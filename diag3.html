@@ -1,0 +1,28 @@
+<title>בדיקת ניגון סופית</title>
+<div style="font-family:system-ui,sans-serif;padding:30px;background:#F7F5EF;min-height:100vh;box-sizing:border-box;direction:rtl;text-align:center;">
+<h2>לחצי על הכפתור הזה (לא על ה-play של הנגן!)</h2>
+<audio id="a" src="test2.mp3" preload="auto"></audio>
+<button id="btn" style="font-size:24px;padding:20px 40px;border-radius:12px;border:none;background:#C0392B;color:white;cursor:pointer;">▶️ לחצי כאן לניגון</button>
+<div id="log" style="white-space:pre-wrap;background:white;padding:16px;border-radius:8px;border:1px solid #ccc;font-family:monospace;font-size:16px;margin-top:20px;text-align:right;"></div>
+</div>
+<script>
+const a = document.getElementById('a');
+const log = document.getElementById('log');
+function line(s) { log.textContent += s + "\n"; }
+document.getElementById('btn').addEventListener('click', () => {
+  log.textContent = '';
+  line('לוחצת... מנסה לנגן');
+  a.currentTime = 0;
+  a.play().then(() => {
+    line('play() הצליח, מנגן עכשיו');
+  }).catch(e => {
+    line('play() נכשל: ' + e.name + ' - ' + e.message);
+  });
+});
+a.addEventListener('play', () => line('event: play'));
+a.addEventListener('playing', () => line('event: playing (יש קול!)'));
+a.addEventListener('timeupdate', () => { if(a.currentTime > 0) line('currentTime=' + a.currentTime.toFixed(2)); });
+a.addEventListener('ended', () => line('event: ended'));
+a.addEventListener('error', () => line('event: error ' + (a.error && a.error.code)));
+a.addEventListener('volumechange', () => line('volumechange: volume=' + a.volume + ' muted=' + a.muted));
+</script>
