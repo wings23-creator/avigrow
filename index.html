@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AviGrow — הצמחים שלי</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #F4F7EE;
+    --ink: #1F3527;
+    --ink-soft: #4A5F4E;
+    --card: #FFFFFF;
+    --line: #DCE5D3;
+    --clay: #B5533C;
+    --sprout: #7A9A1E;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1.15; }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 28px 0;
+  }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sprout); }
+  header h1 { font-size: 1.4rem; }
+
+  .page-intro { color: var(--ink-soft); margin-bottom: 36px; font-size: 1rem; }
+
+  /* ===== עמוד נחיתה ===== */
+  .hero {
+    text-align: center; padding: 20px 0 40px;
+  }
+  .hero h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); margin-bottom: 10px; }
+  .hero p { color: var(--ink-soft); max-width: 420px; margin: 0 auto 26px; }
+  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .btn-ghost {
+    background: transparent; border: 1.5px solid var(--line); color: var(--ink);
+  }
+  .btn-ghost:hover { border-color: var(--sprout); color: var(--sprout); opacity: 1; }
+  .stat-line { color: var(--ink-soft); font-size: 0.9rem; }
+  .stat-line strong { color: var(--sprout); }
+
+  /* ===== כלי ייצוא/ייבוא נתונים ===== */
+  .data-tools { display: flex; gap: 16px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .link-btn {
+    background: none; border: none; color: var(--ink-soft); font-size: 0.85rem;
+    cursor: pointer; text-decoration: underline; font-family: 'Inter', sans-serif; padding: 0;
+  }
+  .link-btn:hover { color: var(--sprout); }
+
+  /* ===== בדיקת בריאות מהירה (בלי צמח קיים) ===== */
+  .quick-health {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 32px;
+  }
+  .quick-health h2 { font-size: 1.3rem; margin-bottom: 6px; }
+  .quick-health .sub { color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 18px; }
+  .quick-health-result-box {
+    margin-top: 14px; padding: 14px; border-radius: 10px; font-size: 0.9rem;
+    background: #EEF3E4; border: 1px solid var(--sprout);
+  }
+  .quick-health-result-box.warn { background: #FBEDE9; border-color: var(--clay); }
+  .close-section-btn {
+    background: none; border: none; color: var(--ink-soft); font-size: 0.85rem;
+    cursor: pointer; padding: 0; margin-top: 14px; text-decoration: underline;
+  }
+
+  /* ===== חיפוש ואינדקס א"ב ===== */
+  .search-section { margin-bottom: 20px; }
+  .search-input {
+    width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--card); color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .search-input:focus { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .alpha-index { display: flex; flex-wrap: wrap; gap: 6px; }
+  .alpha-btn {
+    min-width: 30px; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink-soft); font-size: 0.82rem; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .alpha-btn:hover { border-color: var(--sprout); color: var(--sprout); }
+  .alpha-btn.active { background: var(--sprout); border-color: var(--sprout); color: #fff; }
+
+  /* ===== טופס הוספת צמח ===== */
+  .add-plant {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 48px;
+  }
+  .add-plant h2 { font-size: 1.3rem; margin-bottom: 18px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.88rem; font-weight: 500; margin-bottom: 6px; color: var(--ink-soft); }
+  .field input[type="text"], .field textarea {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg); color: var(--ink);
+  }
+  .field input:focus, .field textarea:focus { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* כפתור צילום תמונה - מוסתר את קלט הקובץ המקורי ומעצבים תווית יפה במקומו */
+  .photo-input { display: none; }
+  .photo-label {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px dashed var(--line); border-radius: 12px; padding: 20px;
+    cursor: pointer; color: var(--ink-soft); font-size: 0.9rem; text-align: center;
+  }
+  .photo-label:hover { border-color: var(--sprout); color: var(--sprout); }
+  .photo-preview { max-width: 140px; border-radius: 10px; margin-top: 10px; display: none; }
+  .identify-status { font-size: 0.85rem; color: var(--sprout); margin-top: 8px; min-height: 1.2em; }
+  .identify-status.error { color: var(--clay); }
+
+  .btn {
+    display: inline-block; padding: 13px 28px; border-radius: 999px;
+    font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer;
+    background: var(--clay); color: #fff; font-family: 'Inter', sans-serif;
+  }
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ===== רשימת הצמחים ===== */
+  .plants-section h2 { font-size: 1.3rem; margin-bottom: 18px; }
+  .empty-state {
+    text-align: center; color: var(--ink-soft); padding: 40px 20px;
+    border: 1.5px dashed var(--line); border-radius: var(--radius); font-size: 0.95rem;
+  }
+  .plants-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;
+    margin-bottom: 60px;
+  }
+  .plant-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .plant-card img { width: 100%; height: 160px; object-fit: cover; display: block; background: var(--line); }
+  .plant-card .body { padding: 16px; }
+  .plant-card h3 { font-size: 1.05rem; }
+  .plant-card .en-name { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 8px; }
+  .plant-card .notes { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 10px; }
+  .plant-card .date { font-size: 0.75rem; color: var(--ink-soft); opacity: 0.8; }
+  .plant-card .delete-btn {
+    background: none; border: none; color: var(--clay); font-size: 0.8rem;
+    cursor: pointer; margin-top: 8px; padding: 0; font-family: 'Inter', sans-serif;
+  }
+
+  /* בדיקת בריאות בכרטיס צמח */
+  .health-input { display: none; }
+  .health-btn {
+    display: inline-block; margin-top: 10px; padding: 8px 14px; border-radius: 999px;
+    border: 1.5px solid var(--line); font-size: 0.82rem; cursor: pointer; color: var(--ink-soft);
+  }
+  .health-btn:hover { border-color: var(--sprout); color: var(--sprout); }
+  .health-status-msg { font-size: 0.8rem; color: var(--ink-soft); margin-top: 8px; }
+  .health-result {
+    margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 0.83rem;
+    background: #EEF3E4; border: 1px solid var(--sprout);
+  }
+  .health-result.warn { background: #FBEDE9; border-color: var(--clay); }
+  .health-result .h-status { font-weight: 600; margin-bottom: 4px; display: block; }
+  .health-result .h-date { font-size: 0.72rem; color: var(--ink-soft); margin-top: 6px; display: block; }
+
+  /* מצב טעינה כללי */
+  .loading-state { text-align: center; color: var(--ink-soft); padding: 40px 20px; font-size: 0.95rem; }
+
+  @media (max-width: 560px) {
+    .row2 { grid-template-columns: 1fr; }
+  }
+
+  a:focus-visible, .btn:focus-visible, .photo-label:focus-visible { outline: 2px solid var(--clay); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+    <header>
+      <span class="logo-dot"></span>
+      <h1>AviGrow</h1>
+    </header>
+
+    <section class="hero">
+      <h1>הצמחים שלי</h1>
+      <p>המקום שבו אני שומר מידע ותמונות על כל צמח בבית, ובודק את מצבם מתי שרוצים.</p>
+      <div class="hero-actions">
+        <button type="button" id="show-add-btn" class="btn">🌱 הוספת צמח חדש</button>
+        <button type="button" id="show-quick-health-btn" class="btn btn-ghost">🩺 בדיקת בריאות מהירה</button>
+      </div>
+      <p class="stat-line" id="stat-line"></p>
+
+      <div class="data-tools">
+        <button type="button" id="export-btn" class="link-btn">📤 ייצוא לקובץ</button>
+        <input type="file" id="import-input" accept="application/json" style="display:none;">
+        <label for="import-input" class="link-btn">📥 ייבוא מקובץ</label>
+      </div>
+      <p id="import-status" class="identify-status" style="display:none;"></p>
+    </section>
+
+    <!-- בדיקת בריאות מהירה - בלי קשר לצמח קיים ברשימה -->
+    <section class="quick-health" id="quick-health-section" style="display:none;">
+      <h2>בדיקת בריאות מהירה</h2>
+      <p class="sub">צלמו כל צמח - גם אם הוא עדיין לא ברשימה שלכם - ותקבלו אבחון מיידי.</p>
+      <input type="file" id="quick-health-input" class="photo-input" accept="image/*">
+      <label for="quick-health-input" class="photo-label">📷 צילום לבדיקה</label>
+      <img id="quick-health-preview" class="photo-preview" alt="תצוגה מקדימה">
+      <p id="quick-health-status" class="identify-status"></p>
+      <div id="quick-health-result"></div>
+      <button type="button" class="close-section-btn" id="close-quick-health-btn">סגירה</button>
+    </section>
+
+    <!-- טופס הוספת צמח חדש -->
+    <section class="add-plant" id="add-plant-section" style="display:none;">
+      <h2>הוספת צמח חדש</h2>
+      <form id="plant-form">
+        <div class="row2">
+          <div class="field">
+            <label for="name-he">שם הצמח (עברית)</label>
+            <input type="text" id="name-he" required placeholder="יתמלא אוטומטית לאחר צילום, או הקלידו ידנית">
+          </div>
+          <div class="field">
+            <label for="name-en">שם הצמח (אנגלית)</label>
+            <input type="text" id="name-en" placeholder="יתמלא אוטומטית לאחר צילום">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="notes">הערות</label>
+          <textarea id="notes" rows="2" placeholder="יתמלא אוטומטית לאחר צילום - ניתן לתקן"></textarea>
+        </div>
+
+        <div class="field">
+          <label>תמונה של הצמח - הזיהוי יתבצע אוטומטית</label>
+          <!-- בלי capture - הדפדפן יציג אפשרות לבחור בין צילום ישיר לבחירה מהגלריה -->
+          <input type="file" id="photo-input" class="photo-input" accept="image/*">
+          <label for="photo-input" class="photo-label" id="photo-label">📷 לחצו לצילום או העלאת תמונה</label>
+          <img id="photo-preview" class="photo-preview" alt="תצוגה מקדימה">
+          <p id="identify-status" class="identify-status"></p>
+        </div>
+
+        <button type="submit" class="btn">שמירת הצמח</button>
+        <button type="button" class="close-section-btn" id="close-add-btn">ביטול</button>
+        <p id="save-error" class="identify-status error" style="display:none;"></p>
+      </form>
+    </section>
+
+    <!-- חיפוש ואינדקס -->
+    <section class="search-section">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
+      <div class="alpha-index" id="alpha-index"><!-- נבנה דינמית ב-JS --></div>
+    </section>
+
+    <!-- רשימת הצמחים השמורים -->
+    <section class="plants-section">
+      <h2>הצמחים שלי</h2>
+      <div id="plants-container">
+        <!-- כאן ה-JS מזריק את הכרטיסים -->
+      </div>
+    </section>
+  </div>
+
+<script>
+  // ===== חיבור ל-Supabase =====
+  // Project URL וה-anon public key נלקחים מ-Project Settings → API בפרויקט ה-Supabase שלך.
+  // ה-anon key הזה מיועד להיות גלוי בצד לקוח (הוא ממילא רץ בדפדפן) - ההגנה האמיתית
+  // היא ה-Row Level Security policy שהוגדרה על טבלת plants.
+  const SUPABASE_URL = 'https://wipkpkdctwnpsyqszzhn.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_IYt_DMG8DzuLoxUVtqWCbw_X1LRC6_O';
+
+  const SUPABASE_TABLE_URL = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/plants';
+  const supabaseHeaders = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  function assertSupabaseConfigured() {
+    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_SUPABASE_URL_HERE') ||
+        !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY_HERE')) {
+      throw new Error('החיבור ל-Supabase לא הוגדר עדיין - חסרים SUPABASE_URL / SUPABASE_ANON_KEY בקוד הדף');
+    }
+  }
+
+  // ===== המרה בין מבנה השורה בטבלה (snake_case) למבנה שהדף עובד איתו (camelCase) =====
+  function rowToPlant(row) {
+    const plant = {
+      id: row.id,
+      nameHe: row.name_he,
+      nameEn: row.name_en,
+      notes: row.notes,
+      photo: row.photo_base64,
+      addedAt: row.added_at ? new Date(row.added_at).toLocaleDateString('he-IL') : ''
+    };
+    if (row.health_status) {
+      plant.health = {
+        status: row.health_status,
+        diagnosis: row.health_diagnosis,
+        advice: row.health_advice,
+        date: row.health_date ? new Date(row.health_date).toLocaleDateString('he-IL') : ''
+      };
+    }
+    return plant;
+  }
+
+  function plantToInsertRow(plant) {
+    return {
+      name_he: plant.nameHe,
+      name_en: plant.nameEn || null,
+      notes: plant.notes || null,
+      photo_base64: plant.photo || null
+    };
+  }
+
+  // ===== תפיסת שגיאות גלובלית =====
+  // אם משהו נכשל בצורה לא צפויה בכל מקום בדף, נציג את הטקסט המדויק
+  // כדי שיהיה אפשר לדעת בדיוק מה קרה (במקום "Script error" בלי פרטים)
+  function showGlobalError(message) {
+    const el = document.getElementById('save-error');
+    if (!el) return;
+    el.textContent = 'שגיאה: ' + message;
+    el.style.display = 'block';
+  }
+  window.addEventListener('error', (e) => {
+    const msg = (e.error && e.error.message) || e.message || 'שגיאה לא ידועה';
+    console.error('Uncaught error:', msg);
+    showGlobalError(msg);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const msg = (e.reason && e.reason.message) || String(e.reason);
+    console.error('Unhandled promise rejection:', msg);
+    showGlobalError(msg);
+  });
+
+  // ===== ייצוא וייבוא נתונים =====
+  // מאפשר לגבות את כל רשימת הצמחים (כולל תמונות) לקובץ מקומי.
+  const importStatus = document.getElementById('import-status');
+
+  async function exportPlantsToFile(silent) {
+    const plants = await loadPlants();
+    if (plants.length === 0) {
+      if (!silent) {
+        importStatus.textContent = 'אין עדיין צמחים לייצוא.';
+        importStatus.style.display = 'block';
+        importStatus.classList.remove('error');
+      }
+      return;
+    }
+    const dataStr = JSON.stringify(plants, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // שם קובץ עם תאריך ושעה - כדי שכל גיבוי אוטומטי יהיה קובץ נפרד ומזוהה
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = 'avigrow-plants-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (silent) {
+      // רמז עדין שגיבוי אוטומטי קרה, בלי להפריע לזרימה
+      importStatus.textContent = '💾 גובה אוטומטית לקובץ הורדות';
+      importStatus.classList.remove('error');
+      importStatus.style.display = 'block';
+    }
+  }
+
+  document.getElementById('export-btn').addEventListener('click', () => exportPlantsToFile(false));
+
+  document.getElementById('import-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    importStatus.style.display = 'block';
+    importStatus.classList.remove('error');
+    importStatus.textContent = '📥 מייבא...';
+
+    try {
+      assertSupabaseConfigured();
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (!Array.isArray(imported)) throw new Error('מבנה הקובץ לא תקין - לא נמצאה רשימת צמחים');
+
+      const rows = imported.map(p => plantToInsertRow(p));
+      const response = await fetch(SUPABASE_TABLE_URL, {
+        method: 'POST',
+        headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rows)
+      });
+      if (!response.ok) throw new Error('שגיאת שרת בייבוא (קוד ' + response.status + ')');
+
+      await renderPlants();
+      importStatus.textContent = `✓ יובאו ${imported.length} צמחים בהצלחה`;
+    } catch (err) {
+      console.error('Import failed:', (err && err.message) || String(err));
+      importStatus.textContent = 'הייבוא נכשל: ' + ((err && err.message) || String(err));
+      importStatus.classList.add('error');
+    }
+
+    e.target.value = ''; // מאפשר לייבא שוב את אותו קובץ אם צריך
+  });
+
+  // ===== כפתורי הפעולה בעמוד הנחיתה =====
+  const addSection = document.getElementById('add-plant-section');
+  const quickHealthSection = document.getElementById('quick-health-section');
+
+  document.getElementById('show-add-btn').addEventListener('click', () => {
+    quickHealthSection.style.display = 'none';
+    addSection.style.display = 'block';
+    addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('close-add-btn').addEventListener('click', () => {
+    addSection.style.display = 'none';
+  });
+  document.getElementById('show-quick-health-btn').addEventListener('click', () => {
+    addSection.style.display = 'none';
+    quickHealthSection.style.display = 'block';
+    quickHealthSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('close-quick-health-btn').addEventListener('click', () => {
+    quickHealthSection.style.display = 'none';
+  });
+
+  // ===== חיפוש ואינדקס א"ב =====
+  let searchQuery = '';
+  let activeLetter = null; // אות פעילה מהאינדקס, אם נבחרה
+
+  const HEBREW_LETTERS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
+
+  function buildAlphaIndex() {
+    const container = document.getElementById('alpha-index');
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'alpha-btn' + (activeLetter === null ? ' active' : '');
+    allBtn.textContent = 'הכל';
+    allBtn.addEventListener('click', async () => { activeLetter = null; await renderPlants(); buildAlphaIndex(); });
+    container.innerHTML = '';
+    container.appendChild(allBtn);
+
+    HEBREW_LETTERS.forEach(letter => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'alpha-btn' + (activeLetter === letter ? ' active' : '');
+      btn.textContent = letter;
+      btn.addEventListener('click', async () => {
+        activeLetter = (activeLetter === letter) ? null : letter;
+        await renderPlants();
+        buildAlphaIndex();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  document.getElementById('search-input').addEventListener('input', async (e) => {
+    searchQuery = e.target.value.trim().toLowerCase();
+    await renderPlants();
+  });
+
+  function filterPlants(plants) {
+    return plants.filter(p => {
+      const matchesSearch = !searchQuery ||
+        (p.nameHe && p.nameHe.toLowerCase().includes(searchQuery)) ||
+        (p.nameEn && p.nameEn.toLowerCase().includes(searchQuery));
+      const matchesLetter = !activeLetter || (p.nameHe && p.nameHe.trim().startsWith(activeLetter));
+      return matchesSearch && matchesLetter;
+    });
+  }
+
+  async function updateStatLine(total) {
+    const statLine = document.getElementById('stat-line');
+    statLine.innerHTML = total === 0
+      ? 'עדיין אין צמחים ברשימה - זה הזמן להוסיף את הראשון 🌱'
+      : `<strong>${total}</strong> צמחים ברשימה שלך`;
+  }
+
+  // ===== שכבת שמירת נתונים - מדברת ישירות מול טבלת plants ב-Supabase =====
+  // כתובת הטבלה: SUPABASE_TABLE_URL (Supabase REST / PostgREST)
+  let plantsCache = []; // עותק אחרון שנטען, כדי לא לבצע קריאת רשת בכל render
+
+  async function loadPlants() {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
+      headers: supabaseHeaders
+    });
+    if (!response.ok) throw new Error('שגיאת שרת בטעינת הצמחים (קוד ' + response.status + ')');
+    const rows = await response.json();
+    plantsCache = rows.map(rowToPlant);
+    return plantsCache;
+  }
+
+  async function insertPlant(plant) {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL, {
+      method: 'POST',
+      headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+      body: JSON.stringify(plantToInsertRow(plant))
+    });
+    if (!response.ok) throw new Error('השמירה נכשלה (קוד ' + response.status + ')');
+    const rows = await response.json();
+    return rows[0] ? rowToPlant(rows[0]) : null;
+  }
+
+  async function deletePlantRow(id) {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: supabaseHeaders
+    });
+    if (!response.ok) throw new Error('המחיקה נכשלה (קוד ' + response.status + ')');
+  }
+
+  async function updatePlantHealthRow(id, health) {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({
+        health_status: health.status,
+        health_diagnosis: health.diagnosis,
+        health_advice: health.advice,
+        health_date: new Date().toISOString()
+      })
+    });
+    if (!response.ok) throw new Error('עדכון הבריאות נכשל (קוד ' + response.status + ')');
+  }
+
+  // ===== תצוגה מקדימה לתמונה שנבחרה =====
+  const photoInput = document.getElementById('photo-input');
+  const photoPreview = document.getElementById('photo-preview');
+  const photoLabel = document.getElementById('photo-label');
+  let selectedPhotoDataUrl = null;
+
+  // ===== הקטנת תמונה לפני שמירה =====
+  // תמונות ישירות ממצלמת נייד יכולות להיות כמה MB - זה ממלא מהר את עמודת ה-photo בטבלה.
+  // מצמצמים לרוחב מקסימלי סביר ואיכות JPEG טובה, בלי שינוי נראה לעין.
+  function compressImage(dataUrl, maxWidth = 900, quality = 0.72) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(dataUrl); // אם ההקטנה נכשלת, נמשיך עם המקור
+      img.src = dataUrl;
+    });
+  }
+
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      selectedPhotoDataUrl = await compressImage(e.target.result);
+      photoPreview.src = selectedPhotoDataUrl;
+      photoPreview.style.display = 'block';
+      photoLabel.textContent = '📷 תמונה נבחרה - לחצו להחלפה';
+      identifyPlant(selectedPhotoDataUrl); // מזהים את הצמח אוטומטית ברגע שיש תמונה
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ===== זיהוי הצמח מהתמונה באמצעות Claude =====
+  // שולחים את התמונה ל-API ומבקשים JSON מובנה עם השם בעברית, באנגלית והערת טיפול קצרה
+  const identifyStatus = document.getElementById('identify-status');
+  const submitBtn = document.querySelector('#plant-form button[type="submit"]');
+
+  async function identifyPlant(dataUrl) {
+    const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
+    if (!match) return;
+    const mediaType = match[1];
+    const base64Data = match[2];
+
+    identifyStatus.textContent = '🔍 מזהה את הצמח...';
+    identifyStatus.classList.remove('error');
+    submitBtn.disabled = true;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          system: "אתה מזהה צמחי בית מתמונות. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט הבא: {\"nameHe\": \"שם עממי בעברית\", \"nameEn\": \"English common name\", \"notes\": \"טיפ טיפול קצר במשפט אחד בעברית - תדירות השקיה או צרכי אור\"}. אם אינך בטוח בזיהוי, תן את הניחוש הטוב ביותר וציין את אי הוודאות בקצרה בשדה notes.",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+                { type: "text", text: "זהה את הצמח בתמונה הזו." }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message || 'שגיאת שרת בזיהוי');
+
+      const textBlock = (data.content || []).find(b => b.type === "text");
+      if (!textBlock) throw new Error("לא התקבלה תשובת טקסט מהזיהוי");
+
+      // שולפים רק את בלוק ה-JSON מתוך הטקסט, גם אם יש סביבו מילים נוספות
+      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("תשובת הזיהוי לא הייתה בפורמט תקין");
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      document.getElementById('name-he').value = parsed.nameHe || '';
+      document.getElementById('name-en').value = parsed.nameEn || '';
+      document.getElementById('notes').value = parsed.notes || '';
+      identifyStatus.textContent = '✓ זוהה בהצלחה - אפשר לתקן לפני השמירה';
+    } catch (err) {
+      console.error('Plant identification failed:', (err && err.message) || String(err));
+      identifyStatus.textContent = 'לא הצלחתי לזהות אוטומטית - אפשר למלא ידנית';
+      identifyStatus.classList.add('error');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  // ===== שליחת הטופס =====
+  const form = document.getElementById('plant-form');
+  const saveError = document.getElementById('save-error');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    saveError.style.display = 'none';
+
+    try {
+      const nameHe = document.getElementById('name-he').value.trim();
+      const nameEn = document.getElementById('name-en').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!nameHe) return; // שם בעברית הוא שדה חובה
+
+      submitBtn.disabled = true;
+
+      try {
+        await insertPlant({ nameHe, nameEn, notes, photo: selectedPhotoDataUrl });
+      } catch (err) {
+        console.error('Save failed:', (err && err.message) || String(err));
+        saveError.textContent = 'השמירה נכשלה. נסי שוב או צלמי תמונה קטנה יותר.';
+        saveError.style.display = 'block';
+        return; // לא מאפסים את הטופס - כדי שלא תאבדי את מה שהקלדת
+      } finally {
+        submitBtn.disabled = false;
+      }
+
+      // איפוס הטופס לצמח הבא
+      form.reset();
+      selectedPhotoDataUrl = null;
+      photoPreview.style.display = 'none';
+      photoLabel.textContent = '📷 לחצו לצילום או העלאת תמונה';
+
+      await renderPlants();
+    } catch (err) {
+      // רשת ביטחון: כל שגיאה לא צפויה אחרת תוצג כאן במקום לקרוס בשקט
+      console.error('Unexpected error while saving plant:', (err && err.message) || String(err));
+      saveError.textContent = 'שגיאה לא צפויה: ' + (err && err.message ? err.message : String(err));
+      saveError.style.display = 'block';
+    }
+  });
+
+  // ===== הצגת רשימת הצמחים =====
+  async function renderPlants() {
+    const container = document.getElementById('plants-container');
+    let allPlants;
+    try {
+      allPlants = await loadPlants();
+    } catch (err) {
+      console.error('Loading plants failed:', (err && err.message) || String(err));
+      container.innerHTML = '<div class="empty-state">לא הצלחתי לטעון את הצמחים מהשרת: ' +
+        ((err && err.message) || String(err)) + '</div>';
+      await updateStatLine(0);
+      return;
+    }
+
+    const plants = filterPlants(allPlants);
+    await updateStatLine(allPlants.length);
+
+    if (allPlants.length === 0) {
+      container.innerHTML = '<div class="empty-state">עדיין לא הוספת צמחים. התחילי למעלה 🌱</div>';
+      return;
+    }
+    if (plants.length === 0) {
+      container.innerHTML = '<div class="empty-state">לא נמצאו צמחים התואמים לחיפוש.</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="plants-grid">' + plants.map(p => `
+      <div class="plant-card">
+        ${p.photo ? `<img src="${p.photo}" alt="${p.nameHe}">` : ''}
+        <div class="body">
+          <h3>${p.nameHe}</h3>
+          ${p.nameEn ? `<div class="en-name">${p.nameEn}</div>` : ''}
+          ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
+          <div class="date">נוסף בתאריך ${p.addedAt}</div>
+
+          <input type="file" id="health-input-${p.id}" class="health-input" accept="image/*" onchange="checkPlantHealth(${p.id})">
+          <label for="health-input-${p.id}" class="health-btn">🩺 בדיקת בריאות</label>
+          <p id="health-status-${p.id}" class="health-status-msg"></p>
+
+          ${p.health ? `
+            <div class="health-result ${p.health.status === 'תקין' ? '' : 'warn'}">
+              <span class="h-status">${p.health.status === 'תקין' ? '✓ תקין' : '⚠ ' + p.health.status}</span>
+              ${p.health.diagnosis}
+              <br>${p.health.advice}
+              <span class="h-date">נבדק בתאריך ${p.health.date}</span>
+            </div>
+          ` : ''}
+
+          <button class="delete-btn" onclick="deletePlant(${p.id})">מחיקת צמח</button>
+        </div>
+      </div>
+    `).join('') + '</div>';
+  }
+
+  async function deletePlant(id) {
+    try {
+      await deletePlantRow(id);
+      await renderPlants();
+    } catch (err) {
+      console.error('Delete failed:', (err && err.message) || String(err));
+      showGlobalError((err && err.message) || String(err));
+    }
+  }
+
+  // ===== בדיקת בריאות צמח קיים =====
+  // אותו עיקרון כמו זיהוי השם, רק עם פרומפט שונה שמבקש אבחון מצב הצמח
+  async function checkPlantHealth(plantId) {
+    const inputEl = document.getElementById(`health-input-${plantId}`);
+    const file = inputEl && inputEl.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById(`health-status-${plantId}`);
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const dataUrl = await compressImage(e.target.result);
+      const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
+      if (!match) return;
+      const mediaType = match[1];
+      const base64Data = match[2];
+
+      statusEl.textContent = '🔍 בודק את מצב הצמח...';
+
+      // פסק זמן: אם אין תשובה תוך 20 שניות, לא נישאר תקועים לנצח
+      function withTimeout(promise, ms, message) {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+        ]);
+      }
+
+      try {
+        const response = await withTimeout(
+          fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-6",
+              max_tokens: 500,
+              system: "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה כמו \"עלים צהובים\", \"diagnosis\": \"תיאור קצר במשפט אחד של מה שרואים בתמונה\", \"advice\": \"המלצת טיפול קצרה וברורה\"}. אם התמונה לא מספיק ברורה לאבחון מהימן, ציין זאת בשדה diagnosis וההמלצה תהיה לצלם מזווית/תאורה טובה יותר.",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+                    { type: "text", text: "בדוק את מצב הבריאות של הצמח בתמונה הזו." }
+                  ]
+                }
+              ]
+            })
+          }),
+          20000,
+          'הבדיקה לקחה יותר מדי זמן - נסי שוב'
+        );
+
+        if (!response.ok) throw new Error('שגיאת רשת (קוד ' + response.status + ')');
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message || 'שגיאת שרת בבדיקה');
+
+        const textBlock = (data.content || []).find(b => b.type === "text");
+        if (!textBlock) throw new Error("לא התקבלה תשובת טקסט מהבדיקה");
+
+        const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("תשובת הבדיקה לא הייתה בפורמט תקין");
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        await updatePlantHealthRow(plantId, {
+          status: parsed.status || 'לא ידוע',
+          diagnosis: parsed.diagnosis || '',
+          advice: parsed.advice || ''
+        });
+        await renderPlants(); // מרענן את כל הרשימה כדי להציג את התוצאה החדשה
+      } catch (err) {
+        console.error('Health check failed:', (err && err.message) || String(err));
+        // שולפים מחדש את האלמנט כי renderPlants() אולי כבר החליף את ה-DOM
+        const freshStatusEl = document.getElementById(`health-status-${plantId}`);
+        const msg = 'לא הצלחתי לבדוק כרגע: ' + (err && err.message ? err.message : String(err));
+        if (freshStatusEl) freshStatusEl.textContent = msg;
+        showGlobalError(msg);
+      }
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  // ===== בדיקת בריאות מהירה - בלי צמח קיים ברשימה =====
+  // אותו עיקרון בדיוק כמו checkPlantHealth, רק שהתוצאה מוצגת במקום ולא נשמרת לצמח מסוים
+  const quickHealthInput = document.getElementById('quick-health-input');
+  const quickHealthPreview = document.getElementById('quick-health-preview');
+  const quickHealthStatus = document.getElementById('quick-health-status');
+  const quickHealthResult = document.getElementById('quick-health-result');
+
+  function withTimeout(promise, ms, message) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+    ]);
+  }
+
+  quickHealthInput.addEventListener('change', async () => {
+    const file = quickHealthInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = await compressImage(e.target.result);
+      quickHealthPreview.src = dataUrl;
+      quickHealthPreview.style.display = 'block';
+
+      const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
+      if (!match) return;
+      const mediaType = match[1];
+      const base64Data = match[2];
+
+      quickHealthResult.innerHTML = '';
+      quickHealthStatus.textContent = '🔍 בודק את מצב הצמח...';
+      quickHealthStatus.classList.remove('error');
+
+      try {
+        const response = await withTimeout(
+          fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-6",
+              max_tokens: 500,
+              system: "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה, \"diagnosis\": \"תיאור קצר במשפט אחד\", \"advice\": \"המלצת טיפול קצרה\"}. אם לא ברור, ציין זאת ב-diagnosis.",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+                    { type: "text", text: "בדוק את מצב הבריאות של הצמח בתמונה הזו." }
+                  ]
+                }
+              ]
+            })
+          }),
+          20000,
+          'הבדיקה לקחה יותר מדי זמן - נסי שוב'
+        );
+
+        if (!response.ok) throw new Error('שגיאת רשת (קוד ' + response.status + ')');
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message || 'שגיאת שרת בבדיקה');
+
+        const textBlock = (data.content || []).find(b => b.type === "text");
+        if (!textBlock) throw new Error("לא התקבלה תשובת טקסט מהבדיקה");
+        const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("תשובת הבדיקה לא הייתה בפורמט תקין");
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        quickHealthStatus.textContent = '';
+        const isOk = parsed.status === 'תקין';
+        quickHealthResult.innerHTML = `
+          <div class="quick-health-result-box ${isOk ? '' : 'warn'}">
+            <strong>${isOk ? '✓ תקין' : '⚠ ' + parsed.status}</strong><br>
+            ${parsed.diagnosis || ''}<br>${parsed.advice || ''}
+          </div>
+        `;
+      } catch (err) {
+        console.error('Quick health check failed:', (err && err.message) || String(err));
+        quickHealthStatus.textContent = 'לא הצלחתי לבדוק כרגע: ' + ((err && err.message) || String(err));
+        quickHealthStatus.classList.add('error');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // טעינה ראשונית עם פתיחת הדף
+  (async () => {
+    buildAlphaIndex();
+    await renderPlants();
+  })();
+</script>
+
+</body>
+</html>
