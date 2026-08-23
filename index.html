@@ -131,7 +131,7 @@
   .filter-btn.active { background: var(--sprout); border-color: var(--sprout); color: #fff; }
 
   /* ===== חיפוש צמח באינטרנט ===== */
-  .web-search {
+  .web-search, .account-settings {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 28px; margin-bottom: 32px;
   }
@@ -358,6 +358,8 @@
       <div class="menu-group">
         <div class="menu-group-title">👤 חשבון</div>
         <div class="menu-item" style="cursor:default; background:none; padding-inline-start:14px;" id="menu-user-name"></div>
+        <button type="button" id="show-account-btn" class="menu-item">⚙️ עדכון פרטים</button>
+        <button type="button" id="show-guide-btn" class="menu-item">🎬 מדריך שימוש</button>
         <button type="button" id="logout-btn" class="menu-item">🚪 התנתקות</button>
       </div>
     </nav>
@@ -382,6 +384,75 @@
       <p id="web-search-status" class="identify-status"></p>
       <div id="web-search-results" class="web-search-results"></div>
       <button type="button" class="close-section-btn" id="close-web-search-btn">סגירה</button>
+    </section>
+
+    <!-- עדכון פרטי משתמש - כולל שינוי אימייל עם אימות -->
+    <section class="account-settings" id="account-settings-section" style="display:none;">
+      <h2>עדכון פרטים</h2>
+
+      <div id="account-step-form">
+        <div class="row2">
+          <div class="field">
+            <label for="account-first-name">שם פרטי</label>
+            <input type="text" id="account-first-name">
+          </div>
+          <div class="field">
+            <label for="account-last-name">שם משפחה</label>
+            <input type="text" id="account-last-name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="account-email">אימייל</label>
+          <input type="email" id="account-email">
+          <p class="sub" style="margin:6px 0 0;">שינוי כתובת האימייל ידרוש קוד אימות לכתובת החדשה. הצמחים שלך יישארו איתך גם אחרי השינוי.</p>
+        </div>
+        <button type="button" id="account-save-btn" class="btn">שמירה</button>
+        <button type="button" class="close-section-btn" id="close-account-btn">ביטול</button>
+        <p id="account-form-status" class="auth-status"></p>
+      </div>
+
+      <div id="account-step-verify" style="display:none;">
+        <p class="sub">שלחנו קוד אימות לכתובת <strong id="account-new-email"></strong>.<br>הקלידי אותו כאן כדי לאשר את השינוי.</p>
+        <div class="field">
+          <label for="account-verify-code">קוד אימות</label>
+          <input type="text" id="account-verify-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="00000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
+        </div>
+        <button type="button" id="account-verify-btn" class="btn">אימות שינוי האימייל</button>
+        <p id="account-verify-status" class="auth-status"></p>
+      </div>
+    </section>
+
+    <!-- מדריך שימוש קצר -->
+    <section class="account-settings" id="guide-section" style="display:none;">
+      <h2>מדריך שימוש ב-AviGrow</h2>
+      <p class="sub">סקירה קצרה של האפשרויות באתר.</p>
+      <div id="guide-content">
+        <div class="field">
+          <label>🌱 הוספת צמח חדש</label>
+          <p class="sub">צלמי את הצמח שלך - הזיהוי (שם ועצות טיפול) יתבצע אוטומטית, ואפשר לתקן לפני השמירה.</p>
+        </div>
+        <div class="field">
+          <label>🌐 חיפוש צמח באינטרנט</label>
+          <p class="sub">מחפשים צמח לפי שם (למשל לפני קנייה) ומוסיפים אותו לרשימה כ"צמח מהרשת", עם תמונה ומידע מוויקיפדיה.</p>
+        </div>
+        <div class="field">
+          <label>🩺 בדיקת בריאות מהירה</label>
+          <p class="sub">צילום מהיר של כל צמח (גם כזה שעדיין לא ברשימה) לקבלת אבחון מצב מיידי.</p>
+        </div>
+        <div class="field">
+          <label>🔍 חיפוש וסינון</label>
+          <p class="sub">תיבת החיפוש מסננת תוך כדי הקלדה, וכפתורי "הכל / הצמחים שלי / מהרשת" מסננים לפי מקור הצמח.</p>
+        </div>
+        <div class="field">
+          <label>💾 ייצוא וייבוא</label>
+          <p class="sub">שמירת גיבוי של כל הצמחים לקובץ, או טעינת גיבוי קיים.</p>
+        </div>
+        <div class="field">
+          <label>👤 חשבון</label>
+          <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), והתנתקות מהחשבון.</p>
+        </div>
+      </div>
+      <button type="button" class="close-section-btn" id="close-guide-btn">סגירה</button>
     </section>
 
     <!-- טופס הוספת צמח חדש -->
@@ -632,35 +703,31 @@
   // ===== כפתורי הפעולה בעמוד הנחיתה =====
   const addSection = document.getElementById('add-plant-section');
   const quickHealthSection = document.getElementById('quick-health-section');
+  const webSearchSection = document.getElementById('web-search-section');
+  const accountSection = document.getElementById('account-settings-section');
+  const guideSection = document.getElementById('guide-section');
+  const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection];
 
-  document.getElementById('show-add-btn').addEventListener('click', () => {
-    quickHealthSection.style.display = 'none';
-    document.getElementById('web-search-section').style.display = 'none';
-    addSection.style.display = 'block';
-    addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-  document.getElementById('close-add-btn').addEventListener('click', () => {
-    addSection.style.display = 'none';
-  });
-  document.getElementById('show-quick-health-btn').addEventListener('click', () => {
-    addSection.style.display = 'none';
-    document.getElementById('web-search-section').style.display = 'none';
-    quickHealthSection.style.display = 'block';
-    quickHealthSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  function showSection(section) {
+    allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.getElementById('show-add-btn').addEventListener('click', () => showSection(addSection));
+  document.getElementById('close-add-btn').addEventListener('click', () => { addSection.style.display = 'none'; });
+
+  document.getElementById('show-quick-health-btn').addEventListener('click', () => showSection(quickHealthSection));
   document.getElementById('close-quick-health-btn').addEventListener('click', () => {
     quickHealthSection.style.display = 'none';
   });
 
-  const webSearchSection = document.getElementById('web-search-section');
-  document.getElementById('show-web-search-btn').addEventListener('click', () => {
-    addSection.style.display = 'none';
-    quickHealthSection.style.display = 'none';
-    webSearchSection.style.display = 'block';
-    webSearchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  document.getElementById('show-web-search-btn').addEventListener('click', () => showSection(webSearchSection));
   document.getElementById('close-web-search-btn').addEventListener('click', () => {
     webSearchSection.style.display = 'none';
+  });
+
+  document.getElementById('close-guide-btn').addEventListener('click', () => {
+    guideSection.style.display = 'none';
   });
 
   // ===== חיפוש וסינון =====
@@ -1351,6 +1418,118 @@
   document.getElementById('logout-btn').addEventListener('click', async () => {
     localStorage.removeItem('avigrow_login_at');
     await sbClient.auth.signOut();
+  });
+
+  // ===== עדכון פרטי משתמש (שם + אימייל) =====
+  const accountFormStatus = document.getElementById('account-form-status');
+  const accountSaveBtn = document.getElementById('account-save-btn');
+  let accountOriginalEmail = '';
+
+  document.getElementById('show-account-btn').addEventListener('click', async () => {
+    showSection(accountSection);
+    document.getElementById('account-step-form').style.display = 'block';
+    document.getElementById('account-step-verify').style.display = 'none';
+    accountFormStatus.textContent = '';
+
+    const { data: { user } } = await sbClient.auth.getUser();
+    if (!user) return;
+    accountOriginalEmail = user.email || '';
+    document.getElementById('account-email').value = accountOriginalEmail;
+
+    const { data: profile } = await sbClient.from('profiles').select('first_name,last_name').eq('id', user.id).maybeSingle();
+    document.getElementById('account-first-name').value = (profile && profile.first_name) || '';
+    document.getElementById('account-last-name').value = (profile && profile.last_name) || '';
+  });
+
+  document.getElementById('close-account-btn').addEventListener('click', () => {
+    accountSection.style.display = 'none';
+  });
+
+  accountSaveBtn.addEventListener('click', async () => {
+    const firstName = document.getElementById('account-first-name').value.trim();
+    const lastName = document.getElementById('account-last-name').value.trim();
+    const newEmail = document.getElementById('account-email').value.trim();
+
+    accountFormStatus.classList.remove('error');
+    if (!firstName || !lastName) {
+      accountFormStatus.textContent = 'נא למלא שם פרטי ושם משפחה';
+      accountFormStatus.classList.add('error');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      accountFormStatus.textContent = 'נא להזין כתובת אימייל תקינה';
+      accountFormStatus.classList.add('error');
+      return;
+    }
+
+    accountSaveBtn.disabled = true;
+    accountFormStatus.textContent = 'שומרת...';
+    try {
+      const { data: { user } } = await sbClient.auth.getUser();
+      const { error: profileError } = await sbClient.from('profiles')
+        .update({ first_name: firstName, last_name: lastName })
+        .eq('id', user.id);
+      if (profileError) throw profileError;
+      document.getElementById('menu-user-name').textContent = `${firstName} ${lastName}`.trim();
+
+      const emailChanged = newEmail.toLowerCase() !== accountOriginalEmail.toLowerCase();
+      if (!emailChanged) {
+        accountFormStatus.textContent = '✓ נשמר בהצלחה';
+        return;
+      }
+
+      // שינוי אימייל דורש אימות - הצמחים נשארים שייכים לאותו משתמש (user_id לא משתנה)
+      const { error: emailError } = await sbClient.auth.updateUser({ email: newEmail });
+      if (emailError) throw emailError;
+
+      document.getElementById('account-new-email').textContent = newEmail;
+      document.getElementById('account-step-form').style.display = 'none';
+      document.getElementById('account-step-verify').style.display = 'block';
+      document.getElementById('account-verify-code').value = '';
+      document.getElementById('account-verify-code').focus();
+      accountFormStatus.textContent = '';
+    } catch (err) {
+      console.error('Account update failed:', (err && err.message) || String(err));
+      accountFormStatus.textContent = 'השמירה נכשלה: ' + ((err && err.message) || String(err));
+      accountFormStatus.classList.add('error');
+    } finally {
+      accountSaveBtn.disabled = false;
+    }
+  });
+
+  const accountVerifyBtn = document.getElementById('account-verify-btn');
+  const accountVerifyStatus = document.getElementById('account-verify-status');
+
+  accountVerifyBtn.addEventListener('click', async () => {
+    const code = document.getElementById('account-verify-code').value.trim();
+    const newEmail = document.getElementById('account-new-email').textContent;
+    accountVerifyStatus.classList.remove('error');
+    if (!/^\d{4,10}$/.test(code)) {
+      accountVerifyStatus.textContent = 'נא להקליד את הקוד שקיבלת במייל';
+      accountVerifyStatus.classList.add('error');
+      return;
+    }
+
+    accountVerifyBtn.disabled = true;
+    accountVerifyStatus.textContent = 'מאמתת...';
+    try {
+      const { error } = await sbClient.auth.verifyOtp({ email: newEmail, token: code, type: 'email_change' });
+      if (error) throw error;
+      accountOriginalEmail = newEmail;
+      accountVerifyStatus.textContent = '';
+      accountSection.style.display = 'none';
+    } catch (err) {
+      console.error('Verify email change failed:', (err && err.message) || String(err));
+      accountVerifyStatus.textContent = 'הקוד שגוי או פג תוקף: ' + ((err && err.message) || String(err));
+      accountVerifyStatus.classList.add('error');
+    } finally {
+      accountVerifyBtn.disabled = false;
+    }
+  });
+
+  // ===== מדריך שימוש =====
+  document.getElementById('show-guide-btn').addEventListener('click', () => {
+    showSection(guideSection);
   });
 </script>
 
