@@ -38,7 +38,51 @@
     padding: 28px 0;
   }
   .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sprout); }
-  header h1 { font-size: 1.4rem; }
+  header h1 { font-size: 1.4rem; flex: 1; }
+
+  /* ===== כפתור המבורגר ===== */
+  .menu-toggle {
+    width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--line);
+    background: var(--card); cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;
+  }
+  .menu-toggle:hover { border-color: var(--sprout); }
+  .menu-toggle span { display: block; width: 18px; height: 2px; background: var(--ink); border-radius: 1px; }
+
+  /* ===== תפריט המבורגר - מגירה נגררת ===== */
+  .menu-overlay {
+    position: fixed; inset: 0; background: rgba(31, 53, 39, 0.35);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 40;
+  }
+  .menu-overlay.open { opacity: 1; pointer-events: auto; }
+  .menu-drawer {
+    position: fixed; top: 0; inset-inline-end: 0; height: 100%; width: min(300px, 84vw);
+    background: var(--card); z-index: 50; box-shadow: -8px 0 24px rgba(31, 53, 39, 0.15);
+    transform: translateX(100%); transition: transform 0.25s ease; overflow-y: auto;
+    padding: 20px; box-sizing: border-box;
+  }
+  [dir="rtl"] .menu-drawer { transform: translateX(-100%); }
+  .menu-drawer.open { transform: translateX(0); }
+  .menu-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.1rem;
+  }
+  .menu-close {
+    background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--ink-soft);
+    width: 32px; height: 32px; border-radius: 8px;
+  }
+  .menu-close:hover { background: var(--bg); }
+  .menu-group { margin-bottom: 22px; }
+  .menu-group-title {
+    font-size: 0.78rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 8px; padding-inline-start: 4px;
+  }
+  .menu-item {
+    display: block; width: 100%; text-align: start; padding: 12px 14px; margin-bottom: 6px;
+    border-radius: 10px; border: none; background: var(--bg); color: var(--ink);
+    font-size: 0.95rem; cursor: pointer; font-family: 'Inter', sans-serif; box-sizing: border-box;
+  }
+  .menu-item:hover { background: var(--sprout); color: #fff; }
 
   .page-intro { color: var(--ink-soft); margin-bottom: 36px; font-size: 1rem; }
 
@@ -48,21 +92,8 @@
   }
   .hero h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); margin-bottom: 10px; }
   .hero p { color: var(--ink-soft); max-width: 420px; margin: 0 auto 26px; }
-  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
-  .btn-ghost {
-    background: transparent; border: 1.5px solid var(--line); color: var(--ink);
-  }
-  .btn-ghost:hover { border-color: var(--sprout); color: var(--sprout); opacity: 1; }
   .stat-line { color: var(--ink-soft); font-size: 0.9rem; }
   .stat-line strong { color: var(--sprout); }
-
-  /* ===== כלי ייצוא/ייבוא נתונים ===== */
-  .data-tools { display: flex; gap: 16px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
-  .link-btn {
-    background: none; border: none; color: var(--ink-soft); font-size: 0.85rem;
-    cursor: pointer; text-decoration: underline; font-family: 'Inter', sans-serif; padding: 0;
-  }
-  .link-btn:hover { color: var(--sprout); }
 
   /* ===== בדיקת בריאות מהירה (בלי צמח קיים) ===== */
   .quick-health {
@@ -219,25 +250,44 @@
     <header>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
+      <button type="button" id="menu-toggle-btn" class="menu-toggle" aria-label="פתיחת תפריט">
+        <span></span><span></span><span></span>
+      </button>
     </header>
 
     <section class="hero">
       <h1>הצמחים שלי</h1>
       <p>המקום שבו אני שומר מידע ותמונות על כל צמח בבית, ובודק את מצבם מתי שרוצים.</p>
-      <div class="hero-actions">
-        <button type="button" id="show-add-btn" class="btn">🌱 הוספת צמח חדש</button>
-        <button type="button" id="show-quick-health-btn" class="btn btn-ghost">🩺 בדיקת בריאות מהירה</button>
-        <button type="button" id="show-web-search-btn" class="btn btn-ghost">🌐 חיפוש צמח באינטרנט</button>
-      </div>
       <p class="stat-line" id="stat-line"></p>
-
-      <div class="data-tools">
-        <button type="button" id="export-btn" class="link-btn">📤 ייצוא לקובץ</button>
-        <input type="file" id="import-input" accept="application/json" style="display:none;">
-        <label for="import-input" class="link-btn">📥 ייבוא מקובץ</label>
-      </div>
       <p id="import-status" class="identify-status" style="display:none;"></p>
     </section>
+
+    <!-- תפריט המבורגר - כל הפעולות מקובצות לפי נושא, נגיש בכל רוחב מסך -->
+    <div class="menu-overlay" id="menu-overlay"></div>
+    <nav class="menu-drawer" id="menu-drawer" aria-hidden="true">
+      <div class="menu-drawer-header">
+        <span>תפריט</span>
+        <button type="button" id="menu-close-btn" class="menu-close" aria-label="סגירת תפריט">✕</button>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">🌱 צמחים</div>
+        <button type="button" id="show-add-btn" class="menu-item">🌱 הוספת צמח חדש</button>
+        <button type="button" id="show-web-search-btn" class="menu-item">🌐 חיפוש צמח באינטרנט</button>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">🩺 בריאות</div>
+        <button type="button" id="show-quick-health-btn" class="menu-item">🩺 בדיקת בריאות מהירה</button>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">💾 נתונים</div>
+        <button type="button" id="export-btn" class="menu-item">📤 ייצוא לקובץ</button>
+        <input type="file" id="import-input" accept="application/json" style="display:none;">
+        <label for="import-input" class="menu-item">📥 ייבוא מקובץ</label>
+      </div>
+    </nav>
 
     <!-- בדיקת בריאות מהירה - בלי קשר לצמח קיים ברשימה -->
     <section class="quick-health" id="quick-health-section" style="display:none;">
@@ -473,6 +523,27 @@
 
     e.target.value = ''; // מאפשר לייבא שוב את אותו קובץ אם צריך
   });
+
+  // ===== תפריט המבורגר =====
+  const menuOverlay = document.getElementById('menu-overlay');
+  const menuDrawer = document.getElementById('menu-drawer');
+
+  function openMenu() {
+    menuOverlay.classList.add('open');
+    menuDrawer.classList.add('open');
+    menuDrawer.setAttribute('aria-hidden', 'false');
+  }
+  function closeMenu() {
+    menuOverlay.classList.remove('open');
+    menuDrawer.classList.remove('open');
+    menuDrawer.setAttribute('aria-hidden', 'true');
+  }
+  document.getElementById('menu-toggle-btn').addEventListener('click', openMenu);
+  document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
+  menuOverlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+  // סגירת התפריט אוטומטית בבחירת כל פריט (כולל תווית הייבוא, שאינה כפתור)
+  menuDrawer.querySelectorAll('.menu-item').forEach(item => item.addEventListener('click', closeMenu));
 
   // ===== כפתורי הפעולה בעמוד הנחיתה =====
   const addSection = document.getElementById('add-plant-section');
