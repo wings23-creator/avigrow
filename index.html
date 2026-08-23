@@ -7,6 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
   :root {
@@ -242,11 +243,77 @@
   }
 
   a:focus-visible, .btn:focus-visible, .photo-label:focus-visible { outline: 2px solid var(--clay); outline-offset: 3px; }
+
+  /* ===== שער כניסה - אימות משתמש באימייל ===== */
+  .auth-gate {
+    position: fixed; inset: 0; background: var(--bg); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .auth-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 32px 28px; max-width: 380px; width: 100%; text-align: center;
+  }
+  .auth-card .logo-dot { display: inline-block; margin-bottom: 8px; }
+  .auth-card h1 { font-family: 'Fraunces', serif; font-size: 1.6rem; margin-bottom: 6px; }
+  .auth-card .sub { color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 22px; }
+  .auth-card .field { text-align: start; margin-bottom: 14px; }
+  .auth-card .field label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px; color: var(--ink-soft); }
+  .auth-card .field input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg); color: var(--ink); box-sizing: border-box;
+  }
+  .auth-card .field input:focus { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .auth-card .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .auth-card .btn { width: 100%; margin-top: 6px; }
+  .auth-status { font-size: 0.85rem; color: var(--sprout); margin-top: 14px; min-height: 1.2em; }
+  .auth-status.error { color: var(--clay); }
+  .auth-sent-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .auth-change-email { background: none; border: none; color: var(--ink-soft); font-size: 0.82rem; text-decoration: underline; cursor: pointer; margin-top: 14px; }
 </style>
 </head>
 <body>
 
-  <div class="wrap">
+  <!-- שער כניסה - מוצג עד שהמשתמש מאומת -->
+  <div class="auth-gate" id="auth-gate" style="display:none;">
+    <div class="auth-card">
+      <span class="logo-dot"></span>
+      <h1>AviGrow</h1>
+
+      <div id="auth-step-form">
+        <p class="sub">כניסה אישית לרשימת הצמחים שלך</p>
+        <div class="row2">
+          <div class="field">
+            <label for="auth-first-name">שם פרטי</label>
+            <input type="text" id="auth-first-name" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label for="auth-last-name">שם משפחה</label>
+            <input type="text" id="auth-last-name" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="auth-email">אימייל</label>
+          <input type="email" id="auth-email" autocomplete="email" placeholder="name@example.com">
+        </div>
+        <button type="button" id="auth-send-btn" class="btn">שליחת קוד כניסה</button>
+        <p id="auth-form-status" class="auth-status"></p>
+      </div>
+
+      <div id="auth-step-sent" style="display:none;">
+        <div class="auth-sent-icon">📩</div>
+        <p class="sub">שלחנו קוד בן 6 ספרות לכתובת <strong id="auth-sent-email"></strong>.<br>הקלידי אותו כאן כדי להיכנס.</p>
+        <div class="field">
+          <label for="auth-code">קוד כניסה</label>
+          <input type="text" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
+        </div>
+        <button type="button" id="auth-verify-btn" class="btn">אימות והתחברות</button>
+        <p id="auth-verify-status" class="auth-status"></p>
+        <button type="button" id="auth-change-email-btn" class="auth-change-email">שליחה לכתובת אחרת</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" id="app-wrap" style="display:none;">
     <header>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
@@ -286,6 +353,12 @@
         <button type="button" id="export-btn" class="menu-item">📤 ייצוא לקובץ</button>
         <input type="file" id="import-input" accept="application/json" style="display:none;">
         <label for="import-input" class="menu-item">📥 ייבוא מקובץ</label>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-group-title">👤 חשבון</div>
+        <div class="menu-item" style="cursor:default; background:none; padding-inline-start:14px;" id="menu-user-name"></div>
+        <button type="button" id="logout-btn" class="menu-item">🚪 התנתקות</button>
       </div>
     </nav>
 
@@ -375,11 +448,21 @@
 
   const SUPABASE_TABLE_URL = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/plants';
   const PLANT_AI_URL = SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/plant-ai';
-  const supabaseHeaders = {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-    'Content-Type': 'application/json'
-  };
+
+  // לקוח Supabase Auth (ניהול משתמשים, אימות באימייל, session)
+  const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // כותרות בקשה ל-REST/Functions - ה-Authorization חייב להיות ה-access token האישי
+  // של המשתמש המחובר (לא רק ה-anon key), כדי שה-RLS ידע לזהות auth.uid() ולסנן לפי משתמש
+  async function getSupabaseHeaders() {
+    const { data } = await sbClient.auth.getSession();
+    const token = (data.session && data.session.access_token) || SUPABASE_ANON_KEY;
+    return {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    };
+  }
 
   // ===== קריאה לזיהוי/בדיקת בריאות דרך ה-Edge Function =====
   // מפתח ה-Anthropic API עצמו יושב רק בצד השרת (Supabase Function Secrets),
@@ -388,7 +471,7 @@
     assertSupabaseConfigured();
     const response = await fetch(PLANT_AI_URL, {
       method: 'POST',
-      headers: supabaseHeaders,
+      headers: await getSupabaseHeaders(),
       body: JSON.stringify({ system, mediaType, base64Data, userText })
     });
     if (!response.ok) throw new Error('שגיאת שרת ה-AI (קוד ' + response.status + ')');
@@ -430,7 +513,8 @@
       name_en: plant.nameEn || null,
       notes: plant.notes || null,
       photo_base64: plant.photo || null,
-      source: plant.source === 'web' ? 'web' : 'mine'
+      source: plant.source === 'web' ? 'web' : 'mine',
+      user_id: currentUserId
     };
   }
 
@@ -508,7 +592,7 @@
       const rows = imported.map(p => plantToInsertRow(p));
       const response = await fetch(SUPABASE_TABLE_URL, {
         method: 'POST',
-        headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+        headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=minimal' },
         body: JSON.stringify(rows)
       });
       if (!response.ok) throw new Error('שגיאת שרת בייבוא (קוד ' + response.status + ')');
@@ -622,7 +706,7 @@
   async function loadPlants() {
     assertSupabaseConfigured();
     const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
-      headers: supabaseHeaders
+      headers: await getSupabaseHeaders()
     });
     if (!response.ok) throw new Error('שגיאת שרת בטעינת הצמחים (קוד ' + response.status + ')');
     const rows = await response.json();
@@ -634,7 +718,7 @@
     assertSupabaseConfigured();
     const response = await fetch(SUPABASE_TABLE_URL, {
       method: 'POST',
-      headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+      headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=representation' },
       body: JSON.stringify(plantToInsertRow(plant))
     });
     if (!response.ok) throw new Error('השמירה נכשלה (קוד ' + response.status + ')');
@@ -646,7 +730,7 @@
     assertSupabaseConfigured();
     const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
       method: 'DELETE',
-      headers: supabaseHeaders
+      headers: await getSupabaseHeaders()
     });
     if (!response.ok) throw new Error('המחיקה נכשלה (קוד ' + response.status + ')');
   }
@@ -655,7 +739,7 @@
     assertSupabaseConfigured();
     const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
       method: 'PATCH',
-      headers: supabaseHeaders,
+      headers: await getSupabaseHeaders(),
       body: JSON.stringify({
         health_status: health.status,
         health_diagnosis: health.diagnosis,
@@ -832,9 +916,11 @@
           ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
           <div class="date">נוסף בתאריך ${p.addedAt}</div>
 
+          ${p.source === 'web' ? '' : `
           <input type="file" id="health-input-${p.id}" class="health-input" accept="image/*" onchange="checkPlantHealth(${p.id})">
           <label for="health-input-${p.id}" class="health-btn">🩺 בדיקת בריאות</label>
           <p id="health-status-${p.id}" class="health-status-msg"></p>
+          `}
 
           ${p.health ? `
             <div class="health-result ${p.health.status === 'תקין' ? '' : 'warn'}">
@@ -1113,10 +1199,159 @@
     webSearchTimer = setTimeout(() => runWebSearch(query), 400); // דיבאונס - לא שולחים בקשה על כל תו
   });
 
-  // טעינה ראשונית עם פתיחת הדף
-  (async () => {
+  // ===== אימות משתמשים - שער כניסה באימייל =====
+  // כל משתמש מזוהה ע"י Supabase Auth (auth.uid()); הצמחים שלו מסוננים אוטומטית
+  // ע"י ה-RLS policies שהוגדרו על הטבלה (auth.uid() = user_id).
+  let currentUserId = null;
+  const LOGIN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 יום - אחריהם נבקש התחברות מחדש
+
+  function showGate() {
+    document.getElementById('app-wrap').style.display = 'none';
+    const gate = document.getElementById('auth-gate');
+    gate.style.display = 'flex';
+    document.getElementById('auth-step-form').style.display = 'block';
+    document.getElementById('auth-step-sent').style.display = 'none';
+  }
+
+  async function showApp() {
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('app-wrap').style.display = 'block';
     await renderPlants();
-  })();
+  }
+
+  // יוצר/מעדכן שורת פרופיל (שם פרטי/משפחה) עבור המשתמש, ומציג אותו בתפריט
+  async function ensureProfile(user) {
+    const pendingFirst = localStorage.getItem('avigrow_pending_first');
+    const pendingLast = localStorage.getItem('avigrow_pending_last');
+    if (pendingFirst || pendingLast) {
+      await sbClient.from('profiles').upsert({
+        id: user.id,
+        first_name: pendingFirst || '',
+        last_name: pendingLast || ''
+      });
+      localStorage.removeItem('avigrow_pending_first');
+      localStorage.removeItem('avigrow_pending_last');
+    }
+    const { data } = await sbClient.from('profiles').select('first_name,last_name').eq('id', user.id).maybeSingle();
+    const nameEl = document.getElementById('menu-user-name');
+    if (nameEl) nameEl.textContent = data ? `${data.first_name} ${data.last_name}`.trim() : (user.email || '');
+  }
+
+  sbClient.auth.onAuthStateChange(async (event, session) => {
+    try {
+      if (session) {
+        if (event === 'SIGNED_IN') {
+          // כניסה חדשה (כולל לחיצה על קישור מהאימייל) - מתחילים ספירה חדשה של 30 יום
+          localStorage.setItem('avigrow_login_at', String(Date.now()));
+        }
+        const loginAt = Number(localStorage.getItem('avigrow_login_at') || 0);
+        const expired = !loginAt || (Date.now() - loginAt) > LOGIN_MAX_AGE_MS;
+        if (expired) {
+          localStorage.removeItem('avigrow_login_at');
+          await sbClient.auth.signOut(); // יגרום לקריאה חוזרת לפונקציה הזו עם session ריק
+          return;
+        }
+        currentUserId = session.user.id;
+        await ensureProfile(session.user);
+        await showApp();
+      } else {
+        currentUserId = null;
+        showGate();
+      }
+    } catch (err) {
+      console.error('Auth state handling failed:', (err && err.message) || String(err));
+      showGate();
+    }
+  });
+
+  // ===== טופס שער הכניסה =====
+  const authSendBtn = document.getElementById('auth-send-btn');
+  const authFormStatus = document.getElementById('auth-form-status');
+
+  let pendingAuthEmail = '';
+
+  authSendBtn.addEventListener('click', async () => {
+    const firstName = document.getElementById('auth-first-name').value.trim();
+    const lastName = document.getElementById('auth-last-name').value.trim();
+    const email = document.getElementById('auth-email').value.trim();
+
+    authFormStatus.classList.remove('error');
+    if (!firstName || !lastName) {
+      authFormStatus.textContent = 'נא למלא שם פרטי ושם משפחה';
+      authFormStatus.classList.add('error');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      authFormStatus.textContent = 'נא להזין כתובת אימייל תקינה';
+      authFormStatus.classList.add('error');
+      return;
+    }
+
+    authSendBtn.disabled = true;
+    authFormStatus.textContent = 'שולחת...';
+    try {
+      localStorage.setItem('avigrow_pending_first', firstName);
+      localStorage.setItem('avigrow_pending_last', lastName);
+      pendingAuthEmail = email;
+
+      const { error } = await sbClient.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true, data: { first_name: firstName, last_name: lastName } }
+      });
+      if (error) throw error;
+
+      document.getElementById('auth-sent-email').textContent = email;
+      document.getElementById('auth-step-form').style.display = 'none';
+      document.getElementById('auth-step-sent').style.display = 'block';
+      document.getElementById('auth-code').value = '';
+      document.getElementById('auth-code').focus();
+      authFormStatus.textContent = '';
+    } catch (err) {
+      console.error('Send OTP failed:', (err && err.message) || String(err));
+      authFormStatus.textContent = 'השליחה נכשלה: ' + ((err && err.message) || String(err));
+      authFormStatus.classList.add('error');
+    } finally {
+      authSendBtn.disabled = false;
+    }
+  });
+
+  const authVerifyBtn = document.getElementById('auth-verify-btn');
+  const authVerifyStatus = document.getElementById('auth-verify-status');
+
+  authVerifyBtn.addEventListener('click', async () => {
+    const code = document.getElementById('auth-code').value.trim();
+    authVerifyStatus.classList.remove('error');
+    if (!/^\d{6}$/.test(code)) {
+      authVerifyStatus.textContent = 'נא להקליד קוד בן 6 ספרות';
+      authVerifyStatus.classList.add('error');
+      return;
+    }
+
+    authVerifyBtn.disabled = true;
+    authVerifyStatus.textContent = 'מאמתת...';
+    try {
+      const { error } = await sbClient.auth.verifyOtp({ email: pendingAuthEmail, token: code, type: 'email' });
+      if (error) throw error;
+      // הצלחה - onAuthStateChange יזהה SIGNED_IN ויעביר למסך הראשי
+      authVerifyStatus.textContent = '';
+    } catch (err) {
+      console.error('Verify OTP failed:', (err && err.message) || String(err));
+      authVerifyStatus.textContent = 'הקוד שגוי או פג תוקף: ' + ((err && err.message) || String(err));
+      authVerifyStatus.classList.add('error');
+    } finally {
+      authVerifyBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('auth-change-email-btn').addEventListener('click', () => {
+    document.getElementById('auth-step-sent').style.display = 'none';
+    document.getElementById('auth-step-form').style.display = 'block';
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    localStorage.removeItem('avigrow_login_at');
+    await sbClient.auth.signOut();
+  });
 </script>
 
 </body>
