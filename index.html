@@ -89,6 +89,42 @@
     margin-bottom: 12px;
   }
   .search-input:focus { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .source-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+    background: var(--card); color: var(--ink-soft); font-size: 0.82rem; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .filter-btn:hover { border-color: var(--sprout); color: var(--sprout); }
+  .filter-btn.active { background: var(--sprout); border-color: var(--sprout); color: #fff; }
+
+  /* ===== חיפוש צמח באינטרנט ===== */
+  .web-search {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 32px;
+  }
+  .web-search h2 { font-size: 1.3rem; margin-bottom: 6px; }
+  .web-search .sub { color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 18px; }
+  .web-search-results {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px;
+    margin-top: 16px;
+  }
+  .web-result-card {
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg);
+  }
+  .web-result-card img { width: 100%; height: 120px; object-fit: cover; display: block; background: var(--line); }
+  .web-result-card .wr-body { padding: 10px; }
+  .web-result-card h4 { font-size: 0.9rem; margin-bottom: 4px; }
+  .web-result-card p { font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 8px; max-height: 3em; overflow: hidden; }
+  .web-result-card button {
+    width: 100%; padding: 6px; border-radius: 8px; border: none; background: var(--sprout);
+    color: #fff; font-size: 0.82rem; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .web-result-card button:disabled { opacity: 0.6; cursor: default; }
+  .source-badge {
+    display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+    background: var(--bg); color: var(--ink-soft); border: 1px solid var(--line); margin-inline-start: 6px;
+  }
 
   /* ===== טופס הוספת צמח ===== */
   .add-plant {
@@ -191,6 +227,7 @@
       <div class="hero-actions">
         <button type="button" id="show-add-btn" class="btn">🌱 הוספת צמח חדש</button>
         <button type="button" id="show-quick-health-btn" class="btn btn-ghost">🩺 בדיקת בריאות מהירה</button>
+        <button type="button" id="show-web-search-btn" class="btn btn-ghost">🌐 חיפוש צמח באינטרנט</button>
       </div>
       <p class="stat-line" id="stat-line"></p>
 
@@ -212,6 +249,16 @@
       <p id="quick-health-status" class="identify-status"></p>
       <div id="quick-health-result"></div>
       <button type="button" class="close-section-btn" id="close-quick-health-btn">סגירה</button>
+    </section>
+
+    <!-- חיפוש צמח באינטרנט (ויקיפדיה) - להוספת צמח לעיון, לא בהכרח כזה שברשותך -->
+    <section class="web-search" id="web-search-section" style="display:none;">
+      <h2>חיפוש צמח באינטרנט</h2>
+      <p class="sub">חפשי שם צמח כדי למצוא תמונה ומידע ולהוסיף אותו לרשימה כ"צמח מהרשת".</p>
+      <input type="text" id="web-search-input" class="search-input" placeholder="🔍 הקלידי שם צמח לחיפוש...">
+      <p id="web-search-status" class="identify-status"></p>
+      <div id="web-search-results" class="web-search-results"></div>
+      <button type="button" class="close-section-btn" id="close-web-search-btn">סגירה</button>
     </section>
 
     <!-- טופס הוספת צמח חדש -->
@@ -249,9 +296,14 @@
       </form>
     </section>
 
-    <!-- חיפוש -->
+    <!-- חיפוש וסינון -->
     <section class="search-section">
       <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
+      <div class="source-filter" id="source-filter">
+        <button type="button" class="filter-btn active" data-source="all">הכל</button>
+        <button type="button" class="filter-btn" data-source="mine">הצמחים שלי</button>
+        <button type="button" class="filter-btn" data-source="web">מהרשת</button>
+      </div>
     </section>
 
     <!-- רשימת הצמחים השמורים -->
@@ -308,6 +360,7 @@
       nameEn: row.name_en,
       notes: row.notes,
       photo: row.photo_base64,
+      source: row.source || 'mine',
       addedAt: row.added_at ? new Date(row.added_at).toLocaleDateString('he-IL') : ''
     };
     if (row.health_status) {
@@ -326,7 +379,8 @@
       name_he: plant.nameHe,
       name_en: plant.nameEn || null,
       notes: plant.notes || null,
-      photo_base64: plant.photo || null
+      photo_base64: plant.photo || null,
+      source: plant.source === 'web' ? 'web' : 'mine'
     };
   }
 
@@ -426,6 +480,7 @@
 
   document.getElementById('show-add-btn').addEventListener('click', () => {
     quickHealthSection.style.display = 'none';
+    document.getElementById('web-search-section').style.display = 'none';
     addSection.style.display = 'block';
     addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
@@ -434,6 +489,7 @@
   });
   document.getElementById('show-quick-health-btn').addEventListener('click', () => {
     addSection.style.display = 'none';
+    document.getElementById('web-search-section').style.display = 'none';
     quickHealthSection.style.display = 'block';
     quickHealthSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
@@ -441,20 +497,43 @@
     quickHealthSection.style.display = 'none';
   });
 
-  // ===== חיפוש =====
+  const webSearchSection = document.getElementById('web-search-section');
+  document.getElementById('show-web-search-btn').addEventListener('click', () => {
+    addSection.style.display = 'none';
+    quickHealthSection.style.display = 'none';
+    webSearchSection.style.display = 'block';
+    webSearchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('close-web-search-btn').addEventListener('click', () => {
+    webSearchSection.style.display = 'none';
+  });
+
+  // ===== חיפוש וסינון =====
+  // חיפוש הדרגתי - כל תו שמוקלד מצמצם את הרשימה מיידית לפי תחילת השם
+  // (עברית או אנגלית), כדי שההקלדה תרגיש כמו הדפדוף באינדקס הישן.
   let searchQuery = '';
+  let sourceFilter = 'all'; // 'all' | 'mine' | 'web'
 
   document.getElementById('search-input').addEventListener('input', async (e) => {
     searchQuery = e.target.value.trim().toLowerCase();
     await renderPlants();
   });
 
+  document.getElementById('source-filter').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    sourceFilter = btn.dataset.source;
+    document.querySelectorAll('#source-filter .filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    await renderPlants();
+  });
+
   function filterPlants(plants) {
     return plants.filter(p => {
-      const matchesSearch = !searchQuery ||
-        (p.nameHe && p.nameHe.toLowerCase().includes(searchQuery)) ||
-        (p.nameEn && p.nameEn.toLowerCase().includes(searchQuery));
-      return matchesSearch;
+      const nameHe = (p.nameHe || '').toLowerCase();
+      const nameEn = (p.nameEn || '').toLowerCase();
+      const matchesSearch = !searchQuery || nameHe.startsWith(searchQuery) || nameEn.startsWith(searchQuery);
+      const matchesSource = sourceFilter === 'all' || (p.source || 'mine') === sourceFilter;
+      return matchesSearch && matchesSource;
     });
   }
 
@@ -677,7 +756,7 @@
       <div class="plant-card">
         ${p.photo ? `<img src="${p.photo}" alt="${p.nameHe}">` : ''}
         <div class="body">
-          <h3>${p.nameHe}</h3>
+          <h3>${p.nameHe}${p.source === 'web' ? '<span class="source-badge">מהרשת</span>' : ''}</h3>
           ${p.nameEn ? `<div class="en-name">${p.nameEn}</div>` : ''}
           ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
           <div class="date">נוסף בתאריך ${p.addedAt}</div>
@@ -846,6 +925,109 @@
       }
     };
     reader.readAsDataURL(file);
+  });
+
+  // ===== חיפוש צמח באינטרנט (ויקיפדיה) =====
+  // אין צורך במפתח API - ה-API הציבורי של ויקיפדיה תומך בקריאות ישירות מהדפדפן (CORS פתוח דרך origin=*).
+  // מחפשים קודם בוויקיפדיה העברית, ואם אין תוצאות עוברים לאנגלית.
+  const webSearchInput = document.getElementById('web-search-input');
+  const webSearchStatus = document.getElementById('web-search-status');
+  const webSearchResults = document.getElementById('web-search-results');
+  let webSearchTimer = null;
+  let webSearchToken = 0; // מונע מתוצאות של חיפוש ישן "לדרוס" תוצאות חדשות יותר
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  async function searchWikipedia(lang, query) {
+    // גרשיים סביב מונח החיפוש = התאמת ביטוי, פחות "תוצאות תועות" מהתאמות מקריות של אותיות בודדות
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent('"' + query + '"')}&gsrlimit=8&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=300&exintro=1&explaintext=1&exchars=180&format=json&origin=*`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('שגיאת רשת בחיפוש (קוד ' + res.status + ')');
+    const data = await res.json();
+    const pages = (data.query && data.query.pages) ? Object.values(data.query.pages) : [];
+    return pages
+      .filter(pg => pg.thumbnail && pg.thumbnail.source) // בלי תמונה אין מה להציג/לשמור
+      .sort((a, b) => (a.index || 0) - (b.index || 0)) // המפתחות ב-JSON אינם מובטחים לשמור על סדר הרלוונטיות
+      .map(pg => ({
+        title: pg.title,
+        extract: pg.extract || '',
+        thumbnail: pg.thumbnail.source,
+        lang
+      }));
+  }
+
+  async function runWebSearch(query) {
+    const myToken = ++webSearchToken;
+    webSearchStatus.textContent = '🔍 מחפשת...';
+    webSearchStatus.classList.remove('error');
+    webSearchResults.innerHTML = '';
+
+    try {
+      let results = await searchWikipedia('he', query);
+      if (results.length === 0) results = await searchWikipedia('en', query);
+      if (myToken !== webSearchToken) return; // חיפוש חדש כבר התחיל בינתיים
+
+      if (results.length === 0) {
+        webSearchStatus.textContent = 'לא נמצאו תוצאות עם תמונה.';
+        return;
+      }
+      webSearchStatus.textContent = '';
+
+      webSearchResults.innerHTML = results.map((r, i) => `
+        <div class="web-result-card">
+          <img src="${r.thumbnail}" alt="${escapeHtml(r.title)}">
+          <div class="wr-body">
+            <h4>${escapeHtml(r.title)}</h4>
+            <p>${escapeHtml(r.extract)}</p>
+            <button type="button" data-idx="${i}">➕ הוספה לרשימה</button>
+          </div>
+        </div>
+      `).join('');
+
+      webSearchResults.querySelectorAll('button[data-idx]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const r = results[Number(btn.dataset.idx)];
+          btn.disabled = true;
+          btn.textContent = 'מוסיפה...';
+          try {
+            await insertPlant({
+              nameHe: r.lang === 'he' ? r.title : '',
+              nameEn: r.lang === 'en' ? r.title : '',
+              notes: r.extract,
+              photo: r.thumbnail,
+              source: 'web'
+            });
+            btn.textContent = '✓ נוסף';
+            await renderPlants();
+          } catch (err) {
+            console.error('Adding web plant failed:', (err && err.message) || String(err));
+            btn.textContent = 'הוספה נכשלה';
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      if (myToken !== webSearchToken) return;
+      console.error('Web search failed:', (err && err.message) || String(err));
+      webSearchStatus.textContent = 'החיפוש נכשל: ' + ((err && err.message) || String(err));
+      webSearchStatus.classList.add('error');
+    }
+  }
+
+  webSearchInput.addEventListener('input', () => {
+    const query = webSearchInput.value.trim();
+    clearTimeout(webSearchTimer);
+    if (!query) {
+      webSearchToken++; // מבטל תוצאות ממתינות
+      webSearchStatus.textContent = '';
+      webSearchResults.innerHTML = '';
+      return;
+    }
+    webSearchTimer = setTimeout(() => runWebSearch(query), 400); // דיבאונס - לא שולחים בקשה על כל תו
   });
 
   // טעינה ראשונית עם פתיחת הדף
