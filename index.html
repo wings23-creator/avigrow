@@ -301,10 +301,10 @@
 
       <div id="auth-step-sent" style="display:none;">
         <div class="auth-sent-icon">📩</div>
-        <p class="sub">שלחנו קוד בן 6 ספרות לכתובת <strong id="auth-sent-email"></strong>.<br>הקלידי אותו כאן כדי להיכנס.</p>
+        <p class="sub">שלחנו קוד לכתובת <strong id="auth-sent-email"></strong>.<br>הקלידי אותו כאן כדי להיכנס.</p>
         <div class="field">
           <label for="auth-code">קוד כניסה</label>
-          <input type="text" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
+          <input type="text" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="00000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
         </div>
         <button type="button" id="auth-verify-btn" class="btn">אימות והתחברות</button>
         <p id="auth-verify-status" class="auth-status"></p>
@@ -1321,8 +1321,8 @@
   authVerifyBtn.addEventListener('click', async () => {
     const code = document.getElementById('auth-code').value.trim();
     authVerifyStatus.classList.remove('error');
-    if (!/^\d{6}$/.test(code)) {
-      authVerifyStatus.textContent = 'נא להקליד קוד בן 6 ספרות';
+    if (!/^\d{4,10}$/.test(code)) {
+      authVerifyStatus.textContent = 'נא להקליד את הקוד שקיבלת במייל';
       authVerifyStatus.classList.add('error');
       return;
     }
