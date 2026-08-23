@@ -281,11 +281,26 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_IYt_DMG8DzuLoxUVtqWCbw_X1LRC6_O';
 
   const SUPABASE_TABLE_URL = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/plants';
+  const PLANT_AI_URL = SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/plant-ai';
   const supabaseHeaders = {
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
     'Content-Type': 'application/json'
   };
+
+  // ===== קריאה לזיהוי/בדיקת בריאות דרך ה-Edge Function =====
+  // מפתח ה-Anthropic API עצמו יושב רק בצד השרת (Supabase Function Secrets),
+  // לא בקוד הדף - כך שהוא לא נחשף לכל מי שפותח "הצג מקור" בדפדפן.
+  async function callPlantAI(system, mediaType, base64Data, userText) {
+    assertSupabaseConfigured();
+    const response = await fetch(PLANT_AI_URL, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify({ system, mediaType, base64Data, userText })
+    });
+    if (!response.ok) throw new Error('שגיאת שרת ה-AI (קוד ' + response.status + ')');
+    return response.json();
+  }
 
   function assertSupabaseConfigured() {
     if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_SUPABASE_URL_HERE') ||
@@ -597,26 +612,12 @@
     submitBtn.disabled = true;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 500,
-          system: "אתה מזהה צמחי בית מתמונות. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט הבא: {\"nameHe\": \"שם עממי בעברית\", \"nameEn\": \"English common name\", \"notes\": \"טיפ טיפול קצר במשפט אחד בעברית - תדירות השקיה או צרכי אור\"}. אם אינך בטוח בזיהוי, תן את הניחוש הטוב ביותר וציין את אי הוודאות בקצרה בשדה notes.",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
-                { type: "text", text: "זהה את הצמח בתמונה הזו." }
-              ]
-            }
-          ]
-        })
-      });
-
-      const data = await response.json();
+      const data = await callPlantAI(
+        "אתה מזהה צמחי בית מתמונות. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט הבא: {\"nameHe\": \"שם עממי בעברית\", \"nameEn\": \"English common name\", \"notes\": \"טיפ טיפול קצר במשפט אחד בעברית - תדירות השקיה או צרכי אור\"}. אם אינך בטוח בזיהוי, תן את הניחוש הטוב ביותר וציין את אי הוודאות בקצרה בשדה notes.",
+        mediaType,
+        base64Data,
+        "זהה את הצמח בתמונה הזו."
+      );
       if (data.error) throw new Error(data.error.message || 'שגיאת שרת בזיהוי');
 
       const textBlock = (data.content || []).find(b => b.type === "text");
@@ -775,32 +776,17 @@
       }
 
       try {
-        const response = await withTimeout(
-          fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-6",
-              max_tokens: 500,
-              system: "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה כמו \"עלים צהובים\", \"diagnosis\": \"תיאור קצר במשפט אחד של מה שרואים בתמונה\", \"advice\": \"המלצת טיפול קצרה וברורה\"}. אם התמונה לא מספיק ברורה לאבחון מהימן, ציין זאת בשדה diagnosis וההמלצה תהיה לצלם מזווית/תאורה טובה יותר.",
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
-                    { type: "text", text: "בדוק את מצב הבריאות של הצמח בתמונה הזו." }
-                  ]
-                }
-              ]
-            })
-          }),
+        const data = await withTimeout(
+          callPlantAI(
+            "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה כמו \"עלים צהובים\", \"diagnosis\": \"תיאור קצר במשפט אחד של מה שרואים בתמונה\", \"advice\": \"המלצת טיפול קצרה וברורה\"}. אם התמונה לא מספיק ברורה לאבחון מהימן, ציין זאת בשדה diagnosis וההמלצה תהיה לצלם מזווית/תאורה טובה יותר.",
+            mediaType,
+            base64Data,
+            "בדוק את מצב הבריאות של הצמח בתמונה הזו."
+          ),
           20000,
           'הבדיקה לקחה יותר מדי זמן - נסי שוב'
         );
 
-        if (!response.ok) throw new Error('שגיאת רשת (קוד ' + response.status + ')');
-
-        const data = await response.json();
         if (data.error) throw new Error(data.error.message || 'שגיאת שרת בבדיקה');
 
         const textBlock = (data.content || []).find(b => b.type === "text");
@@ -863,31 +849,17 @@
       quickHealthStatus.classList.remove('error');
 
       try {
-        const response = await withTimeout(
-          fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-6",
-              max_tokens: 500,
-              system: "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה, \"diagnosis\": \"תיאור קצר במשפט אחד\", \"advice\": \"המלצת טיפול קצרה\"}. אם לא ברור, ציין זאת ב-diagnosis.",
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
-                    { type: "text", text: "בדוק את מצב הבריאות של הצמח בתמונה הזו." }
-                  ]
-                }
-              ]
-            })
-          }),
+        const data = await withTimeout(
+          callPlantAI(
+            "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה, \"diagnosis\": \"תיאור קצר במשפט אחד\", \"advice\": \"המלצת טיפול קצרה\"}. אם לא ברור, ציין זאת ב-diagnosis.",
+            mediaType,
+            base64Data,
+            "בדוק את מצב הבריאות של הצמח בתמונה הזו."
+          ),
           20000,
           'הבדיקה לקחה יותר מדי זמן - נסי שוב'
         );
 
-        if (!response.ok) throw new Error('שגיאת רשת (קוד ' + response.status + ')');
-        const data = await response.json();
         if (data.error) throw new Error(data.error.message || 'שגיאת שרת בבדיקה');
 
         const textBlock = (data.content || []).find(b => b.type === "text");
