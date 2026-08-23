@@ -1,0 +1,36 @@
+<title>בדיקת פענוח אודיו</title>
+<div style="font-family:system-ui,sans-serif;padding:30px;background:#F7F5EF;min-height:100vh;box-sizing:border-box;direction:rtl;">
+<h2>בדיקת פענוח קבצי אודיו</h2>
+<div id="log" style="white-space:pre-wrap;background:white;padding:16px;border-radius:8px;border:1px solid #ccc;font-family:monospace;font-size:14px;"></div>
+</div>
+<script>
+const log = document.getElementById('log');
+function line(s) { log.textContent += s + "\n"; console.log(s); }
+
+async function testFile(url) {
+  line("--- " + url + " ---");
+  try {
+    const resp = await fetch(url);
+    line("fetch status: " + resp.status + ", content-type: " + resp.headers.get('content-type') + ", content-length: " + resp.headers.get('content-length'));
+    const buf = await resp.arrayBuffer();
+    line("bytes received: " + buf.byteLength);
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      const audioBuf = await ctx.decodeAudioData(buf.slice(0));
+      line("DECODE SUCCESS: duration=" + audioBuf.duration.toFixed(2) + "s, channels=" + audioBuf.numberOfChannels + ", sampleRate=" + audioBuf.sampleRate);
+    } catch (decodeErr) {
+      line("DECODE FAILED: " + decodeErr.name + " - " + decodeErr.message);
+    }
+  } catch (e) {
+    line("FETCH FAILED: " + e.message);
+  }
+  line("");
+}
+
+(async () => {
+  await testFile('test2.mp3');
+  await testFile('test.mp3');
+  await testFile('https://www.w3schools.com/html/horse.mp3');
+  line("=== סיום הבדיקה ===");
+})();
+</script>
