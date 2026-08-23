@@ -135,6 +135,9 @@
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 28px; margin-bottom: 32px;
   }
+  .guide-step { border-radius: 10px; padding: 10px; margin: 0 -10px 12px; transition: background 0.2s ease; }
+  .guide-step.active { background: #EEF3E4; }
+  .guide-step.active label { color: var(--sprout); }
   .web-search h2 { font-size: 1.3rem; margin-bottom: 6px; }
   .web-search .sub { color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 18px; }
   .web-search-results {
@@ -425,32 +428,39 @@
     <!-- מדריך שימוש קצר -->
     <section class="account-settings" id="guide-section" style="display:none;">
       <h2>מדריך שימוש ב-AviGrow</h2>
-      <p class="sub">סקירה קצרה של האפשרויות באתר.</p>
+      <p class="sub">סקירה קצרה של האפשרויות באתר, עם הסבר קולי בעברית.</p>
       <div id="guide-content">
-        <img src="avigrow-guide.gif" alt="הדגמת ניווט באתר AviGrow" style="width:100%; border-radius:12px; border:1px solid var(--line); margin-bottom:20px;">
-        <div class="field">
+        <img src="avigrow-guide.gif" alt="הדגמת ניווט באתר AviGrow" style="width:100%; border-radius:12px; border:1px solid var(--line); margin-bottom:16px;">
+
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:18px;">
+          <button type="button" id="guide-play-btn" class="btn" style="padding:10px 22px;">🔊 נגני את ההסבר</button>
+          <button type="button" id="guide-stop-btn" class="btn btn-ghost" style="display:none; padding:10px 22px;">⏹ עצירה</button>
+          <span id="guide-voice-status" class="sub" style="margin:0;"></span>
+        </div>
+
+        <div class="field guide-step" data-step="0">
           <label>🌱 הוספת צמח חדש</label>
           <p class="sub">צלמי את הצמח שלך - הזיהוי (שם ועצות טיפול) יתבצע אוטומטית, ואפשר לתקן לפני השמירה.</p>
         </div>
-        <div class="field">
+        <div class="field guide-step" data-step="1">
           <label>🌐 חיפוש צמח באינטרנט</label>
           <p class="sub">מחפשים צמח לפי שם (למשל לפני קנייה) ומוסיפים אותו לרשימה כ"צמח מהרשת", עם תמונה ומידע מוויקיפדיה.</p>
         </div>
-        <div class="field">
+        <div class="field guide-step" data-step="2">
           <label>🩺 בדיקת בריאות מהירה</label>
           <p class="sub">צילום מהיר של כל צמח (גם כזה שעדיין לא ברשימה) לקבלת אבחון מצב מיידי.</p>
         </div>
-        <div class="field">
+        <div class="field guide-step" data-step="3">
           <label>🔍 חיפוש וסינון</label>
           <p class="sub">תיבת החיפוש מסננת תוך כדי הקלדה, וכפתורי "הכל / הצמחים שלי / מהרשת" מסננים לפי מקור הצמח.</p>
         </div>
-        <div class="field">
+        <div class="field guide-step" data-step="4">
           <label>💾 ייצוא וייבוא</label>
           <p class="sub">שמירת גיבוי של כל הצמחים לקובץ, או טעינת גיבוי קיים.</p>
         </div>
-        <div class="field">
+        <div class="field guide-step" data-step="5">
           <label>👤 חשבון</label>
-          <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), והתנתקות מהחשבון.</p>
+          <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), צפייה שוב במדריך הזה, והתנתקות מהחשבון.</p>
         </div>
       </div>
       <button type="button" class="close-section-btn" id="close-guide-btn">סגירה</button>
@@ -1532,6 +1542,75 @@
   document.getElementById('show-guide-btn').addEventListener('click', () => {
     showSection(guideSection);
   });
+  document.getElementById('close-guide-btn').addEventListener('click', stopGuideNarration);
+
+  // ===== הסבר קולי בעברית למדריך השימוש (Web Speech API - רץ כולו בדפדפן, בלי שרת) =====
+  const GUIDE_SCRIPT = [
+    'ברוכה הבאה ל-אבי גרואו. לפתיחת התפריט, לחצי על שלושת הקווים בפינה העליונה.',
+    'בקבוצה צמחים, האפשרות הוספת צמח חדש מאפשרת לצלם צמח שיש לך בבית. השם והעצות לטיפול יזוהו אוטומטית מהתמונה, ואפשר לתקן אותם לפני השמירה.',
+    'באותה קבוצה, האפשרות חיפוש צמח באינטרנט מאפשרת לחפש צמח לפי שם, למשל לפני שקונים אותו, ולהוסיף אותו לרשימה כצמח מהרשת, יחד עם תמונה ומידע.',
+    'בקבוצה בריאות, האפשרות בדיקת בריאות מהירה מאפשרת לצלם כל צמח, גם כזה שעדיין לא ברשימה, ולקבל אבחון מצב מיידי.',
+    'מתחת לכותרת הראשית יש תיבת חיפוש שמסננת את הרשימה תוך כדי הקלדה, ולידה שלושה כפתורים: הכל, הצמחים שלי, ומהרשת, לסינון לפי מקור הצמח.',
+    'בקבוצה נתונים אפשר לייצא גיבוי של כל הצמחים לקובץ, או לייבא גיבוי קיים בחזרה.',
+    'ולבסוף, בקבוצה חשבון אפשר לעדכן שם פרטי, שם משפחה, וכתובת אימייל, לצפות שוב במדריך הזה, ולהתנתק מהחשבון. זהו הסיור הקצר, בהצלחה עם הצמחים.'
+  ];
+
+  let guideVoice = null;
+  let guideSpeaking = false;
+
+  function pickHebrewVoice() {
+    const voices = speechSynthesis.getVoices();
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he')) || null;
+  }
+  // הרשימה נטענת אסינכרונית בחלק מהדפדפנים
+  speechSynthesis.onvoiceschanged = () => { guideVoice = pickHebrewVoice(); };
+  guideVoice = pickHebrewVoice();
+
+  function highlightGuideStep(index) {
+    document.querySelectorAll('.guide-step').forEach(el => {
+      el.classList.toggle('active', Number(el.dataset.step) === index);
+    });
+    if (index >= 0) {
+      const el = document.querySelector(`.guide-step[data-step="${index}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function stopGuideNarration() {
+    speechSynthesis.cancel();
+    guideSpeaking = false;
+    highlightGuideStep(-1);
+    document.getElementById('guide-play-btn').style.display = 'inline-block';
+    document.getElementById('guide-stop-btn').style.display = 'none';
+    document.getElementById('guide-voice-status').textContent = '';
+  }
+
+  function speakGuideStep(index) {
+    if (index >= GUIDE_SCRIPT.length) { stopGuideNarration(); return; }
+    highlightGuideStep(index);
+    const utter = new SpeechSynthesisUtterance(GUIDE_SCRIPT[index]);
+    utter.lang = 'he-IL';
+    if (guideVoice) utter.voice = guideVoice;
+    utter.onend = () => { if (guideSpeaking) speakGuideStep(index + 1); };
+    utter.onerror = () => { if (guideSpeaking) speakGuideStep(index + 1); };
+    speechSynthesis.speak(utter);
+  }
+
+  document.getElementById('guide-play-btn').addEventListener('click', () => {
+    if (!guideVoice) guideVoice = pickHebrewVoice();
+    if (!guideVoice && !('speechSynthesis' in window)) {
+      document.getElementById('guide-voice-status').textContent = 'הדפדפן הזה לא תומך בהקראה קולית';
+      return;
+    }
+    speechSynthesis.cancel();
+    guideSpeaking = true;
+    document.getElementById('guide-play-btn').style.display = 'none';
+    document.getElementById('guide-stop-btn').style.display = 'inline-block';
+    document.getElementById('guide-voice-status').textContent = guideVoice ? '' : '(לא נמצא קול עברי - ייתכן מבטא לא מדויק)';
+    speakGuideStep(0);
+  });
+
+  document.getElementById('guide-stop-btn').addEventListener('click', stopGuideNarration);
 </script>
 
 </body>
