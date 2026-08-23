@@ -1,0 +1,31 @@
+<title>בדיקת ניגון Web Audio</title>
+<div style="font-family:system-ui,sans-serif;padding:30px;background:#F7F5EF;min-height:100vh;box-sizing:border-box;direction:rtl;text-align:center;">
+<h2>בדיקת ניגון בפועל</h2>
+<button id="playBtn" style="font-size:20px;padding:16px 32px;border-radius:10px;border:none;background:#5B7A3A;color:white;cursor:pointer;">🔊 נגן עכשיו</button>
+<div id="log" style="white-space:pre-wrap;background:white;padding:16px;border-radius:8px;border:1px solid #ccc;font-family:monospace;font-size:14px;margin-top:20px;text-align:right;"></div>
+</div>
+<script>
+const log = document.getElementById('log');
+function line(s) { log.textContent += s + "\n"; }
+
+document.getElementById('playBtn').addEventListener('click', async () => {
+  log.textContent = '';
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    line("AudioContext state: " + ctx.state);
+    if (ctx.state === 'suspended') { await ctx.resume(); line("after resume: " + ctx.state); }
+    const resp = await fetch('test2.mp3');
+    const buf = await resp.arrayBuffer();
+    const audioBuf = await ctx.decodeAudioData(buf);
+    line("decoded, duration=" + audioBuf.duration.toFixed(2) + "s");
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+    src.onended = () => line("סיום ניגון");
+    src.start(0);
+    line("ניגון התחיל - את אמורה לשמוע עכשיו!");
+  } catch (e) {
+    line("שגיאה: " + e.name + " - " + e.message);
+  }
+});
+</script>
