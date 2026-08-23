@@ -81,7 +81,7 @@
     cursor: pointer; padding: 0; margin-top: 14px; text-decoration: underline;
   }
 
-  /* ===== חיפוש ואינדקס א"ב ===== */
+  /* ===== חיפוש ===== */
   .search-section { margin-bottom: 20px; }
   .search-input {
     width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px;
@@ -89,14 +89,6 @@
     margin-bottom: 12px;
   }
   .search-input:focus { outline: 2px solid var(--sprout); outline-offset: 1px; }
-  .alpha-index { display: flex; flex-wrap: wrap; gap: 6px; }
-  .alpha-btn {
-    min-width: 30px; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--line);
-    background: var(--card); color: var(--ink-soft); font-size: 0.82rem; cursor: pointer;
-    font-family: 'Inter', sans-serif;
-  }
-  .alpha-btn:hover { border-color: var(--sprout); color: var(--sprout); }
-  .alpha-btn.active { background: var(--sprout); border-color: var(--sprout); color: #fff; }
 
   /* ===== טופס הוספת צמח ===== */
   .add-plant {
@@ -257,10 +249,9 @@
       </form>
     </section>
 
-    <!-- חיפוש ואינדקס -->
+    <!-- חיפוש -->
     <section class="search-section">
       <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
-      <div class="alpha-index" id="alpha-index"><!-- נבנה דינמית ב-JS --></div>
     </section>
 
     <!-- רשימת הצמחים השמורים -->
@@ -450,35 +441,8 @@
     quickHealthSection.style.display = 'none';
   });
 
-  // ===== חיפוש ואינדקס א"ב =====
+  // ===== חיפוש =====
   let searchQuery = '';
-  let activeLetter = null; // אות פעילה מהאינדקס, אם נבחרה
-
-  const HEBREW_LETTERS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
-
-  function buildAlphaIndex() {
-    const container = document.getElementById('alpha-index');
-    const allBtn = document.createElement('button');
-    allBtn.type = 'button';
-    allBtn.className = 'alpha-btn' + (activeLetter === null ? ' active' : '');
-    allBtn.textContent = 'הכל';
-    allBtn.addEventListener('click', async () => { activeLetter = null; await renderPlants(); buildAlphaIndex(); });
-    container.innerHTML = '';
-    container.appendChild(allBtn);
-
-    HEBREW_LETTERS.forEach(letter => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'alpha-btn' + (activeLetter === letter ? ' active' : '');
-      btn.textContent = letter;
-      btn.addEventListener('click', async () => {
-        activeLetter = (activeLetter === letter) ? null : letter;
-        await renderPlants();
-        buildAlphaIndex();
-      });
-      container.appendChild(btn);
-    });
-  }
 
   document.getElementById('search-input').addEventListener('input', async (e) => {
     searchQuery = e.target.value.trim().toLowerCase();
@@ -490,8 +454,7 @@
       const matchesSearch = !searchQuery ||
         (p.nameHe && p.nameHe.toLowerCase().includes(searchQuery)) ||
         (p.nameEn && p.nameEn.toLowerCase().includes(searchQuery));
-      const matchesLetter = !activeLetter || (p.nameHe && p.nameHe.trim().startsWith(activeLetter));
-      return matchesSearch && matchesLetter;
+      return matchesSearch;
     });
   }
 
@@ -887,7 +850,6 @@
 
   // טעינה ראשונית עם פתיחת הדף
   (async () => {
-    buildAlphaIndex();
     await renderPlants();
   })();
 </script>
