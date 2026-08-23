@@ -1013,15 +1013,27 @@
     }[c]));
   }
 
+  // מילות מפתח בוטניות - משמשות לסנן תוצאות ולוודא שמדובר בצמח, לא באדם/מקום/בניין וכד'
+  const PLANT_KEYWORDS_HE = /צמח|פרח|עלים|עלה|גבעול|שורש|שיח|עץ|עצי|עצים|זן|זרעים|נוי|גינון|עציץ|תבלין|פורח|פריחה|בוטני/;
+  const PLANT_KEYWORDS_EN = /plant|flora|flower|leaf|leaves|shrub|tree|species|genus|botan|houseplant|foliage|succulent|fern|vine|garden/i;
+
+  function looksLikePlant(lang, categories, extract) {
+    const keywordRe = lang === 'he' ? PLANT_KEYWORDS_HE : PLANT_KEYWORDS_EN;
+    const inCategories = (categories || []).some(c => keywordRe.test(c.title || ''));
+    const inExtract = keywordRe.test(extract || '');
+    return inCategories || inExtract;
+  }
+
   async function searchWikipedia(lang, query) {
     // גרשיים סביב מונח החיפוש = התאמת ביטוי, פחות "תוצאות תועות" מהתאמות מקריות של אותיות בודדות
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent('"' + query + '"')}&gsrlimit=8&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=300&exintro=1&explaintext=1&exchars=180&format=json&origin=*`;
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent('"' + query + '"')}&gsrlimit=10&prop=pageimages|extracts|categories&piprop=thumbnail&pithumbsize=300&exintro=1&explaintext=1&exchars=180&cllimit=50&clshow=!hidden&format=json&origin=*`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('שגיאת רשת בחיפוש (קוד ' + res.status + ')');
     const data = await res.json();
     const pages = (data.query && data.query.pages) ? Object.values(data.query.pages) : [];
     return pages
       .filter(pg => pg.thumbnail && pg.thumbnail.source) // בלי תמונה אין מה להציג/לשמור
+      .filter(pg => looksLikePlant(lang, pg.categories, pg.extract)) // רק תוצאות שנראות כמו צמח
       .sort((a, b) => (a.index || 0) - (b.index || 0)) // המפתחות ב-JSON אינם מובטחים לשמור על סדר הרלוונטיות
       .map(pg => ({
         title: pg.title,
