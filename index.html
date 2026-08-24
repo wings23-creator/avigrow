@@ -1557,13 +1557,17 @@
 
   let guideSpeaking = false;
   const guideAudioEl = new Audio();
+  // הקלטה 0 (ברוכה הבאה) והקלטה 1 (הוספת צמח חדש) שייכות שתיהן לכרטיס הראשון ("הוספת צמח חדש"),
+  // כי אין כרטיס נפרד לפתיחה - רק מהקלטה 2 ואילך יש התאמה ישירה של הקלטה לכרטיס.
+  const GUIDE_CARD_FOR_AUDIO = [0, 0, 1, 2, 3, 4, 5];
 
-  function highlightGuideStep(index) {
+  function highlightGuideStep(audioIndex) {
+    const cardIndex = audioIndex >= 0 ? GUIDE_CARD_FOR_AUDIO[audioIndex] : -1;
     document.querySelectorAll('.guide-step').forEach(el => {
-      el.classList.toggle('active', Number(el.dataset.step) === index);
+      el.classList.toggle('active', Number(el.dataset.step) === cardIndex);
     });
-    if (index >= 0) {
-      const el = document.querySelector(`.guide-step[data-step="${index}"]`);
+    if (cardIndex >= 0) {
+      const el = document.querySelector(`.guide-step[data-step="${cardIndex}"]`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
