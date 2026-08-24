@@ -429,6 +429,10 @@
           <input type="email" id="account-email">
           <p class="sub" style="margin:6px 0 0;">שינוי כתובת האימייל ידרוש קוד אימות לכתובת החדשה. הצמחים שלך יישארו איתך גם אחרי השינוי.</p>
         </div>
+        <div class="field" style="display:flex; align-items:center; gap:8px; flex-direction:row-reverse; justify-content:flex-end;">
+          <label for="account-notify-watering" style="margin:0;">📧 קבלת תזכורות השקיה במייל</label>
+          <input type="checkbox" id="account-notify-watering" style="width:18px; height:18px; margin:0;">
+        </div>
         <button type="button" id="account-save-btn" class="btn">שמירה</button>
         <button type="button" class="btn btn-ghost" id="close-account-btn">ביטול</button>
         <p id="account-form-status" class="auth-status"></p>
@@ -1539,9 +1543,11 @@
     accountOriginalEmail = user.email || '';
     document.getElementById('account-email').value = accountOriginalEmail;
 
-    const { data: profile } = await sbClient.from('profiles').select('first_name,last_name').eq('id', user.id).maybeSingle();
+    const { data: profile } = await sbClient.from('profiles').select('first_name,last_name,notify_watering').eq('id', user.id).maybeSingle();
     document.getElementById('account-first-name').value = (profile && profile.first_name) || '';
     document.getElementById('account-last-name').value = (profile && profile.last_name) || '';
+    // ברירת מחדל: התראות דלוקות אם אין עדיין ערך שמור (משתמש חדש/ישן לפני התוספת)
+    document.getElementById('account-notify-watering').checked = !profile || profile.notify_watering !== false;
   });
 
   document.getElementById('close-account-btn').addEventListener('click', () => {
@@ -1552,6 +1558,7 @@
     const firstName = document.getElementById('account-first-name').value.trim();
     const lastName = document.getElementById('account-last-name').value.trim();
     const newEmail = document.getElementById('account-email').value.trim();
+    const notifyWatering = document.getElementById('account-notify-watering').checked;
 
     accountFormStatus.classList.remove('error');
     if (!firstName || !lastName) {
@@ -1570,7 +1577,7 @@
     try {
       const { data: { user } } = await sbClient.auth.getUser();
       const { error: profileError } = await sbClient.from('profiles')
-        .update({ first_name: firstName, last_name: lastName })
+        .update({ first_name: firstName, last_name: lastName, notify_watering: notifyWatering })
         .eq('id', user.id);
       if (profileError) throw profileError;
       document.getElementById('menu-user-name').textContent = `${firstName} ${lastName}`.trim();
