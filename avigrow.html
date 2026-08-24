@@ -227,6 +227,21 @@
     cursor: pointer; margin-top: 8px; padding: 0; font-family: 'Inter', sans-serif;
   }
 
+  /* ===== ניהול השקיה ===== */
+  .watering-box { margin: 10px 0; padding: 10px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+  .watering-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .watering-row label { font-size: 0.82rem; }
+  .watering-row input[type="number"] {
+    width: 56px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line);
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; text-align: center;
+  }
+  .watering-save-btn { padding: 6px 14px; font-size: 0.8rem; }
+  .watering-status { font-size: 0.85rem; margin-top: 8px; font-weight: 600; }
+  .watering-status.ok { color: var(--sprout); }
+  .watering-status.due { color: #B8860B; }
+  .watering-status.overdue { color: var(--clay); }
+  .watering-done-btn { margin-top: 8px; padding: 7px 16px; font-size: 0.82rem; }
+
   /* בדיקת בריאות בכרטיס צמח */
   .health-input { display: none; }
   .health-btn {
@@ -581,7 +596,9 @@
       notes: row.notes,
       photo: row.photo_base64,
       source: row.source || 'mine',
-      addedAt: row.added_at ? new Date(row.added_at).toLocaleDateString('he-IL') : ''
+      addedAt: row.added_at ? new Date(row.added_at).toLocaleDateString('he-IL') : '',
+      wateringIntervalDays: row.watering_interval_days || null,
+      lastWateredAt: row.last_watered_at || null
     };
     if (row.health_status) {
       plant.health = {
@@ -833,6 +850,61 @@
     if (!response.ok) throw new Error('עדכון הבריאות נכשל (קוד ' + response.status + ')');
   }
 
+  // ===== ניהול השקיה =====
+  async function updateWateringRow(id, fields) {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: await getSupabaseHeaders(),
+      body: JSON.stringify(fields)
+    });
+    if (!response.ok) throw new Error('עדכון ההשקיה נכשל (קוד ' + response.status + ')');
+  }
+
+  // מחשבת את מצב ההשקיה של צמח: כמה ימים נשארו / כמה איחור יש
+  function computeWateringStatus(p) {
+    if (!p.wateringIntervalDays) return null;
+    if (!p.lastWateredAt) {
+      return { text: 'עוד לא סומנה השקיה - לחצי "השקיתי" בפעם הראשונה', cls: 'due' };
+    }
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysSince = Math.floor((Date.now() - new Date(p.lastWateredAt).getTime()) / msPerDay);
+    const daysLeft = p.wateringIntervalDays - daysSince;
+    if (daysLeft > 0) {
+      return { text: `💧 השקיה הבאה בעוד ${daysLeft} ${daysLeft === 1 ? 'יום' : 'ימים'}`, cls: 'ok' };
+    }
+    if (daysLeft === 0) {
+      return { text: '💧 להשקות היום!', cls: 'due' };
+    }
+    return { text: `⚠️ באיחור ${-daysLeft} ${-daysLeft === 1 ? 'יום' : 'ימים'} בהשקיה`, cls: 'overdue' };
+  }
+
+  async function saveWateringInterval(id) {
+    const input = document.getElementById('watering-interval-' + id);
+    const statusEl = document.getElementById('watering-save-status-' + id);
+    const raw = input.value.trim();
+    const days = raw === '' ? null : parseInt(raw, 10);
+    if (raw !== '' && (!Number.isFinite(days) || days < 1)) {
+      if (statusEl) statusEl.textContent = 'יש להזין מספר ימים תקין (1 ומעלה), או להשאיר ריק לביטול';
+      return;
+    }
+    try {
+      await updateWateringRow(id, { watering_interval_days: days });
+      await renderPlants();
+    } catch (err) {
+      if (statusEl) statusEl.textContent = 'שגיאה: ' + ((err && err.message) || String(err));
+    }
+  }
+
+  async function markWatered(id) {
+    try {
+      await updateWateringRow(id, { last_watered_at: new Date().toISOString() });
+      await renderPlants();
+    } catch (err) {
+      showGlobalError((err && err.message) || String(err));
+    }
+  }
+
   // ===== תצוגה מקדימה לתמונה שנבחרה =====
   const photoInput = document.getElementById('photo-input');
   const photoPreview = document.getElementById('photo-preview');
@@ -999,11 +1071,26 @@
           ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
           <div class="date">נוסף בתאריך ${p.addedAt}</div>
 
-          ${p.source === 'web' ? '' : `
+          ${p.source === 'web' ? '' : (() => {
+            const w = computeWateringStatus(p);
+            return `
+          <div class="watering-box">
+            <div class="watering-row">
+              <label for="watering-interval-${p.id}">💧 השקיה כל</label>
+              <input type="number" min="1" id="watering-interval-${p.id}" value="${p.wateringIntervalDays || ''}" placeholder="ימים">
+              <span class="sub" style="margin:0;">ימים</span>
+              <button type="button" class="btn btn-ghost watering-save-btn" onclick="saveWateringInterval(${p.id})">שמירה</button>
+            </div>
+            <p id="watering-save-status-${p.id}" class="identify-status error" style="display:none;"></p>
+            ${w ? `
+              <div class="watering-status ${w.cls}">${w.text}</div>
+              <button type="button" class="btn watering-done-btn" onclick="markWatered(${p.id})">✅ השקיתי היום</button>
+            ` : ''}
+          </div>
           <input type="file" id="health-input-${p.id}" class="health-input" accept="image/*" onchange="checkPlantHealth(${p.id})">
           <label for="health-input-${p.id}" class="health-btn">🩺 בדיקת בריאות</label>
           <p id="health-status-${p.id}" class="health-status-msg"></p>
-          `}
+          `; })()}
 
           ${p.health ? `
             <div class="health-result ${p.health.status === 'תקין' ? '' : 'warn'}">
