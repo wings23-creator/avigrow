@@ -1943,20 +1943,38 @@
     adminSection.style.display = 'none';
   });
 
+  function switchAdminTab(tabName) {
+    document.querySelectorAll('#admin-tabs .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.adminTab === tabName));
+    document.getElementById('admin-plants-tab').style.display = tabName === 'plants' ? 'block' : 'none';
+    document.getElementById('admin-users-tab').style.display = tabName === 'users' ? 'block' : 'none';
+  }
+
   document.getElementById('admin-tabs').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-admin-tab]');
     if (!btn) return;
-    document.querySelectorAll('#admin-tabs .filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-    document.getElementById('admin-plants-tab').style.display = btn.dataset.adminTab === 'plants' ? 'block' : 'none';
-    document.getElementById('admin-users-tab').style.display = btn.dataset.adminTab === 'users' ? 'block' : 'none';
+    switchAdminTab(btn.dataset.adminTab);
   });
 
   // ===== חיפוש בניהול נתונים - מסנן תוך כדי הקלדה (אות ראשונה, שנייה וכו') =====
   let adminPlantsCache = [];
   let adminUsersCache = [];
   let adminUserNameById = {};
+  let adminPlantsUserIdFilter = null; // כשמגיעים מ"הצמחים של המשתמש" בטאב המשתמשים - מסנן לפי מזהה מדויק
+
+  // קופצים מהטאב "משתמשים" לטאב "צמחים", מסוננים כבר רק לצמחים של אותו משתמש
+  function jumpToUserPlants(userId, displayName) {
+    adminPlantsUserIdFilter = userId;
+    const searchInput = document.getElementById('admin-plants-search');
+    searchInput.value = displayName;
+    switchAdminTab('plants');
+    applyAdminPlantsFilter();
+  }
 
   function applyAdminPlantsFilter() {
+    if (adminPlantsUserIdFilter) {
+      renderAdminPlants(adminPlantsCache.filter(p => p.user_id === adminPlantsUserIdFilter));
+      return;
+    }
     const query = document.getElementById('admin-plants-search').value.trim().toLowerCase();
     if (!query) { renderAdminPlants(adminPlantsCache); return; }
     const filtered = adminPlantsCache.filter(p => {
@@ -1978,7 +1996,10 @@
     renderAdminUsers(filtered);
   }
 
-  document.getElementById('admin-plants-search').addEventListener('input', applyAdminPlantsFilter);
+  document.getElementById('admin-plants-search').addEventListener('input', () => {
+    adminPlantsUserIdFilter = null; // עריכה ידנית של תיבת החיפוש מבטלת את הסינון "לפי משתמש"
+    applyAdminPlantsFilter();
+  });
   document.getElementById('admin-users-search').addEventListener('input', applyAdminUsersFilter);
 
   async function loadAdminPlants() {
@@ -2101,10 +2122,15 @@
           <label><input type="checkbox" data-field="notify_watering" ${u.notify_watering !== false ? 'checked' : ''}> התראות השקיה</label>
         </div>
         <div class="admin-actions">
+          <button type="button" class="btn btn-ghost" data-action="view-plants">🌿 הצמחים שלו/ה</button>
           <button type="button" class="btn" data-action="save">💾 שמירה</button>
           ${u.id === ADMIN_USER_ID ? '' : '<button type="button" class="btn btn-ghost" data-action="delete">🗑️ מחיקת פרופיל</button>'}
         </div>
       `;
+      row.querySelector('[data-action="view-plants"]').addEventListener('click', () => {
+        const displayName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email || '';
+        jumpToUserPlants(u.id, displayName);
+      });
       row.querySelector('[data-action="save"]').addEventListener('click', async () => {
         const updates = {
           first_name: row.querySelector('[data-field="first_name"]').value.trim(),
