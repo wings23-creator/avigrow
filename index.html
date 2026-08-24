@@ -365,6 +365,7 @@
     <header>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
+      <button type="button" id="home-btn" class="menu-toggle" aria-label="חזרה למסך הבית" title="בית" style="font-size:1.15rem;">🏠</button>
       <button type="button" id="menu-toggle-btn" class="menu-toggle" aria-label="פתיחת תפריט">
         <span></span><span></span><span></span>
       </button>
@@ -818,6 +819,12 @@
     allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  // כפתור "בית" - סוגר כל מסך/סקשן פתוח וחוזר לדף הנחיתה הראשי
+  document.getElementById('home-btn').addEventListener('click', () => {
+    allToggleSections.forEach(s => { s.style.display = 'none'; });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
   // רשימת הצמחים - נגישה רק דרך תפריט ההמבורגר, לא מוצגת אוטומטית בדף הנחיתה
   document.getElementById('show-plants-list-btn').addEventListener('click', () => showSection(plantsListSection));
