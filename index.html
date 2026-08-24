@@ -246,6 +246,25 @@
   .watering-status.overdue { color: var(--clay); }
   .watering-done-btn { margin-top: 8px; padding: 7px 16px; font-size: 0.82rem; }
 
+  /* ===== ניהול מערכת (אדמין) ===== */
+  .admin-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .admin-table { display: flex; flex-direction: column; gap: 10px; }
+  .admin-row {
+    display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;
+    padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg);
+  }
+  .admin-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+  .admin-row .admin-fields { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; min-width: 220px; align-items: center; }
+  .admin-row .admin-fields input[type="text"],
+  .admin-row .admin-fields input[type="number"],
+  .admin-row .admin-fields select {
+    padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line);
+    font-family: 'Inter', sans-serif; font-size: 0.82rem;
+  }
+  .admin-row .admin-fields label { font-size: 0.82rem; display: flex; align-items: center; gap: 4px; }
+  .admin-row .admin-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .admin-row .admin-actions .btn, .admin-row .admin-actions .btn-ghost { padding: 7px 12px; font-size: 0.8rem; }
+
   /* בדיקת בריאות בכרטיס צמח */
   .health-input { display: none; }
   .health-btn {
@@ -389,6 +408,12 @@
         <button type="button" id="show-guide-btn" class="menu-item">🎬 מדריך שימוש</button>
         <button type="button" id="logout-btn" class="menu-item">🚪 התנתקות</button>
       </div>
+
+      <!-- קבוצה זו מוצגת רק למנהלת המערכת - ה-JS חושף אותה לפי currentUserId, וההרשאה האמיתית נאכפת ב-RLS -->
+      <div class="menu-group" id="admin-menu-group" style="display:none;">
+        <div class="menu-group-title">🛠️ ניהול מערכת</div>
+        <button type="button" id="show-admin-btn" class="menu-item">🛠️ ניהול נתונים</button>
+      </div>
     </nav>
 
     <!-- בדיקת בריאות מהירה - בלי קשר לצמח קיים ברשימה -->
@@ -494,6 +519,28 @@
       <button type="button" class="btn btn-ghost" id="close-guide-btn">סגירה</button>
     </section>
 
+    <!-- ניהול מערכת - נטען ומוצג רק למנהלת; ההגנה האמיתית היא Row Level Security ב-Supabase -->
+    <section class="account-settings" id="admin-section" style="display:none;">
+      <h2>🛠️ ניהול נתונים</h2>
+      <p class="sub">גישה למנהלת המערכת בלבד. עריכה או מחיקה כאן משפיעה על הנתונים בפועל של כל המשתמשים - בזהירות.</p>
+
+      <div class="admin-tabs" id="admin-tabs">
+        <button type="button" class="filter-btn active" data-admin-tab="plants">🌿 צמחים</button>
+        <button type="button" class="filter-btn" data-admin-tab="users">👤 משתמשים</button>
+      </div>
+
+      <p id="admin-status" class="identify-status"></p>
+
+      <div id="admin-plants-tab">
+        <div id="admin-plants-list" class="admin-table"></div>
+      </div>
+      <div id="admin-users-tab" style="display:none;">
+        <div id="admin-users-list" class="admin-table"></div>
+      </div>
+
+      <button type="button" class="btn btn-ghost" id="close-admin-btn" style="margin-top:14px;">סגירה</button>
+    </section>
+
     <!-- טופס הוספת צמח חדש -->
     <section class="add-plant" id="add-plant-section" style="display:none;">
       <h2>הוספת צמח חדש</h2>
@@ -559,7 +606,12 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_IYt_DMG8DzuLoxUVtqWCbw_X1LRC6_O';
 
   const SUPABASE_TABLE_URL = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/plants';
+  const SUPABASE_PROFILES_URL = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/profiles';
   const PLANT_AI_URL = SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/plant-ai';
+
+  // מזהה המשתמשת שהיא מנהלת המערכת - זה רק לצורך הצגה/הסתרה של תפריט הניהול בממשק.
+  // ההרשאה האמיתית נאכפת ב-Row Level Security policies על טבלאות plants/profiles ב-Supabase.
+  const ADMIN_USER_ID = '31f1b6b6-eb61-4f94-9b44-e84659f83400';
 
   // לקוח Supabase Auth (ניהול משתמשים, אימות באימייל, session)
   const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -749,7 +801,8 @@
   const webSearchSection = document.getElementById('web-search-section');
   const accountSection = document.getElementById('account-settings-section');
   const guideSection = document.getElementById('guide-section');
-  const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection];
+  const adminSection = document.getElementById('admin-section');
+  const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection, adminSection];
 
   function showSection(section) {
     allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
@@ -1407,14 +1460,22 @@
       await sbClient.from('profiles').upsert({
         id: user.id,
         first_name: pendingFirst || '',
-        last_name: pendingLast || ''
+        last_name: pendingLast || '',
+        email: user.email || null
       });
       localStorage.removeItem('avigrow_pending_first');
       localStorage.removeItem('avigrow_pending_last');
+    } else {
+      // עדכון שקט של המייל בכל כניסה (למקרה שהשתנה), בלי לגעת בשם השמור
+      await sbClient.from('profiles').update({ email: user.email || null }).eq('id', user.id);
     }
     const { data } = await sbClient.from('profiles').select('first_name,last_name').eq('id', user.id).maybeSingle();
     const nameEl = document.getElementById('menu-user-name');
     if (nameEl) nameEl.textContent = data ? `${data.first_name} ${data.last_name}`.trim() : (user.email || '');
+
+    // תפריט "ניהול מערכת" מוצג רק למנהלת (הרשאה אמיתית נאכפת ב-RLS, זה רק להצגה/הסתרה)
+    const adminGroup = document.getElementById('admin-menu-group');
+    if (adminGroup) adminGroup.style.display = (user.id === ADMIN_USER_ID) ? 'block' : 'none';
   }
 
   sbClient.auth.onAuthStateChange(async (event, session) => {
@@ -1709,6 +1770,191 @@
   });
 
   document.getElementById('guide-stop-btn').addEventListener('click', stopGuideNarration);
+
+  // ===== ניהול מערכת (אדמין בלבד) =====
+  // ההסתרה של הכפתור/הסקשן היא רק נוחות ממשק - ההגנה האמיתית היא ה-RLS policies
+  // על plants/profiles שמאפשרות למנהלת (ADMIN_USER_ID) לראות/לערוך/למחוק כל שורה.
+  let adminUserEmailById = {};
+
+  function setAdminStatus(msg, isError) {
+    const el = document.getElementById('admin-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('error', !!isError);
+  }
+
+  document.getElementById('show-admin-btn').addEventListener('click', () => {
+    showSection(adminSection);
+    loadAdminUsers().then(loadAdminPlants);
+  });
+  document.getElementById('close-admin-btn').addEventListener('click', () => {
+    adminSection.style.display = 'none';
+  });
+
+  document.getElementById('admin-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-admin-tab]');
+    if (!btn) return;
+    document.querySelectorAll('#admin-tabs .filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('admin-plants-tab').style.display = btn.dataset.adminTab === 'plants' ? 'block' : 'none';
+    document.getElementById('admin-users-tab').style.display = btn.dataset.adminTab === 'users' ? 'block' : 'none';
+  });
+
+  async function loadAdminPlants() {
+    setAdminStatus('טוענת צמחים...');
+    try {
+      const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
+        headers: await getSupabaseHeaders()
+      });
+      if (!response.ok) throw new Error('שגיאה בטעינת הצמחים (קוד ' + response.status + ')');
+      renderAdminPlants(await response.json());
+      setAdminStatus('');
+    } catch (err) {
+      setAdminStatus('שגיאה: ' + ((err && err.message) || String(err)), true);
+    }
+  }
+
+  function renderAdminPlants(rows) {
+    const container = document.getElementById('admin-plants-list');
+    container.innerHTML = '';
+    if (!rows.length) {
+      container.innerHTML = '<p class="sub">אין צמחים במערכת.</p>';
+      return;
+    }
+    rows.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      row.innerHTML = `
+        ${p.photo_base64 ? `<img src="${p.photo_base64}" alt="">` : ''}
+        <div class="admin-fields">
+          <input type="text" data-field="name_he" value="${escapeHtml(p.name_he || '')}" placeholder="שם (עברית)">
+          <input type="text" data-field="name_en" value="${escapeHtml(p.name_en || '')}" placeholder="שם (אנגלית)">
+          <select data-field="source">
+            <option value="mine" ${p.source === 'mine' ? 'selected' : ''}>הצמחים שלי</option>
+            <option value="web" ${p.source === 'web' ? 'selected' : ''}>מהרשת</option>
+          </select>
+          <input type="number" data-field="watering_interval_days" value="${p.watering_interval_days ?? ''}" placeholder="מרווח השקיה (ימים)" style="width:90px;">
+          <span class="sub" style="margin:0;">בעלים: ${escapeHtml(adminUserEmailById[p.user_id] || p.user_id || '—')}</span>
+        </div>
+        <div class="admin-actions">
+          <button type="button" class="btn" data-action="save">💾 שמירה</button>
+          <button type="button" class="btn btn-ghost" data-action="delete">🗑️ מחיקה</button>
+        </div>
+      `;
+      row.querySelector('[data-action="save"]').addEventListener('click', async () => {
+        const intervalVal = row.querySelector('[data-field="watering_interval_days"]').value;
+        const updates = {
+          name_he: row.querySelector('[data-field="name_he"]').value.trim(),
+          name_en: row.querySelector('[data-field="name_en"]').value.trim() || null,
+          source: row.querySelector('[data-field="source"]').value,
+          watering_interval_days: intervalVal ? Number(intervalVal) : null
+        };
+        try {
+          const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(p.id), {
+            method: 'PATCH',
+            headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=minimal' },
+            body: JSON.stringify(updates)
+          });
+          if (!response.ok) throw new Error('שמירה נכשלה (קוד ' + response.status + ')');
+          setAdminStatus('✓ הצמח נשמר');
+        } catch (err) {
+          setAdminStatus('שגיאה בשמירה: ' + ((err && err.message) || String(err)), true);
+        }
+      });
+      row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+        if (!confirm(`למחוק לצמיתות את הצמח "${p.name_he}"? הפעולה בלתי הפיכה.`)) return;
+        try {
+          const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(p.id), {
+            method: 'DELETE',
+            headers: await getSupabaseHeaders()
+          });
+          if (!response.ok) throw new Error('מחיקה נכשלה (קוד ' + response.status + ')');
+          row.remove();
+          setAdminStatus('✓ הצמח נמחק');
+        } catch (err) {
+          setAdminStatus('שגיאה במחיקה: ' + ((err && err.message) || String(err)), true);
+        }
+      });
+      container.appendChild(row);
+    });
+  }
+
+  async function loadAdminUsers() {
+    setAdminStatus('טוענת משתמשים...');
+    try {
+      const response = await fetch(SUPABASE_PROFILES_URL + '?select=id,email,first_name,last_name,notify_watering&order=created_at', {
+        headers: await getSupabaseHeaders()
+      });
+      if (!response.ok) throw new Error('שגיאה בטעינת המשתמשים (קוד ' + response.status + ')');
+      const rows = await response.json();
+      adminUserEmailById = {};
+      rows.forEach(u => { adminUserEmailById[u.id] = u.email; });
+      renderAdminUsers(rows);
+      setAdminStatus('');
+    } catch (err) {
+      setAdminStatus('שגיאה: ' + ((err && err.message) || String(err)), true);
+    }
+  }
+
+  function renderAdminUsers(rows) {
+    const container = document.getElementById('admin-users-list');
+    container.innerHTML = '';
+    if (!rows.length) {
+      container.innerHTML = '<p class="sub">אין משתמשים.</p>';
+      return;
+    }
+    rows.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'admin-row';
+      row.innerHTML = `
+        <div class="admin-fields">
+          <span class="sub" style="margin:0;">${escapeHtml(u.email || '')}</span>
+          <input type="text" data-field="first_name" value="${escapeHtml(u.first_name || '')}" placeholder="שם פרטי">
+          <input type="text" data-field="last_name" value="${escapeHtml(u.last_name || '')}" placeholder="שם משפחה">
+          <label><input type="checkbox" data-field="notify_watering" ${u.notify_watering !== false ? 'checked' : ''}> התראות השקיה</label>
+        </div>
+        <div class="admin-actions">
+          <button type="button" class="btn" data-action="save">💾 שמירה</button>
+          ${u.id === ADMIN_USER_ID ? '' : '<button type="button" class="btn btn-ghost" data-action="delete">🗑️ מחיקת פרופיל</button>'}
+        </div>
+      `;
+      row.querySelector('[data-action="save"]').addEventListener('click', async () => {
+        const updates = {
+          first_name: row.querySelector('[data-field="first_name"]').value.trim(),
+          last_name: row.querySelector('[data-field="last_name"]').value.trim(),
+          notify_watering: row.querySelector('[data-field="notify_watering"]').checked
+        };
+        try {
+          const response = await fetch(SUPABASE_PROFILES_URL + '?id=eq.' + encodeURIComponent(u.id), {
+            method: 'PATCH',
+            headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=minimal' },
+            body: JSON.stringify(updates)
+          });
+          if (!response.ok) throw new Error('שמירה נכשלה (קוד ' + response.status + ')');
+          setAdminStatus('✓ המשתמש נשמר');
+        } catch (err) {
+          setAdminStatus('שגיאה בשמירה: ' + ((err && err.message) || String(err)), true);
+        }
+      });
+      const delBtn = row.querySelector('[data-action="delete"]');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          if (!confirm(`למחוק את שורת הפרופיל של ${u.email}? זה לא מוחק את חשבון ההתחברות שלו/ה - רק את הפרופיל (שם, העדפות).`)) return;
+          try {
+            const response = await fetch(SUPABASE_PROFILES_URL + '?id=eq.' + encodeURIComponent(u.id), {
+              method: 'DELETE',
+              headers: await getSupabaseHeaders()
+            });
+            if (!response.ok) throw new Error('מחיקה נכשלה (קוד ' + response.status + ')');
+            row.remove();
+            setAdminStatus('✓ הפרופיל נמחק');
+          } catch (err) {
+            setAdminStatus('שגיאה במחיקה: ' + ((err && err.message) || String(err)), true);
+          }
+        });
+      }
+      container.appendChild(row);
+    });
+  }
 </script>
 
 </body>
