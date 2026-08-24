@@ -290,7 +290,15 @@
   .watering-done-btn { margin-top: 8px; padding: 7px 16px; font-size: 0.82rem; }
 
   /* ===== ניהול מערכת (אדמין) ===== */
-  .admin-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .admin-lock {
+    display: block; width: 100%; text-align: center; padding: 10px; margin-bottom: 14px;
+    border-radius: var(--radius); border: 1.5px solid var(--line); cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+  }
+  .admin-lock.locked { background: #FBEAE6; color: #8A3D26; border-color: #E6C4B8; }
+  .admin-lock.unlocked { background: #EAF3DE; color: #3B6D11; border-color: var(--sprout); }
+  /* כשנעול - כפתורי שמירה/מחיקה מושבתים ויזואלית, גם אם ה-disabled attribute כבר חוסם אותם */
+  .admin-row .admin-actions button[disabled] { opacity: 0.4; cursor: not-allowed; }
   .admin-table { display: flex; flex-direction: column; gap: 10px; }
   .admin-row {
     display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;
@@ -592,20 +600,20 @@
       <h2>🛠️ ניהול נתונים</h2>
       <p class="sub">גישה למנהלת המערכת בלבד. עריכה או מחיקה כאן משפיעה על הנתונים בפועל של כל המשתמשים - בזהירות.</p>
 
-      <div class="admin-tabs" id="admin-tabs">
-        <button type="button" class="filter-btn active" data-admin-tab="plants">🌿 צמחים</button>
-        <button type="button" class="filter-btn" data-admin-tab="users">👤 משתמשים</button>
-      </div>
+      <!-- מנעול עריכה - כברירת מחדל נעול, כדי למנוע עריכה/מחיקה בטעות בנתונים רגישים -->
+      <button type="button" id="admin-lock-toggle" class="admin-lock locked">🔒 נעול לעריכה - לחצי לפתיחה</button>
 
       <p id="admin-status" class="identify-status"></p>
 
-      <div id="admin-plants-tab">
-        <input type="text" id="admin-plants-search" class="search-input" placeholder="🔍 חיפוש לפי שם משתמש (בעל/ת הצמח)" style="margin-bottom:12px;">
-        <div id="admin-plants-list" class="admin-table"></div>
-      </div>
-      <div id="admin-users-tab" style="display:none;">
+      <div id="admin-users-tab">
         <input type="text" id="admin-users-search" class="search-input" placeholder="🔍 חיפוש משתמש לפי שם" style="margin-bottom:12px;">
         <div id="admin-users-list" class="admin-table"></div>
+      </div>
+
+      <div id="admin-plants-tab" style="display:none;">
+        <button type="button" class="btn btn-ghost" id="back-to-admin-users-btn" style="margin-bottom:12px;">⬅ חזרה למשתמשים</button>
+        <h3 id="admin-plants-owner-title" style="font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; margin-bottom:12px;"></h3>
+        <div id="admin-plants-list" class="admin-table"></div>
       </div>
 
       <button type="button" class="btn btn-ghost" id="close-admin-btn" style="margin-top:14px;">סגירה</button>
@@ -1928,6 +1936,10 @@
   // על plants/profiles שמאפשרות למנהלת (ADMIN_USER_ID) לראות/לערוך/למחוק כל שורה.
   let adminUserEmailById = {};
 
+  // מנעול עריכה - כברירת מחדל נעול, כדי שעריכה/מחיקה בנתונים רגישים לא תקרה בטעות.
+  // זו הגנת ממשק בלבד (לא הגנת אבטחה) - ה-RLS כבר מגן על מי בכלל יכול לגשת לנתונים.
+  let adminUnlocked = false;
+
   function setAdminStatus(msg, isError) {
     const el = document.getElementById('admin-status');
     if (!el) return;
@@ -1935,54 +1947,50 @@
     el.classList.toggle('error', !!isError);
   }
 
+  document.getElementById('admin-lock-toggle').addEventListener('click', () => {
+    adminUnlocked = !adminUnlocked;
+    const btn = document.getElementById('admin-lock-toggle');
+    btn.classList.toggle('locked', !adminUnlocked);
+    btn.classList.toggle('unlocked', adminUnlocked);
+    btn.textContent = adminUnlocked ? '🔓 פתוח לעריכה - לחצי לנעילה' : '🔒 נעול לעריכה - לחצי לפתיחה';
+    // מרעננים את התצוגה הנוכחית כדי שכפתורי שמירה/מחיקה יתעדכנו (מושבתים/פעילים)
+    applyAdminUsersFilter();
+    if (adminPlantsUserIdFilter) applyAdminPlantsFilter();
+  });
+
   document.getElementById('show-admin-btn').addEventListener('click', () => {
     showSection(adminSection);
+    document.getElementById('admin-plants-tab').style.display = 'none';
+    document.getElementById('admin-users-tab').style.display = 'block';
     loadAdminUsers().then(loadAdminPlants);
   });
   document.getElementById('close-admin-btn').addEventListener('click', () => {
     adminSection.style.display = 'none';
   });
 
-  function switchAdminTab(tabName) {
-    document.querySelectorAll('#admin-tabs .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.adminTab === tabName));
-    document.getElementById('admin-plants-tab').style.display = tabName === 'plants' ? 'block' : 'none';
-    document.getElementById('admin-users-tab').style.display = tabName === 'users' ? 'block' : 'none';
-  }
-
-  document.getElementById('admin-tabs').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-admin-tab]');
-    if (!btn) return;
-    switchAdminTab(btn.dataset.adminTab);
+  document.getElementById('back-to-admin-users-btn').addEventListener('click', () => {
+    document.getElementById('admin-plants-tab').style.display = 'none';
+    document.getElementById('admin-users-tab').style.display = 'block';
   });
 
-  // ===== חיפוש בניהול נתונים - מסנן תוך כדי הקלדה (אות ראשונה, שנייה וכו') =====
+  // ===== חיפוש משתמשים - מסנן תוך כדי הקלדה (אות ראשונה, שנייה וכו') =====
   let adminPlantsCache = [];
   let adminUsersCache = [];
   let adminUserNameById = {};
-  let adminPlantsUserIdFilter = null; // כשמגיעים מ"הצמחים של המשתמש" בטאב המשתמשים - מסנן לפי מזהה מדויק
+  let adminPlantsUserIdFilter = null; // מזהה המשתמש שאת הצמחים שלו רואים כרגע (מגיעים תמיד דרך "הצמחים שלו/ה")
 
-  // קופצים מהטאב "משתמשים" לטאב "צמחים", מסוננים כבר רק לצמחים של אותו משתמש
+  // קופצים מרשימת המשתמשים לצמחים של משתמש ספציפי בלבד
   function jumpToUserPlants(userId, displayName) {
     adminPlantsUserIdFilter = userId;
-    const searchInput = document.getElementById('admin-plants-search');
-    searchInput.value = displayName;
-    switchAdminTab('plants');
+    document.getElementById('admin-plants-owner-title').textContent = 'הצמחים של ' + displayName;
+    document.getElementById('admin-users-tab').style.display = 'none';
+    document.getElementById('admin-plants-tab').style.display = 'block';
     applyAdminPlantsFilter();
   }
 
   function applyAdminPlantsFilter() {
-    if (adminPlantsUserIdFilter) {
-      renderAdminPlants(adminPlantsCache.filter(p => p.user_id === adminPlantsUserIdFilter));
-      return;
-    }
-    const query = document.getElementById('admin-plants-search').value.trim().toLowerCase();
-    if (!query) { renderAdminPlants(adminPlantsCache); return; }
-    const filtered = adminPlantsCache.filter(p => {
-      const ownerName = (adminUserNameById[p.user_id] || '').toLowerCase();
-      const ownerEmail = (adminUserEmailById[p.user_id] || '').toLowerCase();
-      return ownerName.includes(query) || ownerEmail.includes(query);
-    });
-    renderAdminPlants(filtered);
+    if (!adminPlantsUserIdFilter) { renderAdminPlants([]); return; }
+    renderAdminPlants(adminPlantsCache.filter(p => p.user_id === adminPlantsUserIdFilter));
   }
 
   function applyAdminUsersFilter() {
@@ -1996,22 +2004,15 @@
     renderAdminUsers(filtered);
   }
 
-  document.getElementById('admin-plants-search').addEventListener('input', () => {
-    adminPlantsUserIdFilter = null; // עריכה ידנית של תיבת החיפוש מבטלת את הסינון "לפי משתמש"
-    applyAdminPlantsFilter();
-  });
   document.getElementById('admin-users-search').addEventListener('input', applyAdminUsersFilter);
 
   async function loadAdminPlants() {
-    setAdminStatus('טוענת צמחים...');
     try {
       const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
         headers: await getSupabaseHeaders()
       });
       if (!response.ok) throw new Error('שגיאה בטעינת הצמחים (קוד ' + response.status + ')');
       adminPlantsCache = await response.json();
-      applyAdminPlantsFilter();
-      setAdminStatus('');
     } catch (err) {
       setAdminStatus('שגיאה: ' + ((err && err.message) || String(err)), true);
     }
@@ -2040,11 +2041,12 @@
           <span class="sub" style="margin:0;">בעלים: ${escapeHtml(adminUserNameById[p.user_id] || '') || escapeHtml(adminUserEmailById[p.user_id] || p.user_id || '—')} ${adminUserNameById[p.user_id] ? '(' + escapeHtml(adminUserEmailById[p.user_id] || '') + ')' : ''}</span>
         </div>
         <div class="admin-actions">
-          <button type="button" class="btn" data-action="save">💾 שמירה</button>
-          <button type="button" class="btn btn-ghost" data-action="delete">🗑️ מחיקה</button>
+          <button type="button" class="btn" data-action="save" ${adminUnlocked ? '' : 'disabled'}>💾 שמירה</button>
+          <button type="button" class="btn btn-ghost" data-action="delete" ${adminUnlocked ? '' : 'disabled'}>🗑️ מחיקה</button>
         </div>
       `;
       row.querySelector('[data-action="save"]').addEventListener('click', async () => {
+        if (!adminUnlocked) { setAdminStatus('🔒 יש לפתוח את המנעול לפני עריכה', true); return; }
         const intervalVal = row.querySelector('[data-field="watering_interval_days"]').value;
         const updates = {
           name_he: row.querySelector('[data-field="name_he"]').value.trim(),
@@ -2065,6 +2067,7 @@
         }
       });
       row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+        if (!adminUnlocked) { setAdminStatus('🔒 יש לפתוח את המנעול לפני מחיקה', true); return; }
         if (!confirm(`למחוק לצמיתות את הצמח "${p.name_he}"? הפעולה בלתי הפיכה.`)) return;
         try {
           const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(p.id), {
@@ -2123,8 +2126,8 @@
         </div>
         <div class="admin-actions">
           <button type="button" class="btn btn-ghost" data-action="view-plants">🌿 הצמחים שלו/ה</button>
-          <button type="button" class="btn" data-action="save">💾 שמירה</button>
-          ${u.id === ADMIN_USER_ID ? '' : '<button type="button" class="btn btn-ghost" data-action="delete">🗑️ מחיקת פרופיל</button>'}
+          <button type="button" class="btn" data-action="save" ${adminUnlocked ? '' : 'disabled'}>💾 שמירה</button>
+          ${u.id === ADMIN_USER_ID ? '' : `<button type="button" class="btn btn-ghost" data-action="delete" ${adminUnlocked ? '' : 'disabled'}>🗑️ מחיקת פרופיל</button>`}
         </div>
       `;
       row.querySelector('[data-action="view-plants"]').addEventListener('click', () => {
@@ -2132,6 +2135,7 @@
         jumpToUserPlants(u.id, displayName);
       });
       row.querySelector('[data-action="save"]').addEventListener('click', async () => {
+        if (!adminUnlocked) { setAdminStatus('🔒 יש לפתוח את המנעול לפני עריכה', true); return; }
         const updates = {
           first_name: row.querySelector('[data-field="first_name"]').value.trim(),
           last_name: row.querySelector('[data-field="last_name"]').value.trim(),
@@ -2152,6 +2156,7 @@
       const delBtn = row.querySelector('[data-action="delete"]');
       if (delBtn) {
         delBtn.addEventListener('click', async () => {
+          if (!adminUnlocked) { setAdminStatus('🔒 יש לפתוח את המנעול לפני מחיקה', true); return; }
           if (!confirm(`למחוק את שורת הפרופיל של ${u.email}? זה לא מוחק את חשבון ההתחברות שלו/ה - רק את הפרופיל (שם, העדפות).`)) return;
           try {
             const response = await fetch(SUPABASE_PROFILES_URL + '?id=eq.' + encodeURIComponent(u.id), {
