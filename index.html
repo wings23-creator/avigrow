@@ -196,6 +196,11 @@
   }
   .btn:hover { opacity: 0.92; }
   .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  /* כפתור משני (ביטול/סגירה/עצירה) - אותה צורה וגודל כמו הכפתור הראשי, רק "ריק" מבפנים */
+  .btn-ghost {
+    background: none; border: 1.5px solid var(--line); color: var(--ink-soft);
+  }
+  .btn-ghost:hover { opacity: 1; background: var(--bg); }
 
   /* ===== רשימת הצמחים ===== */
   .plants-section h2 { font-size: 1.3rem; margin-bottom: 18px; }
@@ -376,7 +381,7 @@
       <img id="quick-health-preview" class="photo-preview" alt="תצוגה מקדימה">
       <p id="quick-health-status" class="identify-status"></p>
       <div id="quick-health-result"></div>
-      <button type="button" class="close-section-btn" id="close-quick-health-btn">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-quick-health-btn">סגירה</button>
     </section>
 
     <!-- חיפוש צמח באינטרנט (ויקיפדיה) - להוספת צמח לעיון, לא בהכרח כזה שברשותך -->
@@ -386,7 +391,7 @@
       <input type="text" id="web-search-input" class="search-input" placeholder="🔍 הקלידי שם צמח לחיפוש...">
       <p id="web-search-status" class="identify-status"></p>
       <div id="web-search-results" class="web-search-results"></div>
-      <button type="button" class="close-section-btn" id="close-web-search-btn">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-web-search-btn">סגירה</button>
     </section>
 
     <!-- עדכון פרטי משתמש - כולל שינוי אימייל עם אימות -->
@@ -410,7 +415,7 @@
           <p class="sub" style="margin:6px 0 0;">שינוי כתובת האימייל ידרוש קוד אימות לכתובת החדשה. הצמחים שלך יישארו איתך גם אחרי השינוי.</p>
         </div>
         <button type="button" id="account-save-btn" class="btn">שמירה</button>
-        <button type="button" class="close-section-btn" id="close-account-btn">ביטול</button>
+        <button type="button" class="btn btn-ghost" id="close-account-btn">ביטול</button>
         <p id="account-form-status" class="auth-status"></p>
       </div>
 
@@ -463,7 +468,7 @@
           <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), צפייה שוב במדריך הזה, והתנתקות מהחשבון.</p>
         </div>
       </div>
-      <button type="button" class="close-section-btn" id="close-guide-btn">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-guide-btn">סגירה</button>
     </section>
 
     <!-- טופס הוספת צמח חדש -->
@@ -496,7 +501,7 @@
         </div>
 
         <button type="submit" class="btn">שמירת הצמח</button>
-        <button type="button" class="close-section-btn" id="close-add-btn">ביטול</button>
+        <button type="button" class="btn btn-ghost" id="close-add-btn">ביטול</button>
         <p id="save-error" class="identify-status error" style="display:none;"></p>
       </form>
     </section>
