@@ -1,0 +1,27 @@
+<title>בדיקת הקלטות</title>
+<div style="font-family:system-ui,sans-serif;padding:30px;background:#F7F5EF;min-height:100vh;box-sizing:border-box;direction:rtl;">
+<h2>בדיקת קבצי ההקלטה</h2>
+<div id="log" style="white-space:pre-wrap;background:white;padding:16px;border-radius:8px;border:1px solid #ccc;font-family:monospace;font-size:15px;">בודק...</div>
+</div>
+<script>
+const log = document.getElementById('log');
+function line(s) { log.textContent += "\n" + s; }
+(async () => {
+  log.textContent = '';
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  for (let i = 0; i < 7; i++) {
+    const url = 'guide-audio-recorded/step' + i + '.weba';
+    try {
+      const resp = await fetch(url);
+      const buf = await resp.arrayBuffer();
+      const audioBuf = await ctx.decodeAudioData(buf);
+      const data = audioBuf.getChannelData(0);
+      let max = 0;
+      for (let j = 0; j < data.length; j++) { const v = Math.abs(data[j]); if (v > max) max = v; }
+      line('step' + i + ': duration=' + audioBuf.duration.toFixed(2) + 's maxAmp=' + max.toFixed(3));
+    } catch(e) {
+      line('step' + i + ': שגיאה - ' + e.message);
+    }
+  }
+})();
+</script>
