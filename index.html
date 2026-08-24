@@ -1544,19 +1544,27 @@
   });
   document.getElementById('close-guide-btn').addEventListener('click', stopGuideNarration);
 
-  // ===== הסבר קולי בעברית למדריך השימוש (קבצי הקלטה מוכנים מראש - קול טבעי, לא תלוי בדפדפן) =====
-  const GUIDE_AUDIO_FILES = [
-    'guide-audio/step0.mp3',
-    'guide-audio/step1.mp3',
-    'guide-audio/step2.mp3',
-    'guide-audio/step3.mp3',
-    'guide-audio/step4.mp3',
-    'guide-audio/step5.mp3',
-    'guide-audio/step6.mp3'
+  // ===== הסבר קולי בעברית למדריך השימוש (Web Speech API - רץ כולו בדפדפן, בלי שרת) =====
+  const GUIDE_SCRIPT = [
+    'ברוכה הבאה ל-אבי גרואו. לפתיחת התפריט, לחצי על שלושת הקווים בפינה העליונה.',
+    'בקבוצה צמחים, האפשרות הוספת צמח חדש מאפשרת לצלם צמח שיש לך בבית. השם והעצות לטיפול יזוהו אוטומטית מהתמונה, ואפשר לתקן אותם לפני השמירה.',
+    'באותה קבוצה, האפשרות חיפוש צמח באינטרנט מאפשרת לחפש צמח לפי שם, למשל לפני שקונים אותו, ולהוסיף אותו לרשימה כצמח מהרשת, יחד עם תמונה ומידע.',
+    'בקבוצה בריאות, האפשרות בדיקת בריאות מהירה מאפשרת לצלם כל צמח, גם כזה שעדיין לא ברשימה, ולקבל אבחון מצב מיידי.',
+    'מתחת לכותרת הראשית יש תיבת חיפוש שמסננת את הרשימה תוך כדי הקלדה, ולידה שלושה כפתורים: הכל, הצמחים שלי, ומהרשת, לסינון לפי מקור הצמח.',
+    'בקבוצה נתונים אפשר לייצא גיבוי של כל הצמחים לקובץ, או לייבא גיבוי קיים בחזרה.',
+    'ולבסוף, בקבוצה חשבון אפשר לעדכן שם פרטי, שם משפחה, וכתובת אימייל, לצפות שוב במדריך הזה, ולהתנתק מהחשבון. זהו הסיור הקצר, בהצלחה עם הצמחים.'
   ];
 
+  let guideVoice = null;
   let guideSpeaking = false;
-  const guideAudioEl = new Audio();
+
+  function pickHebrewVoice() {
+    const voices = speechSynthesis.getVoices();
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he')) || null;
+  }
+  // הרשימה נטענת אסינכרונית בחלק מהדפדפנים
+  speechSynthesis.onvoiceschanged = () => { guideVoice = pickHebrewVoice(); };
+  guideVoice = pickHebrewVoice();
 
   function highlightGuideStep(index) {
     document.querySelectorAll('.guide-step').forEach(el => {
@@ -1569,7 +1577,7 @@
   }
 
   function stopGuideNarration() {
-    guideAudioEl.pause();
+    speechSynthesis.cancel();
     guideSpeaking = false;
     highlightGuideStep(-1);
     document.getElementById('guide-play-btn').style.display = 'inline-block';
@@ -1578,20 +1586,27 @@
   }
 
   function speakGuideStep(index) {
-    if (index >= GUIDE_AUDIO_FILES.length) { stopGuideNarration(); return; }
+    if (index >= GUIDE_SCRIPT.length) { stopGuideNarration(); return; }
     highlightGuideStep(index);
-    guideAudioEl.src = GUIDE_AUDIO_FILES[index];
-    guideAudioEl.play().catch(() => { if (guideSpeaking) speakGuideStep(index + 1); });
+    const utter = new SpeechSynthesisUtterance(GUIDE_SCRIPT[index]);
+    utter.lang = 'he-IL';
+    if (guideVoice) utter.voice = guideVoice;
+    utter.onend = () => { if (guideSpeaking) speakGuideStep(index + 1); };
+    utter.onerror = () => { if (guideSpeaking) speakGuideStep(index + 1); };
+    speechSynthesis.speak(utter);
   }
-  guideAudioEl.addEventListener('ended', () => {
-    if (guideSpeaking) speakGuideStep(Number(document.querySelector('.guide-step.active')?.dataset.step ?? -1) + 1);
-  });
 
   document.getElementById('guide-play-btn').addEventListener('click', () => {
+    if (!guideVoice) guideVoice = pickHebrewVoice();
+    if (!guideVoice && !('speechSynthesis' in window)) {
+      document.getElementById('guide-voice-status').textContent = 'הדפדפן הזה לא תומך בהקראה קולית';
+      return;
+    }
+    speechSynthesis.cancel();
     guideSpeaking = true;
     document.getElementById('guide-play-btn').style.display = 'none';
     document.getElementById('guide-stop-btn').style.display = 'inline-block';
-    document.getElementById('guide-voice-status').textContent = '';
+    document.getElementById('guide-voice-status').textContent = guideVoice ? '' : '(לא נמצא קול עברי - ייתכן מבטא לא מדויק)';
     speakGuideStep(0);
   });
 
