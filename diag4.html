@@ -9,7 +9,7 @@ function line(s) { log.textContent += "\n" + s; }
 (async () => {
   log.textContent = '';
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  for (const url of ['test2.mp3', 'https://www.w3schools.com/html/horse.mp3']) {
+  for (const url of ['test2.mp3', 'test3.mp3']) {
     try {
       const resp = await fetch(url);
       const buf = await resp.arrayBuffer();
