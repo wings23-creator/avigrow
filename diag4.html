@@ -1,0 +1,32 @@
+<title>בדיקת עוצמת אודיו בפועל</title>
+<div style="font-family:system-ui,sans-serif;padding:30px;background:#F7F5EF;min-height:100vh;box-sizing:border-box;direction:rtl;">
+<h2>בדיקת עוצמה בפועל בקובץ</h2>
+<div id="log" style="white-space:pre-wrap;background:white;padding:16px;border-radius:8px;border:1px solid #ccc;font-family:monospace;font-size:15px;">בודק...</div>
+</div>
+<script>
+const log = document.getElementById('log');
+function line(s) { log.textContent += "\n" + s; }
+(async () => {
+  log.textContent = '';
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  for (const url of ['test2.mp3', 'https://www.w3schools.com/html/horse.mp3']) {
+    try {
+      const resp = await fetch(url);
+      const buf = await resp.arrayBuffer();
+      const audioBuf = await ctx.decodeAudioData(buf);
+      const data = audioBuf.getChannelData(0);
+      let max = 0, sumSq = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = Math.abs(data[i]);
+        if (v > max) max = v;
+        sumSq += data[i]*data[i];
+      }
+      const rms = Math.sqrt(sumSq / data.length);
+      line(url + ": samples=" + data.length + " maxAmplitude=" + max.toFixed(5) + " (1.0=מקסימום) RMS=" + rms.toFixed(5));
+    } catch(e) {
+      line(url + ": שגיאה - " + e.message);
+    }
+  }
+  line("\n(אם maxAmplitude קרוב ל-0 זה אומר שהקובץ באמת שקט/דומם)");
+})();
+</script>
