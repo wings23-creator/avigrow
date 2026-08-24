@@ -1,0 +1,18 @@
+name: Send watering reminders
+
+on:
+  schedule:
+    # 07:00 Israel time = 05:00 UTC in summer (IDT, UTC+3), 04:00 UTC in winter (IST, UTC+2).
+    # Runs a bit early in winter - harmless, the function is idempotent per day.
+    - cron: '0 5 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call watering-reminders edge function
+        run: |
+          curl -sf -X POST "https://wipkpkdctwnpsyqszzhn.supabase.co/functions/v1/watering-reminders" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
