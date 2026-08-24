@@ -387,6 +387,7 @@
 
       <div class="menu-group">
         <div class="menu-group-title">🌱 צמחים</div>
+        <button type="button" id="show-plants-list-btn" class="menu-item">🌿 רשימת צמחים</button>
         <button type="button" id="show-add-btn" class="menu-item">🌱 הוספת צמח חדש</button>
         <button type="button" id="show-web-search-btn" class="menu-item">🌐 חיפוש צמח באינטרנט</button>
       </div>
@@ -534,9 +535,11 @@
       <p id="admin-status" class="identify-status"></p>
 
       <div id="admin-plants-tab">
+        <input type="text" id="admin-plants-search" class="search-input" placeholder="🔍 חיפוש לפי שם משתמש (בעל/ת הצמח)" style="margin-bottom:12px;">
         <div id="admin-plants-list" class="admin-table"></div>
       </div>
       <div id="admin-users-tab" style="display:none;">
+        <input type="text" id="admin-users-search" class="search-input" placeholder="🔍 חיפוש משתמש לפי שם" style="margin-bottom:12px;">
         <div id="admin-users-list" class="admin-table"></div>
       </div>
 
@@ -578,23 +581,27 @@
       </form>
     </section>
 
-    <!-- חיפוש וסינון -->
-    <section class="search-section">
-      <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
-      <div class="source-filter" id="source-filter">
-        <button type="button" class="filter-btn active" data-source="all">הכל</button>
-        <button type="button" class="filter-btn" data-source="mine">הצמחים שלי</button>
-        <button type="button" class="filter-btn" data-source="web">מהרשת</button>
-      </div>
-    </section>
+    <!-- רשימת הצמחים - מוצגת רק לאחר בחירה בתפריט ההמבורגר, לא כחלק מדף הנחיתה -->
+    <div id="plants-list-section" style="display:none;">
+      <!-- חיפוש וסינון -->
+      <section class="search-section">
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
+        <div class="source-filter" id="source-filter">
+          <button type="button" class="filter-btn active" data-source="all">הכל</button>
+          <button type="button" class="filter-btn" data-source="mine">הצמחים שלי</button>
+          <button type="button" class="filter-btn" data-source="web">מהרשת</button>
+        </div>
+      </section>
 
-    <!-- רשימת הצמחים השמורים -->
-    <section class="plants-section">
-      <h2>הצמחים שלי</h2>
-      <div id="plants-container">
-        <!-- כאן ה-JS מזריק את הכרטיסים -->
-      </div>
-    </section>
+      <!-- רשימת הצמחים השמורים -->
+      <section class="plants-section">
+        <h2>הצמחים שלי</h2>
+        <div id="plants-container">
+          <!-- כאן ה-JS מזריק את הכרטיסים -->
+        </div>
+        <button type="button" class="btn btn-ghost" id="close-plants-list-btn" style="margin-top:14px;">סגירה</button>
+      </section>
+    </div>
 
     <footer class="app-footer">© 2026 יעל רוזן. כל הזכויות שמורות.</footer>
   </div>
@@ -804,12 +811,19 @@
   const accountSection = document.getElementById('account-settings-section');
   const guideSection = document.getElementById('guide-section');
   const adminSection = document.getElementById('admin-section');
-  const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection, adminSection];
+  const plantsListSection = document.getElementById('plants-list-section');
+  const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection, adminSection, plantsListSection];
 
   function showSection(section) {
     allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  // רשימת הצמחים - נגישה רק דרך תפריט ההמבורגר, לא מוצגת אוטומטית בדף הנחיתה
+  document.getElementById('show-plants-list-btn').addEventListener('click', () => showSection(plantsListSection));
+  document.getElementById('close-plants-list-btn').addEventListener('click', () => {
+    plantsListSection.style.display = 'none';
+  });
 
   document.getElementById('show-add-btn').addEventListener('click', () => showSection(addSection));
   document.getElementById('close-add-btn').addEventListener('click', () => { addSection.style.display = 'none'; });
@@ -1801,6 +1815,36 @@
     document.getElementById('admin-users-tab').style.display = btn.dataset.adminTab === 'users' ? 'block' : 'none';
   });
 
+  // ===== חיפוש בניהול נתונים - מסנן תוך כדי הקלדה (אות ראשונה, שנייה וכו') =====
+  let adminPlantsCache = [];
+  let adminUsersCache = [];
+  let adminUserNameById = {};
+
+  function applyAdminPlantsFilter() {
+    const query = document.getElementById('admin-plants-search').value.trim().toLowerCase();
+    if (!query) { renderAdminPlants(adminPlantsCache); return; }
+    const filtered = adminPlantsCache.filter(p => {
+      const ownerName = (adminUserNameById[p.user_id] || '').toLowerCase();
+      const ownerEmail = (adminUserEmailById[p.user_id] || '').toLowerCase();
+      return ownerName.includes(query) || ownerEmail.includes(query);
+    });
+    renderAdminPlants(filtered);
+  }
+
+  function applyAdminUsersFilter() {
+    const query = document.getElementById('admin-users-search').value.trim().toLowerCase();
+    if (!query) { renderAdminUsers(adminUsersCache); return; }
+    const filtered = adminUsersCache.filter(u => {
+      const name = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      return name.includes(query) || email.includes(query);
+    });
+    renderAdminUsers(filtered);
+  }
+
+  document.getElementById('admin-plants-search').addEventListener('input', applyAdminPlantsFilter);
+  document.getElementById('admin-users-search').addEventListener('input', applyAdminUsersFilter);
+
   async function loadAdminPlants() {
     setAdminStatus('טוענת צמחים...');
     try {
@@ -1808,7 +1852,8 @@
         headers: await getSupabaseHeaders()
       });
       if (!response.ok) throw new Error('שגיאה בטעינת הצמחים (קוד ' + response.status + ')');
-      renderAdminPlants(await response.json());
+      adminPlantsCache = await response.json();
+      applyAdminPlantsFilter();
       setAdminStatus('');
     } catch (err) {
       setAdminStatus('שגיאה: ' + ((err && err.message) || String(err)), true);
@@ -1835,7 +1880,7 @@
             <option value="web" ${p.source === 'web' ? 'selected' : ''}>מהרשת</option>
           </select>
           <input type="number" data-field="watering_interval_days" value="${p.watering_interval_days ?? ''}" placeholder="מרווח השקיה (ימים)" style="width:90px;">
-          <span class="sub" style="margin:0;">בעלים: ${escapeHtml(adminUserEmailById[p.user_id] || p.user_id || '—')}</span>
+          <span class="sub" style="margin:0;">בעלים: ${escapeHtml(adminUserNameById[p.user_id] || '') || escapeHtml(adminUserEmailById[p.user_id] || p.user_id || '—')} ${adminUserNameById[p.user_id] ? '(' + escapeHtml(adminUserEmailById[p.user_id] || '') + ')' : ''}</span>
         </div>
         <div class="admin-actions">
           <button type="button" class="btn" data-action="save">💾 שמירה</button>
@@ -1888,9 +1933,14 @@
       });
       if (!response.ok) throw new Error('שגיאה בטעינת המשתמשים (קוד ' + response.status + ')');
       const rows = await response.json();
+      adminUsersCache = rows;
       adminUserEmailById = {};
-      rows.forEach(u => { adminUserEmailById[u.id] = u.email; });
-      renderAdminUsers(rows);
+      adminUserNameById = {};
+      rows.forEach(u => {
+        adminUserEmailById[u.id] = u.email;
+        adminUserNameById[u.id] = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+      });
+      applyAdminUsersFilter();
       setAdminStatus('');
     } catch (err) {
       setAdminStatus('שגיאה: ' + ((err && err.message) || String(err)), true);
