@@ -1575,20 +1575,24 @@
   function stopGuideNarration() {
     guideAudioEl.pause();
     guideSpeaking = false;
+    guideAudioIndex = -1;
     highlightGuideStep(-1);
     document.getElementById('guide-play-btn').style.display = 'inline-block';
     document.getElementById('guide-stop-btn').style.display = 'none';
     document.getElementById('guide-voice-status').textContent = '';
   }
 
+  let guideAudioIndex = -1; // האינדקס של ההקלטה שמתנגנת כרגע (נשמר במשתנה, לא נקרא מה-DOM)
+
   function speakGuideStep(index) {
     if (index >= GUIDE_AUDIO_FILES.length) { stopGuideNarration(); return; }
+    guideAudioIndex = index;
     highlightGuideStep(index);
     guideAudioEl.src = GUIDE_AUDIO_FILES[index];
     guideAudioEl.play().catch(() => { if (guideSpeaking) speakGuideStep(index + 1); });
   }
   guideAudioEl.addEventListener('ended', () => {
-    if (guideSpeaking) speakGuideStep(Number(document.querySelector('.guide-step.active')?.dataset.step ?? -1) + 1);
+    if (guideSpeaking) speakGuideStep(guideAudioIndex + 1);
   });
 
   document.getElementById('guide-play-btn').addEventListener('click', () => {
