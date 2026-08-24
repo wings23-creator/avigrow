@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>הקלטת מדריך AviGrow</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #F7F5EF; margin: 0; padding: 20px; direction: rtl; }
+  h1 { color: #3A4A2F; font-size: 22px; }
+  .step { background: white; border-radius: 12px; padding: 18px; margin-bottom: 16px; border: 1px solid #ddd; }
+  .step.done { border-color: #5B7A3A; background: #F4F8EF; }
+  .step-num { font-weight: bold; color: #5B7A3A; }
+  .step-text { font-size: 18px; margin: 10px 0 16px; line-height: 1.5; }
+  button { font-size: 16px; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; margin-inline-end: 8px; margin-bottom: 8px; }
+  .rec-btn { background: #C0392B; color: white; }
+  .rec-btn.recording { background: #7a1f14; }
+  .stop-btn { background: #555; color: white; }
+  .dl-btn { background: #5B7A3A; color: white; }
+  .status { font-size: 14px; color: #666; margin-top: 6px; }
+  audio { display: block; margin-top: 10px; width: 100%; max-width: 400px; }
+</style>
+</head>
+<body>
+<h1>🎙️ הקלטת המדריך הקולי - AviGrow</h1>
+<p>לכל שלב: לחצי "התחל הקלטה", תקראי את המשפט, לחצי "עצור". תוכלי להאזין ולהקליט מחדש אם צריך. בסוף לחצי "הורדה" לשמירת הקובץ.</p>
+<div id="steps"></div>
+
+<script>
+const SCRIPT = [
+  'ברוכה הבאה לאבי גרואו. לפתיחת התפריט, לחצי על שלושת הקווים בפינה העליונה.',
+  'בקבוצה צמחים, האפשרות הוספת צמח חדש מאפשרת לצלם צמח שיש לך בבית. השם והעצות לטיפול יזוהו אוטומטית מהתמונה, ואפשר לתקן אותם לפני השמירה.',
+  'באותה קבוצה, האפשרות חיפוש צמח באינטרנט מאפשרת לחפש צמח לפי שם, למשל לפני שקונים אותו, ולהוסיף אותו לרשימה כצמח מהרשת, יחד עם תמונה ומידע.',
+  'בקבוצה בריאות, האפשרות בדיקת בריאות מהירה מאפשרת לצלם כל צמח, גם כזה שעדיין לא ברשימה, ולקבל אבחון מצב מיידי.',
+  'מתחת לכותרת הראשית יש תיבת חיפוש שמסננת את הרשימה תוך כדי הקלדה, ולידה שלושה כפתורים: הכל, הצמחים שלי, ומהרשת, לסינון לפי מקור הצמח.',
+  'בקבוצה נתונים אפשר לייצא גיבוי של כל הצמחים לקובץ, או לייבא גיבוי קיים בחזרה.',
+  'ולבסוף, בקבוצה חשבון אפשר לעדכן שם פרטי, שם משפחה, וכתובת אימייל, לצפות שוב במדריך הזה, ולהתנתק מהחשבון. זהו הסיור הקצר, בהצלחה עם הצמחים.'
+];
+
+const container = document.getElementById('steps');
+let recorders = {};
+
+SCRIPT.forEach((text, i) => {
+  const div = document.createElement('div');
+  div.className = 'step';
+  div.id = 'step' + i;
+  div.innerHTML = `
+    <div class="step-num">שלב ${i + 1} מתוך ${SCRIPT.length}</div>
+    <div class="step-text">${text}</div>
+    <button class="rec-btn" id="rec${i}">🔴 התחל הקלטה</button>
+    <button class="stop-btn" id="stop${i}" style="display:none;">⏹ עצור</button>
+    <button class="dl-btn" id="dl${i}" style="display:none;">⬇️ הורדה כ-guide${i}.webm</button>
+    <div class="status" id="status${i}"></div>
+    <audio id="audio${i}" controls style="display:none;"></audio>
+  `;
+  container.appendChild(div);
+
+  const recBtn = div.querySelector('#rec' + i);
+  const stopBtn = div.querySelector('#stop' + i);
+  const dlBtn = div.querySelector('#dl' + i);
+  const status = div.querySelector('#status' + i);
+  const audioEl = div.querySelector('#audio' + i);
+
+  recBtn.addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const chunks = [];
+      mr.ondataavailable = e => chunks.push(e.data);
+      mr.onstop = () => {
+        const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        audioEl.src = url;
+        audioEl.style.display = 'block';
+        dlBtn.style.display = 'inline-block';
+        dlBtn.dataset.url = url;
+        dlBtn.dataset.ext = (mr.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+        div.classList.add('done');
+        status.textContent = 'הוקלט! אפשר להאזין למעלה, להקליט מחדש, או להוריד.';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mr.start();
+      recorders[i] = mr;
+      recBtn.style.display = 'none';
+      stopBtn.style.display = 'inline-block';
+      status.textContent = '🔴 מקליטה... תדברי עכשיו.';
+    } catch (e) {
+      status.textContent = 'שגיאה בגישה למיקרופון: ' + e.message;
+    }
+  });
+
+  stopBtn.addEventListener('click', () => {
+    if (recorders[i]) recorders[i].stop();
+    stopBtn.style.display = 'none';
+    recBtn.style.display = 'inline-block';
+    recBtn.textContent = '🔴 הקלטה מחדש';
+  });
+
+  dlBtn.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = dlBtn.dataset.url;
+    a.download = 'guide' + i + '.' + dlBtn.dataset.ext;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+});
+</script>
+</body>
+</html>
