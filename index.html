@@ -98,6 +98,47 @@
   .stat-line { color: var(--ink-soft); font-size: 0.9rem; }
   .stat-line strong { color: var(--sprout); }
 
+  /* ===== אריחי פעולות מהירות בדף הבית ===== */
+  .quick-tiles {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    max-width: 420px; margin: 30px auto 0; text-align: center;
+  }
+  .quick-tile {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 10px; cursor: pointer; font-family: 'Inter', sans-serif;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: border-color 0.15s ease;
+  }
+  .quick-tile:hover { border-color: var(--sprout); }
+  .quick-tile .ic { font-size: 1.6rem; }
+  .quick-tile .tt { font-size: 0.85rem; color: var(--ink); }
+
+  /* ===== כרטיס "להשקות היום" בדף הבית ===== */
+  .watering-focus-card {
+    max-width: 420px; margin: 16px auto 0; background: var(--card);
+    border-radius: var(--radius); border: 1px solid var(--line);
+    border-inline-end: 3px solid var(--clay);
+    padding: 16px; text-align: start;
+  }
+  .watering-focus-card .focus-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; }
+  .watering-focus-card .focus-row {
+    display: flex; justify-content: space-between; gap: 10px;
+    font-size: 0.85rem; color: var(--ink-soft); padding: 6px 0; border-top: 1px solid var(--line);
+  }
+  .watering-focus-card .focus-row:first-child { border-top: none; }
+  .watering-focus-card .btn { width: 100%; margin-top: 14px; }
+
+  /* ===== תגית "מציגה רק צמחים שדורשים השקיה" ברשימה ===== */
+  .filter-pill {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #FBEAE6; color: #8A3D26; font-size: 0.82rem;
+    padding: 8px 14px; border-radius: 999px; margin-bottom: 14px;
+  }
+  .filter-pill button {
+    background: none; border: none; color: var(--clay); font-weight: 600;
+    cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; padding: 0;
+  }
+
   /* ===== בדיקת בריאות מהירה (בלי צמח קיים) ===== */
   .quick-health {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -376,6 +417,29 @@
       <p>המקום שבו אני שומר מידע ותמונות על כל צמח בבית, ובודק את מצבם מתי שרוצים.</p>
       <p class="stat-line" id="stat-line"></p>
       <p id="import-status" class="identify-status" style="display:none;"></p>
+
+      <!-- אריחי פעולות מהירות - גישה מיידית לפעולות הנפוצות בלי לפתוח את ההמבורגר -->
+      <div class="quick-tiles">
+        <button type="button" class="quick-tile" id="tile-plants-list">
+          <span class="ic">🌿</span><span class="tt">רשימת צמחים</span>
+        </button>
+        <button type="button" class="quick-tile" id="tile-add-plant">
+          <span class="ic">🌱</span><span class="tt">הוספת צמח</span>
+        </button>
+        <button type="button" class="quick-tile" id="tile-quick-health">
+          <span class="ic">🩺</span><span class="tt">בדיקת בריאות</span>
+        </button>
+        <button type="button" class="quick-tile" id="tile-web-search">
+          <span class="ic">🌐</span><span class="tt">חיפוש באינטרנט</span>
+        </button>
+      </div>
+
+      <!-- כרטיס "מה קורה היום" - מוצג רק כשיש בפועל צמח שצריך השקיה -->
+      <div class="watering-focus-card" id="watering-focus-card" style="display:none;">
+        <div class="focus-title">💧 להשקות היום (<span id="watering-focus-count">0</span>)</div>
+        <div id="watering-focus-list"></div>
+        <button type="button" class="btn" id="watering-focus-cta">לרשימה המלאה ←</button>
+      </div>
     </section>
 
     <!-- תפריט המבורגר - כל הפעולות מקובצות לפי נושא, נגיש בכל רוחב מסך -->
@@ -584,6 +648,12 @@
 
     <!-- רשימת הצמחים - מוצגת רק לאחר בחירה בתפריט ההמבורגר, לא כחלק מדף הנחיתה -->
     <div id="plants-list-section" style="display:none;">
+      <!-- תגית סינון "להשקות היום" - מוצגת רק כשמגיעים לכאן דרך כרטיס ההשקיה בדף הבית -->
+      <div class="filter-pill" id="watering-filter-pill" style="display:none;">
+        <span>מציגה רק צמחים שדורשים השקיה</span>
+        <button type="button" id="clear-watering-filter-btn">✕ נקה סינון</button>
+      </div>
+
       <!-- חיפוש וסינון -->
       <section class="search-section">
         <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
@@ -826,10 +896,27 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // רשימת הצמחים - נגישה רק דרך תפריט ההמבורגר, לא מוצגת אוטומטית בדף הנחיתה
-  document.getElementById('show-plants-list-btn').addEventListener('click', () => showSection(plantsListSection));
+  // רשימת הצמחים - נגישה דרך תפריט ההמבורגר או אריח "רשימת צמחים" בדף הבית, לא מוצגת אוטומטית
+  function openPlantsList() {
+    setWateringOnlyFilter(false);
+    showSection(plantsListSection);
+  }
+  document.getElementById('show-plants-list-btn').addEventListener('click', openPlantsList);
+  document.getElementById('tile-plants-list').addEventListener('click', openPlantsList);
   document.getElementById('close-plants-list-btn').addEventListener('click', () => {
     plantsListSection.style.display = 'none';
+  });
+
+  // ===== אריחי פעולות מהירות בדף הבית =====
+  document.getElementById('tile-add-plant').addEventListener('click', () => showSection(addSection));
+  document.getElementById('tile-quick-health').addEventListener('click', () => showSection(quickHealthSection));
+  document.getElementById('tile-web-search').addEventListener('click', () => showSection(webSearchSection));
+
+  // כרטיס "להשקות היום" בדף הבית - מוביל לרשימה כבר מסוננת לצמחים שצריכים השקיה
+  document.getElementById('watering-focus-cta').addEventListener('click', async () => {
+    setWateringOnlyFilter(true);
+    showSection(plantsListSection);
+    await renderPlants();
   });
 
   document.getElementById('show-add-btn').addEventListener('click', () => showSection(addSection));
@@ -854,6 +941,17 @@
   // (עברית או אנגלית), כדי שההקלדה תרגיש כמו הדפדוף באינדקס הישן.
   let searchQuery = '';
   let sourceFilter = 'all'; // 'all' | 'mine' | 'web'
+  let wateringOnlyFilter = false; // true = מגיעים מכרטיס "להשקות היום" בדף הבית
+
+  function setWateringOnlyFilter(active) {
+    wateringOnlyFilter = active;
+    document.getElementById('watering-filter-pill').style.display = active ? 'flex' : 'none';
+  }
+
+  document.getElementById('clear-watering-filter-btn').addEventListener('click', async () => {
+    setWateringOnlyFilter(false);
+    await renderPlants();
+  });
 
   document.getElementById('search-input').addEventListener('input', async (e) => {
     searchQuery = e.target.value.trim().toLowerCase();
@@ -864,9 +962,17 @@
     const btn = e.target.closest('.filter-btn');
     if (!btn) return;
     sourceFilter = btn.dataset.source;
+    setWateringOnlyFilter(false);
     document.querySelectorAll('#source-filter .filter-btn').forEach(b => b.classList.toggle('active', b === btn));
     await renderPlants();
   });
+
+  // צמח "צריך השקיה" = יש לו מרווח השקיה מוגדר, הוא לא "מהרשת", והסטטוס שלו due/overdue
+  function isDueForWatering(p) {
+    if (p.source === 'web' || !p.wateringIntervalDays) return false;
+    const w = computeWateringStatus(p);
+    return !!w && (w.cls === 'due' || w.cls === 'overdue');
+  }
 
   function filterPlants(plants) {
     return plants.filter(p => {
@@ -874,7 +980,8 @@
       const nameEn = (p.nameEn || '').toLowerCase();
       const matchesSearch = !searchQuery || nameHe.startsWith(searchQuery) || nameEn.startsWith(searchQuery);
       const matchesSource = sourceFilter === 'all' || (p.source || 'mine') === sourceFilter;
-      return matchesSearch && matchesSource;
+      const matchesWatering = !wateringOnlyFilter || isDueForWatering(p);
+      return matchesSearch && matchesSource && matchesWatering;
     });
   }
 
@@ -1123,6 +1230,22 @@
   });
 
   // ===== הצגת רשימת הצמחים =====
+  // מעדכן את כרטיס "להשקות היום" בדף הבית - מוצג רק אם יש בפועל צמח שצריך השקיה
+  function updateHomeWateringFocus(allPlants) {
+    const card = document.getElementById('watering-focus-card');
+    const due = allPlants.filter(isDueForWatering);
+    if (due.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+    document.getElementById('watering-focus-count').textContent = due.length;
+    document.getElementById('watering-focus-list').innerHTML = due.map(p => {
+      const w = computeWateringStatus(p);
+      return `<div class="focus-row"><span>${p.nameHe}</span><span>${w.text.replace(/^[💧⚠️]+\s*/, '')}</span></div>`;
+    }).join('');
+    card.style.display = 'block';
+  }
+
   async function renderPlants() {
     const container = document.getElementById('plants-container');
     let allPlants;
@@ -1136,6 +1259,7 @@
       return;
     }
 
+    updateHomeWateringFocus(allPlants);
     const plants = filterPlants(allPlants);
     await updateStatLine(allPlants.length);
 
