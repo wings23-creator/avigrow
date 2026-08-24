@@ -998,7 +998,12 @@
 
   async function loadPlants() {
     assertSupabaseConfigured();
-    const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
+    // מסננים במפורש לפי user_id הנוכחי - לא מסתמכים רק על RLS, כי למנהלת המערכת
+    // יש (בכוונה) הרשאת RLS לראות את כל הצמחים של כל המשתמשים (לצורך פאנל הניהול),
+    // וכשההרשאה הזאת קיימת היא חלה על כל שאילתה, כולל הרשימה הרגילה כאן.
+    const { data: { user } } = await sbClient.auth.getUser();
+    const userFilter = user ? '&user_id=eq.' + encodeURIComponent(user.id) : '';
+    const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc' + userFilter, {
       headers: await getSupabaseHeaders()
     });
     if (!response.ok) throw new Error('שגיאת שרת בטעינת הצמחים (קוד ' + response.status + ')');
