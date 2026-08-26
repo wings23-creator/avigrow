@@ -365,13 +365,40 @@
   .auth-status { font-size: 0.85rem; color: var(--sprout); margin-top: 14px; min-height: 1.2em; }
   .auth-status.error { color: var(--clay); }
   .auth-sent-icon { font-size: 2.4rem; margin-bottom: 10px; }
-  .lang-select {
-    flex-shrink: 0; border: 1.5px solid var(--line); border-radius: 10px;
-    background: var(--card); color: var(--ink); cursor: pointer;
-    font-family: 'Inter', sans-serif; font-size: 0.82rem; padding: 8px 6px; height: 40px;
+  /* ===== בורר שפה עם דגלים =====
+     הדגלים הם SVG מוטבע ולא אמוג'י דגל: כרום ואדג' ב-Windows לא מציגים אמוג'י
+     דגלים בכלל אלא את קוד המדינה באותיות (IL/GB/RU), וזה נראה שבור. */
+  .lang-picker { position: relative; flex-shrink: 0; }
+  .lang-btn {
+    display: flex; align-items: center; gap: 5px; height: 40px; padding: 0 8px;
+    border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer;
   }
-  .lang-select:focus-visible { outline: 2px solid var(--sprout); outline-offset: 1px; }
-  .lang-select-gate { position: absolute; top: 14px; inset-inline-end: 14px; height: 34px; padding: 4px 6px; }
+  .lang-btn:hover { border-color: var(--sprout); }
+  .lang-btn:focus-visible { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .lang-flag {
+    width: 24px; height: 17px; border-radius: 3px; overflow: hidden; display: block;
+    box-shadow: inset 0 0 0 1px rgba(31, 53, 39, .18);
+  }
+  .lang-flag svg { display: block; width: 100%; height: 100%; }
+  .lang-caret { font-size: 0.62rem; color: var(--ink-soft); line-height: 1; }
+
+  .lang-menu {
+    position: absolute; top: calc(100% + 6px); inset-inline-end: 0; min-width: 158px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 10px 26px rgba(31, 53, 39, .18); padding: 5px; display: none; z-index: 40;
+  }
+  .lang-menu.open { display: block; }
+  .lang-option {
+    display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px;
+    border: none; border-radius: 8px; background: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem; color: var(--ink); text-align: start;
+  }
+  .lang-option:hover { background: var(--bg); }
+  .lang-option[aria-selected="true"] { background: var(--bg); font-weight: 500; }
+  .lang-option .lang-check { margin-inline-start: auto; color: var(--sprout); }
+
+  .lang-picker-gate { position: absolute; top: 12px; inset-inline-end: 12px; }
+  .lang-picker-gate .lang-btn { height: 34px; }
   .auth-card { position: relative; }
 
   .auth-change-email { background: none; border: none; color: var(--ink-soft); font-size: 0.82rem; text-decoration: underline; cursor: pointer; margin-top: 14px; }
@@ -439,11 +466,12 @@
   <!-- שער כניסה - מוצג עד שהמשתמש מאומת -->
   <div class="auth-gate" id="auth-gate" style="display:none;">
     <div class="auth-card">
-      <select id="lang-select-gate" class="lang-select lang-select-gate" aria-label="Language">
-        <option value="he">עברית</option>
-        <option value="en">English</option>
-        <option value="ru">Русский</option>
-      </select>
+      <div class="lang-picker lang-picker-gate" data-lang-picker>
+        <button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+          <span class="lang-flag"></span><span class="lang-caret">▾</span>
+        </button>
+        <div class="lang-menu" role="listbox" aria-label="Language"></div>
+      </div>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
 
@@ -500,11 +528,12 @@
     <header>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
-      <select id="lang-select" class="lang-select" aria-label="Language">
-        <option value="he">עברית</option>
-        <option value="en">English</option>
-        <option value="ru">Русский</option>
-      </select>
+      <div class="lang-picker" data-lang-picker>
+        <button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+          <span class="lang-flag"></span><span class="lang-caret">▾</span>
+        </button>
+        <div class="lang-menu" role="listbox" aria-label="Language"></div>
+      </div>
       <button type="button" id="home-btn" class="menu-toggle" data-i18n-aria="home_aria" data-i18n-title="home_title" style="font-size:1.15rem;">🏠</button>
       <button type="button" id="menu-toggle-btn" class="menu-toggle" data-i18n-aria="menu_aria">
         <span></span><span></span><span></span>
@@ -848,6 +877,7 @@
       exporting: '💾 גובה אוטומטית לקובץ הורדות', importing: '📥 מייבא...', import_none: 'אין עדיין צמחים לייצוא.',
       import_ok: '✓ יובאו {n} צמחים בהצלחה', import_failed: 'הייבוא נכשל: ',
       // חיפוש באינטרנט
+      search_busy: 'שירות בדיקת הצמחים עמוס כרגע. נסו שוב בעוד כמה שניות.',
       searching: '🔍 מחפש...', no_results: 'לא נמצאו צמחים בשם הזה. נסו שם אחר, או בשפה אחרת.',
       search_failed: 'החיפוש נכשל: ', add_to_list: '➕ הוספה לרשימה', adding: 'מוסיף...', added: '✓ נוסף',
       add_failed: 'הוספה נכשלה', source_wiki: 'מקור: ויקיפדיה',
@@ -930,6 +960,7 @@
       save_failed: 'Save failed. Try again, or use a smaller photo.', unexpected: 'Unexpected error: ',
       exporting: '💾 Saved to your downloads folder', importing: '📥 Importing...', import_none: 'No plants to export yet.',
       import_ok: '✓ Imported {n} plants successfully', import_failed: 'Import failed: ',
+      search_busy: 'The plant-check service is busy right now. Try again in a few seconds.',
       searching: '🔍 Searching...', no_results: 'No plants found with that name. Try another name, or another language.',
       search_failed: 'Search failed: ', add_to_list: '➕ Add to my list', adding: 'Adding...', added: '✓ Added',
       add_failed: 'Could not add', source_wiki: 'Source: Wikipedia',
@@ -1010,6 +1041,7 @@
       save_failed: 'Не удалось сохранить. Попробуйте снова или выберите фото поменьше.', unexpected: 'Непредвиденная ошибка: ',
       exporting: '💾 Сохранено в папку загрузок', importing: '📥 Импортирую...', import_none: 'Пока нечего экспортировать.',
       import_ok: '✓ Импортировано растений: {n}', import_failed: 'Импорт не удался: ',
+      search_busy: 'Сервис проверки растений сейчас занят. Попробуйте снова через несколько секунд.',
       searching: '🔍 Ищу...', no_results: 'Растений с таким названием не найдено. Попробуйте другое название или другой язык.',
       search_failed: 'Поиск не удался: ', add_to_list: '➕ Добавить в список', adding: 'Добавляю...', added: '✓ Добавлено',
       add_failed: 'Не удалось добавить', source_wiki: 'Источник: Википедия',
@@ -1063,6 +1095,66 @@
     return n === 1 ? t('day') : t('days');
   }
 
+  // דגלים כ-SVG מוטבע, כדי שייראו זהה בכל דפדפן ומערכת הפעלה
+  const FLAGS = {
+    he: '<svg viewBox="0 0 32 22" aria-hidden="true"><rect width="32" height="22" fill="#fff"/>' +
+        '<rect y="2.6" width="32" height="2.8" fill="#0038b8"/><rect y="16.6" width="32" height="2.8" fill="#0038b8"/>' +
+        '<path d="M16 7.1 L19.2 12.6 H12.8 Z M16 14.9 L12.8 9.4 H19.2 Z" fill="none" stroke="#0038b8" stroke-width="1.05"/></svg>',
+    en: '<svg viewBox="0 0 32 22" aria-hidden="true"><rect width="32" height="22" fill="#012169"/>' +
+        '<path d="M0,0 L32,22 M32,0 L0,22" stroke="#fff" stroke-width="4.4"/>' +
+        '<path d="M0,0 L32,22 M32,0 L0,22" stroke="#C8102E" stroke-width="2"/>' +
+        '<path d="M16,0 V22 M0,11 H32" stroke="#fff" stroke-width="7.3"/>' +
+        '<path d="M16,0 V22 M0,11 H32" stroke="#C8102E" stroke-width="4.4"/></svg>',
+    ru: '<svg viewBox="0 0 32 22" aria-hidden="true"><rect width="32" height="22" fill="#fff"/>' +
+        '<rect y="7.34" width="32" height="7.33" fill="#0039A6"/><rect y="14.67" width="32" height="7.33" fill="#D52B1E"/></svg>'
+  };
+
+  function closeAllLangMenus(except) {
+    document.querySelectorAll('[data-lang-picker]').forEach(p => {
+      if (p === except) return;
+      p.querySelector('.lang-menu').classList.remove('open');
+      p.querySelector('.lang-btn').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // מצייר מחדש את הדגל שעל הכפתור ואת רשימת האפשרויות, לפי השפה הנוכחית
+  function renderLangPicker(picker) {
+    picker.querySelector('.lang-flag').innerHTML = FLAGS[currentLang];
+    picker.querySelector('.lang-btn').setAttribute('aria-label', LANG_NAMES[currentLang]);
+    const menu = picker.querySelector('.lang-menu');
+    menu.innerHTML = Object.keys(LANGS).map(code =>
+      '<button type="button" class="lang-option" role="option" data-lang="' + code + '"' +
+      ' aria-selected="' + (code === currentLang) + '">' +
+      '<span class="lang-flag">' + FLAGS[code] + '</span>' +
+      '<span>' + LANG_NAMES[code] + '</span>' +
+      (code === currentLang ? '<span class="lang-check">✓</span>' : '') +
+      '</button>'
+    ).join('');
+    menu.querySelectorAll('.lang-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        closeAllLangMenus();
+        applyLanguage(opt.dataset.lang);
+      });
+    });
+  }
+
+  function initLangPicker(picker) {
+    const btn = picker.querySelector('.lang-btn');
+    const menu = picker.querySelector('.lang-menu');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willOpen = !menu.classList.contains('open');
+      closeAllLangMenus(picker);
+      menu.classList.toggle('open', willOpen);
+      btn.setAttribute('aria-expanded', String(willOpen));
+    });
+    menu.addEventListener('click', (e) => e.stopPropagation());
+    renderLangPicker(picker);
+  }
+
+  document.addEventListener('click', () => closeAllLangMenus());
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllLangMenus(); });
+
   function applyLanguage(lang) {
     if (!LANGS[lang]) lang = 'he';
     currentLang = lang;
@@ -1077,10 +1169,7 @@
     document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     document.querySelectorAll('[data-i18n-title]').forEach(el => { el.setAttribute('title', t(el.dataset.i18nTitle)); });
 
-    ['lang-select', 'lang-select-gate'].forEach(id => {
-      const sel = document.getElementById(id);
-      if (sel) sel.value = lang;
-    });
+    document.querySelectorAll('[data-lang-picker]').forEach(renderLangPicker);
 
     // תוכן דינמי שנבנה ב-JS צריך להיבנות מחדש בשפה החדשה.
     // הגישה נעשית דרך ה-DOM ובתוך try, כי חלק מהמשתנים מוגדרים בהמשך הסקריפט
@@ -1506,10 +1595,7 @@
     }, delay || 520);
   }
 
-  ['lang-select', 'lang-select-gate'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (sel) sel.addEventListener('change', () => applyLanguage(sel.value));
-  });
+  document.querySelectorAll('[data-lang-picker]').forEach(initLangPicker);
   applyLanguage(currentLang);
 
   coachNextBtn.addEventListener('click', advanceCoach);
@@ -2179,21 +2265,37 @@
       }));
   }
 
-  // בקשה אחת לוויקינתונים לכל המועמדים יחד, ומחזירה רק את אלה שהם באמת צמחים
+  // ויקינתונים מגבילה קצב בקשות (429) ומחזירה שגיאה כשמחפשים כמה פעמים ברצף.
+  // לכן כל תשובה נשמרת בזיכרון לכל אורך הביקור, וכל ערך נבדק פעם אחת בלבד.
+  const plantCheckCache = new Map(); // qid -> true/false
+
+  // בקשה אחת לוויקינתונים לכל המועמדים החדשים יחד, ומחזירה רק את אלה שהם באמת צמחים
   async function keepOnlyPlants(candidates) {
     if (!candidates.length) return [];
-    const ids = candidates.map(c => c.qid).join('|');
-    const data = await fetchJson('https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' +
-      encodeURIComponent(ids) + '&props=claims&format=json&origin=*');
-    const entities = data.entities || {};
-    return candidates.filter(c => {
-      const claims = (entities[c.qid] || {}).claims || {};
-      const isTaxon = (claims.P31 || []).some(st => {
-        const dv = st.mainsnak && st.mainsnak.datavalue;
-        return !!(dv && dv.value && dv.value.id === WD_TAXON);
+    const unknown = candidates.filter(c => !plantCheckCache.has(c.qid));
+
+    if (unknown.length) {
+      const url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' +
+        encodeURIComponent(unknown.map(c => c.qid).join('|')) + '&props=claims&format=json&origin=*';
+      let data = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { data = await fetchJson(url); break; }
+        catch (err) {
+          if (attempt === 1) throw err;
+          await new Promise(r => setTimeout(r, 700)); // הגבלת קצב חולפת מהר - ניסיון שני
+        }
+      }
+      const entities = (data && data.entities) || {};
+      unknown.forEach(c => {
+        const claims = (entities[c.qid] || {}).claims || {};
+        const isTaxon = (claims.P31 || []).some(st => {
+          const dv = st.mainsnak && st.mainsnak.datavalue;
+          return !!(dv && dv.value && dv.value.id === WD_TAXON);
+        });
+        plantCheckCache.set(c.qid, isTaxon && WD_PLANT_DB_PROPS.some(prop => claims[prop]));
       });
-      return isTaxon && WD_PLANT_DB_PROPS.some(prop => claims[prop]);
-    });
+    }
+    return candidates.filter(c => plantCheckCache.get(c.qid));
   }
 
   async function runWebSearch(query) {
@@ -2225,10 +2327,14 @@
     }
 
     if (!results.length) {
-      webSearchStatus.textContent = lastError
-        ? t('search_failed') + ((lastError && lastError.message) || String(lastError))
-        : t('no_results');
-      if (lastError) webSearchStatus.classList.add('error');
+      const msg = (lastError && lastError.message) || String(lastError || '');
+      if (lastError) {
+        // 429 = ויקינתונים מגבילה קצב. זו תקלה זמנית, לא "אין תוצאות" - חשוב שההודעה תבדיל
+        webSearchStatus.textContent = msg.indexOf('429') !== -1 ? t('search_busy') : t('search_failed') + msg;
+        webSearchStatus.classList.add('error');
+      } else {
+        webSearchStatus.textContent = t('no_results');
+      }
       return;
     }
     webSearchStatus.textContent = '';
