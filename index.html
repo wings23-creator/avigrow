@@ -365,6 +365,15 @@
   .auth-status { font-size: 0.85rem; color: var(--sprout); margin-top: 14px; min-height: 1.2em; }
   .auth-status.error { color: var(--clay); }
   .auth-sent-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .lang-select {
+    flex-shrink: 0; border: 1.5px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--ink); cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.82rem; padding: 8px 6px; height: 40px;
+  }
+  .lang-select:focus-visible { outline: 2px solid var(--sprout); outline-offset: 1px; }
+  .lang-select-gate { position: absolute; top: 14px; inset-inline-end: 14px; height: 34px; padding: 4px 6px; }
+  .auth-card { position: relative; }
+
   .auth-change-email { background: none; border: none; color: var(--ink-soft); font-size: 0.82rem; text-decoration: underline; cursor: pointer; margin-top: 14px; }
 
   /* ===== סיור מודרך - אצבע שמצביעה על הפעולה הבאה בכל מסך, בכניסה הראשונה =====
@@ -430,39 +439,44 @@
   <!-- שער כניסה - מוצג עד שהמשתמש מאומת -->
   <div class="auth-gate" id="auth-gate" style="display:none;">
     <div class="auth-card">
+      <select id="lang-select-gate" class="lang-select lang-select-gate" aria-label="Language">
+        <option value="he">עברית</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
 
       <div id="auth-step-form">
-        <p class="sub">כניסה אישית לרשימת הצמחים שלך</p>
+        <p class="sub" data-i18n="gate_sub"></p>
         <div class="row2">
           <div class="field">
-            <label for="auth-first-name">שם פרטי</label>
+            <label for="auth-first-name" data-i18n="first_name"></label>
             <input type="text" id="auth-first-name" autocomplete="given-name">
           </div>
           <div class="field">
-            <label for="auth-last-name">שם משפחה</label>
+            <label for="auth-last-name" data-i18n="last_name"></label>
             <input type="text" id="auth-last-name" autocomplete="family-name">
           </div>
         </div>
         <div class="field">
-          <label for="auth-email">אימייל</label>
+          <label for="auth-email" data-i18n="email"></label>
           <input type="email" id="auth-email" autocomplete="email" placeholder="name@example.com">
         </div>
-        <button type="button" id="auth-send-btn" class="btn">שליחת קוד כניסה</button>
+        <button type="button" id="auth-send-btn" class="btn" data-i18n="gate_send"></button>
         <p id="auth-form-status" class="auth-status"></p>
       </div>
 
       <div id="auth-step-sent" style="display:none;">
         <div class="auth-sent-icon">📩</div>
-        <p class="sub">שלחנו קוד לכתובת <strong id="auth-sent-email"></strong>.<br>הקלידי אותו כאן כדי להיכנס.</p>
+        <p class="sub"><span data-i18n="gate_sent_1"></span> <strong id="auth-sent-email"></strong>.<br><span data-i18n="gate_sent_2"></span></p>
         <div class="field">
-          <label for="auth-code">קוד כניסה</label>
+          <label for="auth-code" data-i18n="gate_code"></label>
           <input type="text" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="00000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
         </div>
-        <button type="button" id="auth-verify-btn" class="btn">אימות והתחברות</button>
+        <button type="button" id="auth-verify-btn" class="btn" data-i18n="gate_verify"></button>
         <p id="auth-verify-status" class="auth-status"></p>
-        <button type="button" id="auth-change-email-btn" class="auth-change-email">שליחה לכתובת אחרת</button>
+        <button type="button" id="auth-change-email-btn" class="auth-change-email" data-i18n="gate_other_email"></button>
       </div>
     </div>
   </div>
@@ -486,39 +500,44 @@
     <header>
       <span class="logo-dot"></span>
       <h1>AviGrow</h1>
-      <button type="button" id="home-btn" class="menu-toggle" aria-label="חזרה למסך הבית" title="בית" style="font-size:1.15rem;">🏠</button>
-      <button type="button" id="menu-toggle-btn" class="menu-toggle" aria-label="פתיחת תפריט">
+      <select id="lang-select" class="lang-select" aria-label="Language">
+        <option value="he">עברית</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
+      <button type="button" id="home-btn" class="menu-toggle" data-i18n-aria="home_aria" data-i18n-title="home_title" style="font-size:1.15rem;">🏠</button>
+      <button type="button" id="menu-toggle-btn" class="menu-toggle" data-i18n-aria="menu_aria">
         <span></span><span></span><span></span>
       </button>
     </header>
 
     <section class="hero">
-      <h1>הצמחים שלי</h1>
-      <p>המקום שבו אני שומר מידע ותמונות על כל צמח בבית, ובודק את מצבם מתי שרוצים.</p>
+      <h1 data-i18n="hero_title"></h1>
+      <p data-i18n="hero_sub"></p>
       <p class="stat-line" id="stat-line"></p>
       <p id="import-status" class="identify-status" style="display:none;"></p>
 
       <!-- אריחי פעולות מהירות - גישה מיידית לפעולות הנפוצות בלי לפתוח את ההמבורגר -->
       <div class="quick-tiles">
         <button type="button" class="quick-tile" id="tile-plants-list">
-          <span class="ic">🌿</span><span class="tt">רשימת צמחים</span>
+          <span class="ic">🌿</span><span class="tt" data-i18n="tile_list"></span>
         </button>
         <button type="button" class="quick-tile" id="tile-add-plant">
-          <span class="ic">🌱</span><span class="tt">הוספת צמח</span>
+          <span class="ic">🌱</span><span class="tt" data-i18n="tile_add"></span>
         </button>
         <button type="button" class="quick-tile" id="tile-quick-health">
-          <span class="ic">🩺</span><span class="tt">בדיקת בריאות</span>
+          <span class="ic">🩺</span><span class="tt" data-i18n="tile_health"></span>
         </button>
         <button type="button" class="quick-tile" id="tile-web-search">
-          <span class="ic">🌐</span><span class="tt">חיפוש באינטרנט</span>
+          <span class="ic">🌐</span><span class="tt" data-i18n="tile_web"></span>
         </button>
       </div>
 
       <!-- כרטיס "מה קורה היום" - מוצג רק כשיש בפועל צמח שצריך השקיה -->
       <div class="watering-focus-card" id="watering-focus-card" style="display:none;">
-        <div class="focus-title">💧 להשקות היום (<span id="watering-focus-count">0</span>)</div>
+        <div class="focus-title">💧 <span data-i18n="focus_title"></span> (<span id="watering-focus-count">0</span>)</div>
         <div id="watering-focus-list"></div>
-        <button type="button" class="btn" id="watering-focus-cta">לרשימה המלאה ←</button>
+        <button type="button" class="btn" id="watering-focus-cta" data-i18n="focus_cta"></button>
       </div>
     </section>
 
@@ -526,153 +545,153 @@
     <div class="menu-overlay" id="menu-overlay"></div>
     <nav class="menu-drawer" id="menu-drawer" aria-hidden="true">
       <div class="menu-drawer-header">
-        <span>תפריט</span>
-        <button type="button" id="menu-close-btn" class="menu-close" aria-label="סגירת תפריט">✕</button>
+        <span data-i18n="menu"></span>
+        <button type="button" id="menu-close-btn" class="menu-close" data-i18n-aria="menu_close_aria">✕</button>
       </div>
 
       <div class="menu-group">
-        <div class="menu-group-title">🌱 צמחים</div>
-        <button type="button" id="show-plants-list-btn" class="menu-item">🌿 רשימת צמחים</button>
-        <button type="button" id="show-add-btn" class="menu-item">🌱 הוספת צמח חדש</button>
-        <button type="button" id="show-web-search-btn" class="menu-item">🌐 חיפוש צמח באינטרנט</button>
+        <div class="menu-group-title">🌱 <span data-i18n="grp_plants"></span></div>
+        <button type="button" id="show-plants-list-btn" class="menu-item">🌿 <span data-i18n="tile_list"></span></button>
+        <button type="button" id="show-add-btn" class="menu-item">🌱 <span data-i18n="add_title"></span></button>
+        <button type="button" id="show-web-search-btn" class="menu-item">🌐 <span data-i18n="web_title"></span></button>
       </div>
 
       <div class="menu-group">
-        <div class="menu-group-title">🩺 בריאות</div>
-        <button type="button" id="show-quick-health-btn" class="menu-item">🩺 בדיקת בריאות מהירה</button>
+        <div class="menu-group-title">🩺 <span data-i18n="grp_health"></span></div>
+        <button type="button" id="show-quick-health-btn" class="menu-item">🩺 <span data-i18n="health_title"></span></button>
       </div>
 
       <div class="menu-group">
-        <div class="menu-group-title">💾 נתונים</div>
-        <button type="button" id="export-btn" class="menu-item">📤 ייצוא לקובץ</button>
+        <div class="menu-group-title">💾 <span data-i18n="grp_data"></span></div>
+        <button type="button" id="export-btn" class="menu-item">📤 <span data-i18n="export"></span></button>
         <input type="file" id="import-input" accept="application/json" style="display:none;">
-        <label for="import-input" class="menu-item">📥 ייבוא מקובץ</label>
+        <label for="import-input" class="menu-item">📥 <span data-i18n="import"></span></label>
       </div>
 
       <div class="menu-group">
-        <div class="menu-group-title">👤 חשבון</div>
+        <div class="menu-group-title">👤 <span data-i18n="grp_account"></span></div>
         <div class="menu-item" style="cursor:default; background:none; padding-inline-start:14px;" id="menu-user-name"></div>
-        <button type="button" id="show-account-btn" class="menu-item">⚙️ עדכון פרטים</button>
-        <button type="button" id="show-guide-btn" class="menu-item">🎬 מדריך שימוש</button>
-        <button type="button" id="logout-btn" class="menu-item">🚪 התנתקות</button>
+        <button type="button" id="show-account-btn" class="menu-item">⚙️ <span data-i18n="account_title"></span></button>
+        <button type="button" id="show-guide-btn" class="menu-item">🎬 <span data-i18n="guide_menu"></span></button>
+        <button type="button" id="logout-btn" class="menu-item">🚪 <span data-i18n="logout"></span></button>
       </div>
 
       <!-- קבוצה זו מוצגת רק למנהלת המערכת - ה-JS חושף אותה לפי currentUserId, וההרשאה האמיתית נאכפת ב-RLS -->
       <div class="menu-group" id="admin-menu-group" style="display:none;">
-        <div class="menu-group-title">🛠️ ניהול מערכת</div>
-        <button type="button" id="show-admin-btn" class="menu-item">🛠️ ניהול נתונים</button>
+        <div class="menu-group-title">🛠️ <span data-i18n="grp_admin"></span></div>
+        <button type="button" id="show-admin-btn" class="menu-item">🛠️ <span data-i18n="admin_title"></span></button>
       </div>
     </nav>
 
     <!-- בדיקת בריאות מהירה - בלי קשר לצמח קיים ברשימה -->
     <section class="quick-health" id="quick-health-section" style="display:none;">
-      <h2>בדיקת בריאות מהירה</h2>
-      <p class="sub">צלמו כל צמח - גם אם הוא עדיין לא ברשימה שלכם - ותקבלו אבחון מיידי.</p>
+      <h2 data-i18n="health_title"></h2>
+      <p class="sub" data-i18n="health_sub"></p>
       <input type="file" id="quick-health-input" class="photo-input" accept="image/*">
-      <label for="quick-health-input" class="photo-label">📷 צילום לבדיקה</label>
-      <img id="quick-health-preview" class="photo-preview" alt="תצוגה מקדימה">
+      <label for="quick-health-input" class="photo-label" data-i18n="health_shoot"></label>
+      <img id="quick-health-preview" class="photo-preview" alt="">
       <p id="quick-health-status" class="identify-status"></p>
       <div id="quick-health-result"></div>
-      <button type="button" class="btn btn-ghost" id="close-quick-health-btn">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-quick-health-btn" data-i18n="close"></button>
     </section>
 
     <!-- חיפוש צמח באינטרנט (ויקיפדיה) - להוספת צמח לעיון, לא בהכרח כזה שברשותך -->
     <section class="web-search" id="web-search-section" style="display:none;">
-      <h2>חיפוש צמח באינטרנט</h2>
-      <p class="sub">חפשי שם צמח כדי למצוא תמונה ומידע ולהוסיף אותו לרשימה כ"צמח מהרשת".</p>
-      <input type="text" id="web-search-input" class="search-input" placeholder="🔍 הקלידי שם צמח לחיפוש...">
+      <h2 data-i18n="web_title"></h2>
+      <p class="sub" data-i18n="web_sub"></p>
+      <input type="text" id="web-search-input" class="search-input" data-i18n-ph="web_ph">
       <p id="web-search-status" class="identify-status"></p>
       <div id="web-search-results" class="web-search-results"></div>
-      <button type="button" class="btn btn-ghost" id="close-web-search-btn">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-web-search-btn" data-i18n="close"></button>
     </section>
 
     <!-- עדכון פרטי משתמש - כולל שינוי אימייל עם אימות -->
     <section class="account-settings" id="account-settings-section" style="display:none;">
-      <h2>עדכון פרטים</h2>
+      <h2 data-i18n="account_title"></h2>
 
       <div id="account-step-form">
         <div class="row2">
           <div class="field">
-            <label for="account-first-name">שם פרטי</label>
+            <label for="account-first-name" data-i18n="first_name"></label>
             <input type="text" id="account-first-name">
           </div>
           <div class="field">
-            <label for="account-last-name">שם משפחה</label>
+            <label for="account-last-name" data-i18n="last_name"></label>
             <input type="text" id="account-last-name">
           </div>
         </div>
         <div class="field">
-          <label for="account-email">אימייל</label>
+          <label for="account-email" data-i18n="email"></label>
           <input type="email" id="account-email">
-          <p class="sub" style="margin:6px 0 0;">שינוי כתובת האימייל ידרוש קוד אימות לכתובת החדשה. הצמחים שלך יישארו איתך גם אחרי השינוי.</p>
+          <p class="sub" style="margin:6px 0 0;" data-i18n="account_email_note"></p>
         </div>
         <div class="field" style="display:flex; align-items:center; gap:8px; flex-direction:row-reverse; justify-content:flex-end;">
-          <label for="account-notify-watering" style="margin:0;">📧 קבלת תזכורות השקיה במייל</label>
+          <label for="account-notify-watering" style="margin:0;">📧 <span data-i18n="account_notify"></span></label>
           <input type="checkbox" id="account-notify-watering" style="width:18px; height:18px; margin:0;">
         </div>
-        <button type="button" id="account-save-btn" class="btn">שמירה</button>
-        <button type="button" class="btn btn-ghost" id="close-account-btn">ביטול</button>
+        <button type="button" id="account-save-btn" class="btn" data-i18n="save"></button>
+        <button type="button" class="btn btn-ghost" id="close-account-btn" data-i18n="cancel"></button>
         <p id="account-form-status" class="auth-status"></p>
       </div>
 
       <div id="account-step-verify" style="display:none;">
-        <p class="sub">שלחנו קוד אימות לכתובת <strong id="account-new-email"></strong>.<br>הקלידי אותו כאן כדי לאשר את השינוי.</p>
+        <p class="sub"><span data-i18n="account_sent_1"></span> <strong id="account-new-email"></strong>.<br><span data-i18n="account_sent_2"></span></p>
         <div class="field">
-          <label for="account-verify-code">קוד אימות</label>
+          <label for="account-verify-code" data-i18n="account_code"></label>
           <input type="text" id="account-verify-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="00000000" style="text-align:center; font-size:1.4rem; letter-spacing:4px;">
         </div>
-        <button type="button" id="account-verify-btn" class="btn">אימות שינוי האימייל</button>
+        <button type="button" id="account-verify-btn" class="btn" data-i18n="account_verify"></button>
         <p id="account-verify-status" class="auth-status"></p>
       </div>
     </section>
 
     <!-- מדריך שימוש קצר -->
     <section class="account-settings" id="guide-section" style="display:none;">
-      <h2>מדריך שימוש ב-AviGrow</h2>
-      <p class="sub">סקירה קצרה של האפשרויות באתר, עם הסבר קולי בעברית.</p>
+      <h2 data-i18n="guide_title"></h2>
+      <p class="sub" data-i18n="guide_sub"></p>
       <div id="guide-content">
-        <img src="avigrow-guide.gif" alt="הדגמת ניווט באתר AviGrow" style="width:100%; border-radius:12px; border:1px solid var(--line); margin-bottom:16px;">
+        <img src="avigrow-guide.gif" alt="" style="width:100%; border-radius:12px; border:1px solid var(--line); margin-bottom:16px;">
 
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:18px;">
-          <button type="button" id="guide-play-btn" class="btn" style="padding:10px 22px;">🔊 נגני את ההסבר</button>
-          <button type="button" id="guide-stop-btn" class="btn btn-ghost" style="display:none; padding:10px 22px;">⏹ עצירה</button>
+          <button type="button" id="guide-play-btn" class="btn" style="padding:10px 22px;" data-i18n="guide_play"></button>
+          <button type="button" id="guide-stop-btn" class="btn btn-ghost" style="display:none; padding:10px 22px;" data-i18n="guide_stop"></button>
           <span id="guide-voice-status" class="sub" style="margin:0;"></span>
         </div>
 
         <div class="field guide-step" data-step="0">
-          <label>🌱 הוספת צמח חדש</label>
-          <p class="sub">צלמי את הצמח שלך - הזיהוי (שם ועצות טיפול) יתבצע אוטומטית, ואפשר לתקן לפני השמירה.</p>
+          <label>🌱 <span data-i18n="add_title"></span></label>
+          <p class="sub" data-i18n="g1"></p>
         </div>
         <div class="field guide-step" data-step="1">
-          <label>🌐 חיפוש צמח באינטרנט</label>
-          <p class="sub">מחפשים צמח לפי שם (למשל לפני קנייה) ומוסיפים אותו לרשימה כ"צמח מהרשת", עם תמונה ומידע מוויקיפדיה.</p>
+          <label>🌐 <span data-i18n="web_title"></span></label>
+          <p class="sub" data-i18n="g2"></p>
         </div>
         <div class="field guide-step" data-step="2">
-          <label>🩺 בדיקת בריאות מהירה</label>
-          <p class="sub">צילום מהיר של כל צמח (גם כזה שעדיין לא ברשימה) לקבלת אבחון מצב מיידי.</p>
+          <label>🩺 <span data-i18n="health_title"></span></label>
+          <p class="sub" data-i18n="g3"></p>
         </div>
         <div class="field guide-step" data-step="3">
-          <label>🔍 חיפוש וסינון</label>
-          <p class="sub">תיבת החיפוש מסננת תוך כדי הקלדה, וכפתורי "הכל / הצמחים שלי / מהרשת" מסננים לפי מקור הצמח.</p>
+          <label>🔍 <span data-i18n="g4t"></span></label>
+          <p class="sub" data-i18n="g4"></p>
         </div>
         <div class="field guide-step" data-step="4">
-          <label>💾 ייצוא וייבוא</label>
-          <p class="sub">שמירת גיבוי של כל הצמחים לקובץ, או טעינת גיבוי קיים.</p>
+          <label>💾 <span data-i18n="g5t"></span></label>
+          <p class="sub" data-i18n="g5"></p>
         </div>
         <div class="field guide-step" data-step="5">
-          <label>👤 חשבון</label>
-          <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), צפייה שוב במדריך הזה, והתנתקות מהחשבון.</p>
+          <label>👤 <span data-i18n="grp_account"></span></label>
+          <p class="sub" data-i18n="g6"></p>
         </div>
       </div>
-      <button type="button" class="btn" id="replay-tour-btn" style="margin-top:6px;">👆 הפעלת הסיור המודרך מחדש</button>
-      <p class="sub" style="margin:8px 0 0;">האצבע תחזור להצביע על הפעולה הבאה בכל מסך שתפתחי, כמו בכניסה הראשונה.</p>
-      <button type="button" class="btn btn-ghost" id="close-guide-btn">סגירה</button>
+      <button type="button" class="btn" id="replay-tour-btn" style="margin-top:6px;" data-i18n="replay_tour"></button>
+      <p class="sub" style="margin:8px 0 0;" data-i18n="replay_tour_sub"></p>
+      <button type="button" class="btn btn-ghost" id="close-guide-btn" data-i18n="close"></button>
     </section>
 
     <!-- ניהול מערכת - נטען ומוצג רק למנהלת; ההגנה האמיתית היא Row Level Security ב-Supabase -->
     <section class="account-settings" id="admin-section" style="display:none;">
-      <h2>🛠️ ניהול נתונים</h2>
-      <p class="sub">גישה למנהלת המערכת בלבד. עריכה או מחיקה כאן משפיעה על הנתונים בפועל של כל המשתמשים - בזהירות.</p>
+      <h2>🛠️ <span data-i18n="admin_title"></span></h2>
+      <p class="sub" data-i18n="admin_sub"></p>
 
       <!-- מנעול עריכה - כברירת מחדל נעול, כדי למנוע עריכה/מחיקה בטעות בנתונים רגישים -->
       <button type="button" id="admin-lock-toggle" class="admin-lock locked">🔒 נעול לעריכה - לחצי לפתיחה</button>
@@ -680,50 +699,50 @@
       <p id="admin-status" class="identify-status"></p>
 
       <div id="admin-users-tab">
-        <input type="text" id="admin-users-search" class="search-input" placeholder="🔍 חיפוש משתמש לפי שם" style="margin-bottom:12px;">
+        <input type="text" id="admin-users-search" class="search-input" data-i18n-ph="admin_search_ph" style="margin-bottom:12px;">
         <div id="admin-users-list" class="admin-table"></div>
       </div>
 
       <div id="admin-plants-tab" style="display:none;">
-        <button type="button" class="btn btn-ghost" id="back-to-admin-users-btn" style="margin-bottom:12px;">⬅ חזרה למשתמשים</button>
+        <button type="button" class="btn btn-ghost" id="back-to-admin-users-btn" style="margin-bottom:12px;" data-i18n="admin_back"></button>
         <h3 id="admin-plants-owner-title" style="font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; margin-bottom:12px;"></h3>
         <div id="admin-plants-list" class="admin-table"></div>
       </div>
 
-      <button type="button" class="btn btn-ghost" id="close-admin-btn" style="margin-top:14px;">סגירה</button>
+      <button type="button" class="btn btn-ghost" id="close-admin-btn" style="margin-top:14px;" data-i18n="close"></button>
     </section>
 
     <!-- טופס הוספת צמח חדש -->
     <section class="add-plant" id="add-plant-section" style="display:none;">
-      <h2>הוספת צמח חדש</h2>
+      <h2 data-i18n="add_title"></h2>
       <form id="plant-form">
         <div class="row2">
           <div class="field">
-            <label for="name-he">שם הצמח (עברית)</label>
-            <input type="text" id="name-he" required placeholder="יתמלא אוטומטית לאחר צילום, או הקלידו ידנית">
+            <label for="name-he" data-i18n="name_local"></label>
+            <input type="text" id="name-he" required data-i18n-ph="name_local_ph">
           </div>
           <div class="field">
-            <label for="name-en">שם הצמח (אנגלית)</label>
-            <input type="text" id="name-en" placeholder="יתמלא אוטומטית לאחר צילום">
+            <label for="name-en" data-i18n="name_en"></label>
+            <input type="text" id="name-en" data-i18n-ph="name_en_ph">
           </div>
         </div>
 
         <div class="field">
-          <label for="notes">הערות</label>
-          <textarea id="notes" rows="2" placeholder="יתמלא אוטומטית לאחר צילום - ניתן לתקן"></textarea>
+          <label for="notes" data-i18n="notes"></label>
+          <textarea id="notes" rows="2" data-i18n-ph="notes_ph"></textarea>
         </div>
 
         <div class="field">
-          <label>תמונה של הצמח - הזיהוי יתבצע אוטומטית</label>
+          <label data-i18n="photo_label_title"></label>
           <!-- בלי capture - הדפדפן יציג אפשרות לבחור בין צילום ישיר לבחירה מהגלריה -->
           <input type="file" id="photo-input" class="photo-input" accept="image/*">
           <label for="photo-input" class="photo-label" id="photo-label">📷 לחצו לצילום או העלאת תמונה</label>
-          <img id="photo-preview" class="photo-preview" alt="תצוגה מקדימה">
+          <img id="photo-preview" class="photo-preview" alt="">
           <p id="identify-status" class="identify-status"></p>
         </div>
 
-        <button type="submit" class="btn">שמירת הצמח</button>
-        <button type="button" class="btn btn-ghost" id="close-add-btn">ביטול</button>
+        <button type="submit" class="btn" data-i18n="save_plant"></button>
+        <button type="button" class="btn btn-ghost" id="close-add-btn" data-i18n="cancel"></button>
         <p id="save-error" class="identify-status error" style="display:none;"></p>
       </form>
     </section>
@@ -732,34 +751,349 @@
     <div id="plants-list-section" style="display:none;">
       <!-- תגית סינון "להשקות היום" - מוצגת רק כשמגיעים לכאן דרך כרטיס ההשקיה בדף הבית -->
       <div class="filter-pill" id="watering-filter-pill" style="display:none;">
-        <span>מציגה רק צמחים שדורשים השקיה</span>
-        <button type="button" id="clear-watering-filter-btn">✕ נקה סינון</button>
+        <span data-i18n="filter_watering"></span>
+        <button type="button" id="clear-watering-filter-btn" data-i18n="clear_filter"></button>
       </div>
 
       <!-- חיפוש וסינון -->
       <section class="search-section">
-        <input type="text" id="search-input" class="search-input" placeholder="🔍 חיפוש צמח לפי שם (עברית או אנגלית)">
+        <input type="text" id="search-input" class="search-input" data-i18n-ph="list_search_ph">
         <div class="source-filter" id="source-filter">
-          <button type="button" class="filter-btn active" data-source="all">הכל</button>
-          <button type="button" class="filter-btn" data-source="mine">הצמחים שלי</button>
-          <button type="button" class="filter-btn" data-source="web">מהרשת</button>
+          <button type="button" class="filter-btn active" data-source="all" data-i18n="f_all"></button>
+          <button type="button" class="filter-btn" data-source="mine" data-i18n="f_mine"></button>
+          <button type="button" class="filter-btn" data-source="web" data-i18n="f_web"></button>
         </div>
       </section>
 
       <!-- רשימת הצמחים השמורים -->
       <section class="plants-section">
-        <h2>הצמחים שלי</h2>
+        <h2 data-i18n="hero_title"></h2>
         <div id="plants-container">
           <!-- כאן ה-JS מזריק את הכרטיסים -->
         </div>
-        <button type="button" class="btn btn-ghost" id="close-plants-list-btn" style="margin-top:14px;">סגירה</button>
+        <button type="button" class="btn btn-ghost" id="close-plants-list-btn" style="margin-top:14px;" data-i18n="close"></button>
       </section>
     </div>
 
-    <footer class="app-footer">© 2026 יעל רוזן. כל הזכויות שמורות.</footer>
+    <footer class="app-footer" data-i18n="footer"></footer>
   </div>
 
 <script>
+
+  // ===== ריבוי שפות =====
+  // כל טקסט קבוע במסך מסומן ב-data-i18n (או data-i18n-ph לפלייסהולדר), ומתורגם
+  // מהמילון הזה. הבחירה נשמרת מקומית ומוחלת מיד, כולל היפוך כיוון הכתיבה.
+  const LANGS = { he: { dir: 'rtl', wiki: 'he' }, en: { dir: 'ltr', wiki: 'en' }, ru: { dir: 'ltr', wiki: 'ru' } };
+  const LANG_NAMES = { he: 'עברית', en: 'English', ru: 'Русский' };
+
+  const I18N = {
+    he: {
+      doc_title: 'AviGrow — הצמחים שלי',
+      gate_sub: 'כניסה אישית לרשימת הצמחים שלך', first_name: 'שם פרטי', last_name: 'שם משפחה', email: 'אימייל',
+      gate_send: 'שליחת קוד כניסה', gate_sent_1: 'שלחנו קוד לכתובת', gate_sent_2: 'הקלידו אותו כאן כדי להיכנס.',
+      gate_code: 'קוד כניסה', gate_verify: 'אימות והתחברות', gate_other_email: 'שליחה לכתובת אחרת',
+      home_aria: 'חזרה למסך הבית', home_title: 'בית', menu_aria: 'פתיחת תפריט', menu_close_aria: 'סגירת תפריט',
+      hero_title: 'הצמחים שלי', hero_sub: 'המקום שבו אני שומר מידע ותמונות על כל צמח בבית, ובודק את מצבם מתי שרוצים.',
+      tile_list: 'רשימת צמחים', tile_add: 'הוספת צמח', tile_health: 'בדיקת בריאות', tile_web: 'חיפוש באינטרנט',
+      focus_title: 'להשקות היום', focus_cta: 'לרשימה המלאה ←',
+      menu: 'תפריט', grp_plants: 'צמחים', grp_health: 'בריאות', grp_data: 'נתונים', grp_account: 'חשבון', grp_admin: 'ניהול מערכת',
+      export: 'ייצוא לקובץ', import: 'ייבוא מקובץ', guide_menu: 'מדריך שימוש', logout: 'התנתקות',
+      add_title: 'הוספת צמח חדש', web_title: 'חיפוש צמח באינטרנט', health_title: 'בדיקת בריאות מהירה',
+      account_title: 'עדכון פרטים', admin_title: 'ניהול נתונים',
+      health_sub: 'צלמו כל צמח - גם אם הוא עדיין לא ברשימה שלכם - ותקבלו אבחון מיידי.',
+      health_shoot: '📷 צילום לבדיקה',
+      web_sub: 'חפשו שם של צמח כדי למצוא תמונה ומידע, ולהוסיף אותו לרשימה כ"צמח מהרשת".',
+      web_ph: '🔍 הקלידו שם של צמח...',
+      account_email_note: 'שינוי כתובת האימייל ידרוש קוד אימות לכתובת החדשה. הצמחים שלך יישארו איתך גם אחרי השינוי.',
+      account_notify: 'קבלת תזכורות השקיה במייל', save: 'שמירה', cancel: 'ביטול', close: 'סגירה',
+      account_sent_1: 'שלחנו קוד אימות לכתובת', account_sent_2: 'הקלידו אותו כאן כדי לאשר את השינוי.',
+      account_code: 'קוד אימות', account_verify: 'אימות שינוי האימייל',
+      guide_title: 'מדריך שימוש ב-AviGrow', guide_sub: 'סקירה קצרה של האפשרויות באתר, עם הסבר קולי בעברית.',
+      guide_play: '🔊 נגני את ההסבר', guide_stop: '⏹ עצירה',
+      g1: 'צלמו את הצמח שלכם - הזיהוי (שם ועצות טיפול) יתבצע אוטומטית, ואפשר לתקן לפני השמירה.',
+      g2: 'מחפשים צמח לפי שם (למשל לפני קנייה) ומוסיפים אותו לרשימה כ"צמח מהרשת", עם תמונה ומידע מוויקיפדיה.',
+      g3: 'צילום מהיר של כל צמח (גם כזה שעדיין לא ברשימה) לקבלת אבחון מצב מיידי.',
+      g4t: 'חיפוש וסינון', g4: 'תיבת החיפוש מסננת תוך כדי הקלדה, וכפתורי "הכל / הצמחים שלי / מהרשת" מסננים לפי מקור הצמח.',
+      g5t: 'ייצוא וייבוא', g5: 'שמירת גיבוי של כל הצמחים לקובץ, או טעינת גיבוי קיים.',
+      g6: 'עדכון שם או כתובת אימייל (עם קוד אימות), צפייה שוב במדריך הזה, והתנתקות מהחשבון.',
+      replay_tour: '👆 הפעלת הסיור המודרך מחדש',
+      replay_tour_sub: 'האצבע תחזור להצביע על הפעולה הבאה בכל מסך שתפתחו, כמו בכניסה הראשונה.',
+      admin_sub: 'גישה למנהלת המערכת בלבד. עריכה או מחיקה כאן משפיעה על הנתונים בפועל של כל המשתמשים - בזהירות.',
+      admin_search_ph: '🔍 חיפוש משתמש לפי שם', admin_back: '⬅ חזרה למשתמשים',
+      name_local: 'שם הצמח (עברית)', name_local_ph: 'יתמלא אוטומטית לאחר צילום, או הקלידו ידנית',
+      name_en: 'שם הצמח (אנגלית)', name_en_ph: 'יתמלא אוטומטית לאחר צילום',
+      notes: 'הערות', notes_ph: 'יתמלא אוטומטית לאחר צילום - ניתן לתקן',
+      photo_label_title: 'תמונה של הצמח - הזיהוי יתבצע אוטומטית',
+      photo_pick: '📷 לחצו לצילום או העלאת תמונה', photo_change: '📷 תמונה נבחרה - לחצו להחלפה',
+      save_plant: 'שמירת הצמח',
+      filter_watering: 'מציגה רק צמחים שדורשים השקיה', clear_filter: '✕ נקה סינון',
+      list_search_ph: '🔍 חיפוש צמח לפי שם', f_all: 'הכל', f_mine: 'הצמחים שלי', f_web: 'מהרשת',
+      footer: '© 2026 יעל רוזן. כל הזכויות שמורות.',
+      // מצב השקיה
+      w_never: 'עוד לא סומנה השקיה - לחצו "השקיתי" בפעם הראשונה',
+      w_next: '💧 השקיה הבאה בעוד {n} {unit}', w_today: '💧 להשקות היום!', w_late: '⚠️ באיחור {n} {unit} בהשקיה',
+      day: 'יום', days: 'ימים', w_every: '💧 השקיה כל', w_days_ph: 'ימים', w_done: '✅ השקיתי היום',
+      w_bad_number: 'יש להזין מספר ימים תקין (1 ומעלה), או להשאיר ריק לביטול',
+      // כרטיס צמח
+      badge_web: 'מהרשת', added_on: 'נוסף בתאריך', health_btn: '🩺 בדיקת בריאות', checked_on: 'נבדק בתאריך',
+      delete_plant: 'מחיקת צמח', status_ok: 'תקין',
+      empty_none: 'עדיין לא הוספת צמחים. התחילו למעלה 🌱', empty_search: 'לא נמצאו צמחים התואמים לחיפוש.',
+      load_failed: 'לא הצלחתי לטעון את הצמחים מהשרת: ',
+      stat_none: 'עדיין אין צמחים ברשימה - זה הזמן להוסיף את הראשון 🌱', stat_some: 'צמחים ברשימה שלך',
+      // סטטוסים
+      identifying: '🔍 מזהה את הצמח...', identified: '✓ זוהה בהצלחה - אפשר לתקן לפני השמירה',
+      identify_failed: 'לא הצלחתי לזהות אוטומטית - אפשר למלא ידנית',
+      checking: '🔍 בודק את מצב הצמח...', check_failed: 'לא הצלחתי לבדוק כרגע: ',
+      save_failed: 'השמירה נכשלה. נסו שוב או צלמו תמונה קטנה יותר.', unexpected: 'שגיאה לא צפויה: ',
+      exporting: '💾 גובה אוטומטית לקובץ הורדות', importing: '📥 מייבא...', import_none: 'אין עדיין צמחים לייצוא.',
+      import_ok: '✓ יובאו {n} צמחים בהצלחה', import_failed: 'הייבוא נכשל: ',
+      // חיפוש באינטרנט
+      searching: '🔍 מחפש...', no_results: 'לא נמצאו צמחים בשם הזה. נסו שם אחר, או בשפה אחרת.',
+      search_failed: 'החיפוש נכשל: ', add_to_list: '➕ הוספה לרשימה', adding: 'מוסיף...', added: '✓ נוסף',
+      add_failed: 'הוספה נכשלה', source_wiki: 'מקור: ויקיפדיה',
+      // טפסים
+      need_names: 'נא למלא שם פרטי ושם משפחה', need_email: 'נא להזין כתובת אימייל תקינה',
+      sending: 'שולח...', verifying: 'מאמת...', saving: 'שומר...', saved_ok: '✓ נשמר בהצלחה',
+      need_code: 'נא להקליד את הקוד שקיבלתם במייל', bad_code: 'הקוד שגוי או פג תוקף: ',
+      send_failed: 'השליחה נכשלה: ', save_failed2: 'השמירה נכשלה: ',
+      error: 'שגיאה: ', unknown_error: 'שגיאה לא ידועה',
+      // סיור מודרך
+      t_next: 'הבא ←', t_done: 'סיימנו 👍', t_skip: 'דילוג על הסיור', t_step: 'שלב {i} מתוך {n}',
+      t_click: 'לחצו על מה שמסומן כדי להמשיך', t_click_btn: 'לחצו על הכפתור המסומן',
+      tour_home1: 'ברוכים הבאים! מכאן מוסיפים צמח חדש - מצלמים, והשאר ימולא אוטומטית.',
+      tour_home2: 'וכאן תמצאו תמיד את כל הצמחים שלכם, כולל מי צריך השקיה היום.',
+      tour_home3: 'משאר האפשרויות מגיעים דרך התפריט הזה. זהו - אפשר להתחיל!',
+      tour_add1: 'מתחילים מכאן: לחצו לצילום הצמח או להעלאת תמונה. הזיהוי יתבצע אוטומטית.',
+      tour_add2: 'מצוין! אפשר לתקן את הפרטים שהתמלאו - וכשמוכנים, לוחצים כאן לשמירת הצמח.',
+      tour_health1: 'צלמו כאן כל צמח - גם כזה שעדיין לא ברשימה שלכם - ותקבלו אבחון מיידי של מצבו.',
+      tour_search1: 'הקלידו כאן שם של צמח. התוצאות יהיו צמחים בלבד, ואפשר להוסיף אותם לרשימה.',
+      tour_list1: 'תיבת החיפוש מסננת את הרשימה תוך כדי הקלדה.',
+      tour_list2: 'והכפתורים האלה מסננים לפי מקור הצמח - הכל, הצמחים שלכם, או צמחים מהרשת.',
+      tour_account1: 'מכאן שולטים על תזכורות ההשקיה במייל - אפשר לכבות ולהדליק מתי שרוצים.',
+      tour_account2: 'ואחרי כל שינוי - לוחצים כאן לשמירה.',
+      tour_admin1: 'הנתונים נעולים לעריכה כברירת מחדל. כדי לערוך או למחוק, פותחים קודם את המנעול.'
+    },
+    en: {
+      doc_title: 'AviGrow — My Plants',
+      gate_sub: 'Your personal plant collection', first_name: 'First name', last_name: 'Last name', email: 'Email',
+      gate_send: 'Send login code', gate_sent_1: 'We sent a code to', gate_sent_2: 'Enter it here to sign in.',
+      gate_code: 'Login code', gate_verify: 'Verify and sign in', gate_other_email: 'Use a different address',
+      home_aria: 'Back to home screen', home_title: 'Home', menu_aria: 'Open menu', menu_close_aria: 'Close menu',
+      hero_title: 'My Plants', hero_sub: 'Where I keep notes and photos of every plant at home, and check on them whenever I like.',
+      tile_list: 'Plant list', tile_add: 'Add a plant', tile_health: 'Health check', tile_web: 'Search the web',
+      focus_title: 'Water today', focus_cta: 'See the full list →',
+      menu: 'Menu', grp_plants: 'Plants', grp_health: 'Health', grp_data: 'Data', grp_account: 'Account', grp_admin: 'Administration',
+      export: 'Export to file', import: 'Import from file', guide_menu: 'User guide', logout: 'Sign out',
+      add_title: 'Add a new plant', web_title: 'Search for a plant online', health_title: 'Quick health check',
+      account_title: 'Update details', admin_title: 'Manage data',
+      health_sub: 'Photograph any plant - even one that is not on your list yet - and get an instant diagnosis.',
+      health_shoot: '📷 Take a photo',
+      web_sub: 'Search for a plant by name to find a photo and information, and add it to your list as a "web plant".',
+      web_ph: '🔍 Type a plant name...',
+      account_email_note: 'Changing your email address requires a verification code sent to the new address. Your plants stay with you.',
+      account_notify: 'Email me watering reminders', save: 'Save', cancel: 'Cancel', close: 'Close',
+      account_sent_1: 'We sent a verification code to', account_sent_2: 'Enter it here to confirm the change.',
+      account_code: 'Verification code', account_verify: 'Confirm email change',
+      guide_title: 'AviGrow user guide', guide_sub: 'A short tour of what the app can do, with narration in Hebrew.',
+      guide_play: '🔊 Play the narration', guide_stop: '⏹ Stop',
+      g1: 'Photograph your plant - the name and care tips are filled in automatically, and you can edit them before saving.',
+      g2: 'Search for a plant by name (before buying one, for example) and add it to your list as a "web plant", with a photo and details from Wikipedia.',
+      g3: 'A quick photo of any plant (even one not on your list) for an instant condition report.',
+      g4t: 'Search and filter', g4: 'The search box filters as you type, and the "All / My plants / From the web" buttons filter by source.',
+      g5t: 'Export and import', g5: 'Save a backup of all your plants to a file, or load an existing backup.',
+      g6: 'Update your name or email address (with a verification code), watch this guide again, or sign out.',
+      replay_tour: '👆 Replay the guided tour',
+      replay_tour_sub: 'The finger will point out the next step again on every screen you open, just like your first visit.',
+      admin_sub: 'Administrator access only. Editing or deleting here affects real data for every user - take care.',
+      admin_search_ph: '🔍 Search users by name', admin_back: '⬅ Back to users',
+      name_local: 'Plant name (English)', name_local_ph: 'Filled in automatically after a photo, or type it yourself',
+      name_en: 'Plant name (Latin / English)', name_en_ph: 'Filled in automatically after a photo',
+      notes: 'Notes', notes_ph: 'Filled in automatically after a photo - you can edit it',
+      photo_label_title: 'Photo of the plant - identification happens automatically',
+      photo_pick: '📷 Tap to take or upload a photo', photo_change: '📷 Photo selected - tap to replace',
+      save_plant: 'Save plant',
+      filter_watering: 'Showing only plants that need watering', clear_filter: '✕ Clear filter',
+      list_search_ph: '🔍 Search plants by name', f_all: 'All', f_mine: 'My plants', f_web: 'From the web',
+      footer: '© 2026 Yael Rosen. All rights reserved.',
+      w_never: 'Not watered yet - tap "Watered" the first time',
+      w_next: '💧 Next watering in {n} {unit}', w_today: '💧 Water today!', w_late: '⚠️ {n} {unit} overdue for watering',
+      day: 'day', days: 'days', w_every: '💧 Water every', w_days_ph: 'days', w_done: '✅ Watered today',
+      w_bad_number: 'Enter a valid number of days (1 or more), or leave it empty to turn this off',
+      badge_web: 'from the web', added_on: 'Added on', health_btn: '🩺 Health check', checked_on: 'Checked on',
+      delete_plant: 'Delete plant', status_ok: 'Healthy',
+      empty_none: 'No plants yet. Add your first one above 🌱', empty_search: 'No plants match your search.',
+      load_failed: 'Could not load your plants from the server: ',
+      stat_none: 'No plants yet - time to add your first 🌱', stat_some: 'plants in your list',
+      identifying: '🔍 Identifying the plant...', identified: '✓ Identified - you can edit before saving',
+      identify_failed: 'Could not identify it automatically - please fill it in yourself',
+      checking: '🔍 Checking the plant...', check_failed: 'Could not check right now: ',
+      save_failed: 'Save failed. Try again, or use a smaller photo.', unexpected: 'Unexpected error: ',
+      exporting: '💾 Saved to your downloads folder', importing: '📥 Importing...', import_none: 'No plants to export yet.',
+      import_ok: '✓ Imported {n} plants successfully', import_failed: 'Import failed: ',
+      searching: '🔍 Searching...', no_results: 'No plants found with that name. Try another name, or another language.',
+      search_failed: 'Search failed: ', add_to_list: '➕ Add to my list', adding: 'Adding...', added: '✓ Added',
+      add_failed: 'Could not add', source_wiki: 'Source: Wikipedia',
+      need_names: 'Please enter your first and last name', need_email: 'Please enter a valid email address',
+      sending: 'Sending...', verifying: 'Verifying...', saving: 'Saving...', saved_ok: '✓ Saved',
+      need_code: 'Please enter the code from your email', bad_code: 'That code is wrong or expired: ',
+      send_failed: 'Sending failed: ', save_failed2: 'Save failed: ',
+      error: 'Error: ', unknown_error: 'Unknown error',
+      t_next: 'Next →', t_done: 'All done 👍', t_skip: 'Skip the tour', t_step: 'Step {i} of {n}',
+      t_click: 'Tap the highlighted item to continue', t_click_btn: 'Tap the highlighted button',
+      tour_home1: 'Welcome! This is where you add a new plant - take a photo and the rest fills itself in.',
+      tour_home2: 'And here you will always find all your plants, including which ones need water today.',
+      tour_home3: 'Everything else lives in this menu. That is it - you are ready to go!',
+      tour_add1: 'Start here: tap to photograph your plant or upload an image. Identification is automatic.',
+      tour_add2: 'Great! You can correct the details that were filled in - then tap here to save the plant.',
+      tour_health1: 'Photograph any plant here - even one not on your list - for an instant report on its condition.',
+      tour_search1: 'Type a plant name here. Results are plants only, and you can add them to your list.',
+      tour_list1: 'The search box filters your list as you type.',
+      tour_list2: 'And these buttons filter by source - all, your own plants, or plants from the web.',
+      tour_account1: 'This controls watering reminders by email - turn them on or off whenever you like.',
+      tour_account2: 'And after any change - tap here to save.',
+      tour_admin1: 'Data is locked for editing by default. To edit or delete, unlock it first.'
+    },
+    ru: {
+      doc_title: 'AviGrow — Мои растения',
+      gate_sub: 'Личный список ваших растений', first_name: 'Имя', last_name: 'Фамилия', email: 'Эл. почта',
+      gate_send: 'Отправить код входа', gate_sent_1: 'Мы отправили код на адрес', gate_sent_2: 'Введите его здесь, чтобы войти.',
+      gate_code: 'Код входа', gate_verify: 'Подтвердить и войти', gate_other_email: 'Отправить на другой адрес',
+      home_aria: 'Вернуться на главную', home_title: 'Главная', menu_aria: 'Открыть меню', menu_close_aria: 'Закрыть меню',
+      hero_title: 'Мои растения', hero_sub: 'Здесь я храню заметки и фотографии каждого растения дома и в любой момент проверяю, как они себя чувствуют.',
+      tile_list: 'Список растений', tile_add: 'Добавить растение', tile_health: 'Проверка здоровья', tile_web: 'Поиск в интернете',
+      focus_title: 'Полить сегодня', focus_cta: 'Весь список →',
+      menu: 'Меню', grp_plants: 'Растения', grp_health: 'Здоровье', grp_data: 'Данные', grp_account: 'Аккаунт', grp_admin: 'Администрирование',
+      export: 'Экспорт в файл', import: 'Импорт из файла', guide_menu: 'Руководство', logout: 'Выйти',
+      add_title: 'Добавить растение', web_title: 'Поиск растения в интернете', health_title: 'Быстрая проверка здоровья',
+      account_title: 'Изменить данные', admin_title: 'Управление данными',
+      health_sub: 'Сфотографируйте любое растение — даже то, которого ещё нет в вашем списке, — и получите мгновенный отчёт.',
+      health_shoot: '📷 Сделать фото',
+      web_sub: 'Найдите растение по названию, чтобы получить фотографию и описание и добавить его в список как «растение из интернета».',
+      web_ph: '🔍 Введите название растения...',
+      account_email_note: 'Смена адреса потребует код подтверждения на новый адрес. Ваши растения останутся с вами.',
+      account_notify: 'Получать напоминания о поливе по почте', save: 'Сохранить', cancel: 'Отмена', close: 'Закрыть',
+      account_sent_1: 'Мы отправили код подтверждения на', account_sent_2: 'Введите его здесь, чтобы подтвердить изменение.',
+      account_code: 'Код подтверждения', account_verify: 'Подтвердить смену почты',
+      guide_title: 'Руководство по AviGrow', guide_sub: 'Краткий обзор возможностей приложения, с озвучкой на иврите.',
+      guide_play: '🔊 Включить озвучку', guide_stop: '⏹ Остановить',
+      g1: 'Сфотографируйте растение — название и советы по уходу заполнятся автоматически, а перед сохранением их можно поправить.',
+      g2: 'Найдите растение по названию (например, перед покупкой) и добавьте его в список как «растение из интернета» — с фотографией и описанием из Википедии.',
+      g3: 'Быстрое фото любого растения (даже не из вашего списка) для мгновенной оценки состояния.',
+      g4t: 'Поиск и фильтры', g4: 'Поле поиска фильтрует список по мере ввода, а кнопки «Все / Мои растения / Из интернета» — по источнику.',
+      g5t: 'Экспорт и импорт', g5: 'Сохраните резервную копию всех растений в файл или загрузите готовую копию.',
+      g6: 'Изменить имя или адрес почты (с кодом подтверждения), пересмотреть это руководство или выйти из аккаунта.',
+      replay_tour: '👆 Пройти обучение заново',
+      replay_tour_sub: 'Палец снова покажет следующий шаг на каждом экране, как при первом входе.',
+      admin_sub: 'Только для администратора. Изменение или удаление здесь затрагивает реальные данные всех пользователей — будьте внимательны.',
+      admin_search_ph: '🔍 Поиск пользователя по имени', admin_back: '⬅ Назад к пользователям',
+      name_local: 'Название растения (по-русски)', name_local_ph: 'Заполнится автоматически после фото, или введите сами',
+      name_en: 'Название (латынь / англ.)', name_en_ph: 'Заполнится автоматически после фото',
+      notes: 'Заметки', notes_ph: 'Заполнится автоматически после фото — можно исправить',
+      photo_label_title: 'Фотография растения — распознавание произойдёт автоматически',
+      photo_pick: '📷 Нажмите, чтобы сфотографировать или загрузить', photo_change: '📷 Фото выбрано — нажмите, чтобы заменить',
+      save_plant: 'Сохранить растение',
+      filter_watering: 'Показаны только растения, которым нужен полив', clear_filter: '✕ Сбросить фильтр',
+      list_search_ph: '🔍 Поиск растения по названию', f_all: 'Все', f_mine: 'Мои растения', f_web: 'Из интернета',
+      footer: '© 2026 Яэль Розен. Все права защищены.',
+      w_never: 'Полив ещё не отмечался — нажмите «Полил(а)» в первый раз',
+      w_next: '💧 Следующий полив через {n} {unit}', w_today: '💧 Полить сегодня!', w_late: '⚠️ Просрочен полив на {n} {unit}',
+      day: 'день', days: 'дн.', w_every: '💧 Полив каждые', w_days_ph: 'дней', w_done: '✅ Полил(а) сегодня',
+      w_bad_number: 'Введите корректное число дней (от 1) или оставьте пустым, чтобы отключить',
+      badge_web: 'из интернета', added_on: 'Добавлено', health_btn: '🩺 Проверка здоровья', checked_on: 'Проверено',
+      delete_plant: 'Удалить растение', status_ok: 'Здоровое',
+      empty_none: 'Растений пока нет. Добавьте первое 🌱', empty_search: 'Ничего не найдено по вашему запросу.',
+      load_failed: 'Не удалось загрузить растения с сервера: ',
+      stat_none: 'Растений пока нет — самое время добавить первое 🌱', stat_some: 'растений в вашем списке',
+      identifying: '🔍 Распознаю растение...', identified: '✓ Распознано — можно поправить перед сохранением',
+      identify_failed: 'Не удалось распознать автоматически — заполните вручную',
+      checking: '🔍 Проверяю состояние растения...', check_failed: 'Сейчас проверить не удалось: ',
+      save_failed: 'Не удалось сохранить. Попробуйте снова или выберите фото поменьше.', unexpected: 'Непредвиденная ошибка: ',
+      exporting: '💾 Сохранено в папку загрузок', importing: '📥 Импортирую...', import_none: 'Пока нечего экспортировать.',
+      import_ok: '✓ Импортировано растений: {n}', import_failed: 'Импорт не удался: ',
+      searching: '🔍 Ищу...', no_results: 'Растений с таким названием не найдено. Попробуйте другое название или другой язык.',
+      search_failed: 'Поиск не удался: ', add_to_list: '➕ Добавить в список', adding: 'Добавляю...', added: '✓ Добавлено',
+      add_failed: 'Не удалось добавить', source_wiki: 'Источник: Википедия',
+      need_names: 'Пожалуйста, укажите имя и фамилию', need_email: 'Пожалуйста, введите корректный адрес почты',
+      sending: 'Отправляю...', verifying: 'Проверяю...', saving: 'Сохраняю...', saved_ok: '✓ Сохранено',
+      need_code: 'Введите код из письма', bad_code: 'Код неверный или истёк: ',
+      send_failed: 'Не удалось отправить: ', save_failed2: 'Не удалось сохранить: ',
+      error: 'Ошибка: ', unknown_error: 'Неизвестная ошибка',
+      t_next: 'Далее →', t_done: 'Готово 👍', t_skip: 'Пропустить обучение', t_step: 'Шаг {i} из {n}',
+      t_click: 'Нажмите на выделенный элемент, чтобы продолжить', t_click_btn: 'Нажмите на выделенную кнопку',
+      tour_home1: 'Добро пожаловать! Отсюда добавляют новое растение — сфотографируйте, остальное заполнится само.',
+      tour_home2: 'А здесь всегда все ваши растения, включая те, которые нужно полить сегодня.',
+      tour_home3: 'Всё остальное — в этом меню. Вот и всё, можно начинать!',
+      tour_add1: 'Начните отсюда: нажмите, чтобы сфотографировать растение или загрузить снимок. Распознавание автоматическое.',
+      tour_add2: 'Отлично! Поправьте заполненные данные — и нажмите здесь, чтобы сохранить растение.',
+      tour_health1: 'Сфотографируйте здесь любое растение — даже не из вашего списка — и получите мгновенную оценку состояния.',
+      tour_search1: 'Введите здесь название растения. В результатах будут только растения, их можно добавить в список.',
+      tour_list1: 'Поле поиска фильтрует список по мере ввода.',
+      tour_list2: 'А эти кнопки фильтруют по источнику — все, ваши собственные или из интернета.',
+      tour_account1: 'Здесь управляют напоминаниями о поливе по почте — можно включить или отключить в любой момент.',
+      tour_account2: 'А после любого изменения — нажмите здесь, чтобы сохранить.',
+      tour_admin1: 'Данные по умолчанию заблокированы. Чтобы изменить или удалить, сначала снимите блокировку.'
+    }
+  };
+
+  // ברירת המחדל היא עברית בכוונה: רוב המשתמשות הקיימות עובדות בעברית גם כשהדפדפן
+  // מוגדר באנגלית, ולא נכון להחליף להן שפה מאחורי הגב. השפה משתנה רק בבחירה מפורשת.
+  let currentLang = 'he';
+  try {
+    const saved = localStorage.getItem('avigrow_lang');
+    if (saved && LANGS[saved]) currentLang = saved;
+  } catch (e) { /* אחסון חסום - נשארים בעברית */ }
+
+  // t('key', {n: 3}) - מחזיר את הטקסט בשפה הנוכחית, עם החלפת {משתנים}
+  function t(key, vars) {
+    const table = I18N[currentLang] || I18N.he;
+    let str = (table[key] !== undefined) ? table[key] : (I18N.he[key] !== undefined ? I18N.he[key] : key);
+    if (vars) Object.keys(vars).forEach(k => { str = str.split('{' + k + '}').join(vars[k]); });
+    return str;
+  }
+
+  // צורת יחיד/רבים של "יום" - ברוסית יש גם צורת ביניים (2-4 ימים)
+  function daysUnit(n) {
+    n = Math.abs(n);
+    if (currentLang === 'ru') {
+      const t1 = n % 10, t2 = n % 100;
+      if (t1 === 1 && t2 !== 11) return 'день';
+      if (t1 >= 2 && t1 <= 4 && (t2 < 10 || t2 >= 20)) return 'дня';
+      return 'дней';
+    }
+    return n === 1 ? t('day') : t('days');
+  }
+
+  function applyLanguage(lang) {
+    if (!LANGS[lang]) lang = 'he';
+    currentLang = lang;
+    try { localStorage.setItem('avigrow_lang', lang); } catch (e) { /* אחסון חסום */ }
+
+    document.documentElement.lang = lang;
+    document.documentElement.dir = LANGS[lang].dir;
+    document.title = t('doc_title');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => { el.setAttribute('title', t(el.dataset.i18nTitle)); });
+
+    ['lang-select', 'lang-select-gate'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = lang;
+    });
+
+    // תוכן דינמי שנבנה ב-JS צריך להיבנות מחדש בשפה החדשה.
+    // הגישה נעשית דרך ה-DOM ובתוך try, כי חלק מהמשתנים מוגדרים בהמשך הסקריפט
+    // (const/let) ופנייה אליהם מוקדם מדי זורקת שגיאת TDZ.
+    try {
+      const lbl = document.getElementById('photo-label');
+      const prev = document.getElementById('photo-preview');
+      if (lbl) lbl.textContent = (prev && prev.style.display === 'block') ? t('photo_change') : t('photo_pick');
+      const appWrap = document.getElementById('app-wrap');
+      if (appWrap && appWrap.style.display !== 'none') renderPlants();
+      if (coachSteps) showCoachStep();
+    } catch (e) { /* ריענון תוכן דינמי לא קריטי - השפה כבר הוחלפה */ }
+  }
   // ===== חיבור ל-Supabase =====
   // Project URL וה-anon public key נלקחים מ-Project Settings → API בפרויקט ה-Supabase שלך.
   // ה-anon key הזה מיועד להיות גלוי בצד לקוח (הוא ממילא רץ בדפדפן) - ההגנה האמיתית
@@ -852,11 +1186,11 @@
   function showGlobalError(message) {
     const el = document.getElementById('save-error');
     if (!el) return;
-    el.textContent = 'שגיאה: ' + message;
+    el.textContent = t('error') + message;
     el.style.display = 'block';
   }
   window.addEventListener('error', (e) => {
-    const msg = (e.error && e.error.message) || e.message || 'שגיאה לא ידועה';
+    const msg = (e.error && e.error.message) || e.message || t('unknown_error');
     console.error('Uncaught error:', msg);
     showGlobalError(msg);
   });
@@ -874,7 +1208,7 @@
     const plants = await loadPlants();
     if (plants.length === 0) {
       if (!silent) {
-        importStatus.textContent = 'אין עדיין צמחים לייצוא.';
+        importStatus.textContent = t('import_none');
         importStatus.style.display = 'block';
         importStatus.classList.remove('error');
       }
@@ -895,7 +1229,7 @@
 
     if (silent) {
       // רמז עדין שגיבוי אוטומטי קרה, בלי להפריע לזרימה
-      importStatus.textContent = '💾 גובה אוטומטית לקובץ הורדות';
+      importStatus.textContent = t('exporting');
       importStatus.classList.remove('error');
       importStatus.style.display = 'block';
     }
@@ -909,7 +1243,7 @@
 
     importStatus.style.display = 'block';
     importStatus.classList.remove('error');
-    importStatus.textContent = '📥 מייבא...';
+    importStatus.textContent = t('importing');
 
     try {
       assertSupabaseConfigured();
@@ -926,10 +1260,10 @@
       if (!response.ok) throw new Error('שגיאת שרת בייבוא (קוד ' + response.status + ')');
 
       await renderPlants();
-      importStatus.textContent = `✓ יובאו ${imported.length} צמחים בהצלחה`;
+      importStatus.textContent = t('import_ok', { n: imported.length });
     } catch (err) {
       console.error('Import failed:', (err && err.message) || String(err));
-      importStatus.textContent = 'הייבוא נכשל: ' + ((err && err.message) || String(err));
+      importStatus.textContent = t('import_failed') + ((err && err.message) || String(err));
       importStatus.classList.add('error');
     }
 
@@ -966,42 +1300,35 @@
   // step.info  = צעד הסברה בלבד, מתקדמים בכפתור "הבא" (וגם בלחיצה על היעד).
   const TOURS = {
     home: [
-      { sel: '#tile-add-plant',   info: true, text: 'ברוכים הבאים! מכאן מוסיפים צמח חדש - מצלמים, והשאר ימולא אוטומטית.' },
-      { sel: '#tile-plants-list', info: true, text: 'וכאן תמצאו תמיד את כל הצמחים שלכם, כולל מי צריך השקיה היום.' },
-      { sel: '#menu-toggle-btn',  info: true, text: 'משאר האפשרויות מגיעים דרך התפריט הזה. זהו - אפשר להתחיל!' }
+      { sel: '#tile-add-plant',   info: true, key: 'tour_home1' },
+      { sel: '#tile-plants-list', info: true, key: 'tour_home2' },
+      { sel: '#menu-toggle-btn',  info: true, key: 'tour_home3' }
     ],
     add: [
       { sel: '#photo-label', watch: { sel: '#photo-input', ev: 'change' },
-        hint: 'לחצו על הכפתור המסומן',
-        text: 'מתחילים מכאן: לחצו לצילום הצמח או להעלאת תמונה. הזיהוי יתבצע אוטומטית.' },
+        hint: 'btn', key: 'tour_add1' },
       { sel: '#plant-form button[type="submit"]',
-        hint: 'לחצו על הכפתור המסומן',
-        text: 'מצוין! אפשר לתקן את הפרטים שהתמלאו - וכשמוכנים, לוחצים כאן לשמירת הצמח.' }
+        hint: 'btn', key: 'tour_add2' }
     ],
     health: [
       { sel: '#quick-health-section .photo-label', watch: { sel: '#quick-health-input', ev: 'change' },
-        hint: 'לחצו על הכפתור המסומן',
-        text: 'צלמו כאן כל צמח - גם כזה שעדיין לא ברשימה שלכם - ותקבלו אבחון מיידי של מצבו.' }
+        hint: 'btn', key: 'tour_health1' }
     ],
     search: [
-      { sel: '#web-search-input', info: true,
-        text: 'הקלידו כאן שם של צמח ולחצו Enter. מהתוצאות אפשר להוסיף אותו לרשימה כ"צמח מהרשת".' }
+      { sel: '#web-search-input', info: true, key: 'tour_search1' }
     ],
     list: [
-      { sel: '#search-input',  info: true, text: 'תיבת החיפוש מסננת את הרשימה תוך כדי הקלדה.' },
-      { sel: '#source-filter', info: true, text: 'והכפתורים האלה מסננים לפי מקור הצמח - הכל, הצמחים שלכם, או צמחים מהרשת.' }
+      { sel: '#search-input',  info: true, key: 'tour_list1' },
+      { sel: '#source-filter', info: true, key: 'tour_list2' }
     ],
     account: [
-      { sel: '#account-notify-watering', info: true,
-        text: 'מכאן שולטים על תזכורות ההשקיה במייל - אפשר לכבות ולהדליק מתי שרוצים.' },
+      { sel: '#account-notify-watering', info: true, key: 'tour_account1' },
       { sel: '#account-save-btn',
-        hint: 'לחצו על הכפתור המסומן',
-        text: 'ואחרי כל שינוי - לוחצים כאן לשמירה.' }
+        hint: 'btn', key: 'tour_account2' }
     ],
     admin: [
       { sel: '#admin-lock-toggle',
-        hint: 'לחצו על הכפתור המסומן',
-        text: 'הנתונים נעולים לעריכה כברירת מחדל. כדי לערוך או למחוק, פותחים קודם את המנעול.' }
+        hint: 'btn', key: 'tour_admin1' }
     ]
   };
 
@@ -1115,19 +1442,19 @@
 
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    coachCountEl.textContent = coachSteps.length > 1 ? ('שלב ' + (coachIdx + 1) + ' מתוך ' + coachSteps.length) : '';
-    coachTextEl.textContent = step.text;
+    coachCountEl.textContent = coachSteps.length > 1 ? t('t_step', { i: coachIdx + 1, n: coachSteps.length }) : '';
+    coachTextEl.textContent = t(step.key);
 
     const isLast = coachIdx === coachSteps.length - 1;
     if (step.info) {
       coachNextBtn.style.display = '';
-      coachNextBtn.textContent = isLast ? 'סיימנו 👍' : 'הבא ←';
+      coachNextBtn.textContent = isLast ? t('t_done') : t('t_next');
       coachHintEl.textContent = '';
     } else {
       coachNextBtn.style.display = 'none';
-      coachHintEl.textContent = step.hint || 'לחצו על מה שמסומן כדי להמשיך';
+      coachHintEl.textContent = step.info ? '' : (step.hint === 'btn' ? t('t_click_btn') : t('t_click'));
     }
-    coachSkipBtn.textContent = isLast ? 'סגירה' : 'דילוג על הסיור';
+    coachSkipBtn.textContent = isLast ? t('close') : t('t_skip');
 
     // מאזין שמקדם את הסיור ברגע שהמשתמש ביצע בפועל את הפעולה
     detachCoachWatcher();
@@ -1178,6 +1505,12 @@
       startTour(key);
     }, delay || 520);
   }
+
+  ['lang-select', 'lang-select-gate'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.addEventListener('change', () => applyLanguage(sel.value));
+  });
+  applyLanguage(currentLang);
 
   coachNextBtn.addEventListener('click', advanceCoach);
   coachSkipBtn.addEventListener('click', endTour);
@@ -1309,8 +1642,8 @@
   async function updateStatLine(total) {
     const statLine = document.getElementById('stat-line');
     statLine.innerHTML = total === 0
-      ? 'עדיין אין צמחים ברשימה - זה הזמן להוסיף את הראשון 🌱'
-      : `<strong>${total}</strong> צמחים ברשימה שלך`;
+      ? t('stat_none')
+      : `<strong>${total}</strong> ` + escapeHtml(t('stat_some'));
   }
 
   // ===== שכבת שמירת נתונים - מדברת ישירות מול טבלת plants ב-Supabase =====
@@ -1384,18 +1717,18 @@
   function computeWateringStatus(p) {
     if (!p.wateringIntervalDays) return null;
     if (!p.lastWateredAt) {
-      return { text: 'עוד לא סומנה השקיה - לחצי "השקיתי" בפעם הראשונה', cls: 'due' };
+      return { text: t('w_never'), cls: 'due' };
     }
     const msPerDay = 24 * 60 * 60 * 1000;
     const daysSince = Math.floor((Date.now() - new Date(p.lastWateredAt).getTime()) / msPerDay);
     const daysLeft = p.wateringIntervalDays - daysSince;
     if (daysLeft > 0) {
-      return { text: `💧 השקיה הבאה בעוד ${daysLeft} ${daysLeft === 1 ? 'יום' : 'ימים'}`, cls: 'ok' };
+      return { text: t('w_next', { n: daysLeft, unit: daysUnit(daysLeft) }), cls: 'ok' };
     }
     if (daysLeft === 0) {
-      return { text: '💧 להשקות היום!', cls: 'due' };
+      return { text: t('w_today'), cls: 'due' };
     }
-    return { text: `⚠️ באיחור ${-daysLeft} ${-daysLeft === 1 ? 'יום' : 'ימים'} בהשקיה`, cls: 'overdue' };
+    return { text: t('w_late', { n: -daysLeft, unit: daysUnit(-daysLeft) }), cls: 'overdue' };
   }
 
   async function saveWateringInterval(id) {
@@ -1404,14 +1737,14 @@
     const raw = input.value.trim();
     const days = raw === '' ? null : parseInt(raw, 10);
     if (raw !== '' && (!Number.isFinite(days) || days < 1)) {
-      if (statusEl) statusEl.textContent = 'יש להזין מספר ימים תקין (1 ומעלה), או להשאיר ריק לביטול';
+      if (statusEl) statusEl.textContent = t('w_bad_number');
       return;
     }
     try {
       await updateWateringRow(id, { watering_interval_days: days });
       await renderPlants();
     } catch (err) {
-      if (statusEl) statusEl.textContent = 'שגיאה: ' + ((err && err.message) || String(err));
+      if (statusEl) statusEl.textContent = t('error') + ((err && err.message) || String(err));
     }
   }
 
@@ -1461,7 +1794,7 @@
       selectedPhotoDataUrl = await compressImage(e.target.result);
       photoPreview.src = selectedPhotoDataUrl;
       photoPreview.style.display = 'block';
-      photoLabel.textContent = '📷 תמונה נבחרה - לחצו להחלפה';
+      photoLabel.textContent = t('photo_change');
       identifyPlant(selectedPhotoDataUrl); // מזהים את הצמח אוטומטית ברגע שיש תמונה
     };
     reader.readAsDataURL(file);
@@ -1478,7 +1811,7 @@
     const mediaType = match[1];
     const base64Data = match[2];
 
-    identifyStatus.textContent = '🔍 מזהה את הצמח...';
+    identifyStatus.textContent = t('identifying');
     identifyStatus.classList.remove('error');
     submitBtn.disabled = true;
 
@@ -1487,7 +1820,7 @@
         "אתה מזהה צמחי בית מתמונות. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט הבא: {\"nameHe\": \"שם עממי בעברית\", \"nameEn\": \"English common name\", \"notes\": \"טיפ טיפול קצר במשפט אחד בעברית - תדירות השקיה או צרכי אור\"}. אם אינך בטוח בזיהוי, תן את הניחוש הטוב ביותר וציין את אי הוודאות בקצרה בשדה notes.",
         mediaType,
         base64Data,
-        "זהה את הצמח בתמונה הזו."
+        "זהה את הצמח בתמונה הזו. השדה nameHe והשדה notes צריכים להיות בשפה: " + LANG_NAMES[currentLang]
       );
       if (data.error) throw new Error(data.error.message || 'שגיאת שרת בזיהוי');
 
@@ -1502,10 +1835,10 @@
       document.getElementById('name-he').value = parsed.nameHe || '';
       document.getElementById('name-en').value = parsed.nameEn || '';
       document.getElementById('notes').value = parsed.notes || '';
-      identifyStatus.textContent = '✓ זוהה בהצלחה - אפשר לתקן לפני השמירה';
+      identifyStatus.textContent = t('identified');
     } catch (err) {
       console.error('Plant identification failed:', (err && err.message) || String(err));
-      identifyStatus.textContent = 'לא הצלחתי לזהות אוטומטית - אפשר למלא ידנית';
+      identifyStatus.textContent = t('identify_failed');
       identifyStatus.classList.add('error');
     } finally {
       submitBtn.disabled = false;
@@ -1533,7 +1866,7 @@
         await insertPlant({ nameHe, nameEn, notes, photo: selectedPhotoDataUrl });
       } catch (err) {
         console.error('Save failed:', (err && err.message) || String(err));
-        saveError.textContent = 'השמירה נכשלה. נסי שוב או צלמי תמונה קטנה יותר.';
+        saveError.textContent = t('save_failed');
         saveError.style.display = 'block';
         return; // לא מאפסים את הטופס - כדי שלא תאבדי את מה שהקלדת
       } finally {
@@ -1544,13 +1877,13 @@
       form.reset();
       selectedPhotoDataUrl = null;
       photoPreview.style.display = 'none';
-      photoLabel.textContent = '📷 לחצו לצילום או העלאת תמונה';
+      photoLabel.textContent = t('photo_pick');
 
       await renderPlants();
     } catch (err) {
       // רשת ביטחון: כל שגיאה לא צפויה אחרת תוצג כאן במקום לקרוס בשקט
       console.error('Unexpected error while saving plant:', (err && err.message) || String(err));
-      saveError.textContent = 'שגיאה לא צפויה: ' + (err && err.message ? err.message : String(err));
+      saveError.textContent = t('unexpected') + (err && err.message ? err.message : String(err));
       saveError.style.display = 'block';
     }
   });
@@ -1579,7 +1912,7 @@
       allPlants = await loadPlants();
     } catch (err) {
       console.error('Loading plants failed:', (err && err.message) || String(err));
-      container.innerHTML = '<div class="empty-state">לא הצלחתי לטעון את הצמחים מהשרת: ' +
+      container.innerHTML = '<div class="empty-state">' + escapeHtml(t('load_failed')) +
         ((err && err.message) || String(err)) + '</div>';
       await updateStatLine(0);
       return;
@@ -1590,11 +1923,11 @@
     await updateStatLine(allPlants.length);
 
     if (allPlants.length === 0) {
-      container.innerHTML = '<div class="empty-state">עדיין לא הוספת צמחים. התחילי למעלה 🌱</div>';
+      container.innerHTML = '<div class="empty-state">' + escapeHtml(t('empty_none')) + '</div>';
       return;
     }
     if (plants.length === 0) {
-      container.innerHTML = '<div class="empty-state">לא נמצאו צמחים התואמים לחיפוש.</div>';
+      container.innerHTML = '<div class="empty-state">' + escapeHtml(t('empty_search')) + '</div>';
       return;
     }
 
@@ -1602,29 +1935,29 @@
       <div class="plant-card">
         ${p.photo ? `<img src="${p.photo}" alt="${p.nameHe}">` : ''}
         <div class="body">
-          <h3>${p.nameHe}${p.source === 'web' ? '<span class="source-badge">מהרשת</span>' : ''}</h3>
+          <h3>${p.nameHe}${p.source === 'web' ? '<span class="source-badge">' + escapeHtml(t('badge_web')) + '</span>' : ''}</h3>
           ${p.nameEn ? `<div class="en-name">${p.nameEn}</div>` : ''}
           ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
-          <div class="date">נוסף בתאריך ${p.addedAt}</div>
+          <div class="date">${escapeHtml(t('added_on'))} ${p.addedAt}</div>
 
           ${p.source === 'web' ? '' : (() => {
             const w = computeWateringStatus(p);
             return `
           <div class="watering-box">
             <div class="watering-row">
-              <label for="watering-interval-${p.id}">💧 השקיה כל</label>
-              <input type="number" min="1" id="watering-interval-${p.id}" value="${p.wateringIntervalDays || ''}" placeholder="ימים">
-              <span class="sub" style="margin:0;">ימים</span>
-              <button type="button" class="btn btn-ghost watering-save-btn" onclick="saveWateringInterval(${p.id})">שמירה</button>
+              <label for="watering-interval-${p.id}">${escapeHtml(t('w_every'))}</label>
+              <input type="number" min="1" id="watering-interval-${p.id}" value="${p.wateringIntervalDays || ''}" placeholder="${escapeHtml(t('w_days_ph'))}">
+              <span class="sub" style="margin:0;">${escapeHtml(t('w_days_ph'))}</span>
+              <button type="button" class="btn btn-ghost watering-save-btn" onclick="saveWateringInterval(${p.id})">${escapeHtml(t('save'))}</button>
             </div>
             <p id="watering-save-status-${p.id}" class="identify-status error" style="display:none;"></p>
             ${w ? `
               <div class="watering-status ${w.cls}">${w.text}</div>
-              <button type="button" class="btn watering-done-btn" onclick="markWatered(${p.id})">✅ השקיתי היום</button>
+              <button type="button" class="btn watering-done-btn" onclick="markWatered(${p.id})">${escapeHtml(t('w_done'))}</button>
             ` : ''}
           </div>
           <input type="file" id="health-input-${p.id}" class="health-input" accept="image/*" onchange="checkPlantHealth(${p.id})">
-          <label for="health-input-${p.id}" class="health-btn">🩺 בדיקת בריאות</label>
+          <label for="health-input-${p.id}" class="health-btn">${escapeHtml(t('health_btn'))}</label>
           <p id="health-status-${p.id}" class="health-status-msg"></p>
           `; })()}
 
@@ -1633,11 +1966,11 @@
               <span class="h-status">${p.health.status === 'תקין' ? '✓ תקין' : '⚠ ' + p.health.status}</span>
               ${p.health.diagnosis}
               <br>${p.health.advice}
-              <span class="h-date">נבדק בתאריך ${p.health.date}</span>
+              <span class="h-date">${escapeHtml(t('checked_on'))} ${p.health.date}</span>
             </div>
           ` : ''}
 
-          <button class="delete-btn" onclick="deletePlant(${p.id})">מחיקת צמח</button>
+          <button class="delete-btn" onclick="deletePlant(${p.id})">${escapeHtml(t('delete_plant'))}</button>
         </div>
       </div>
     `).join('') + '</div>';
@@ -1670,7 +2003,7 @@
       const mediaType = match[1];
       const base64Data = match[2];
 
-      statusEl.textContent = '🔍 בודק את מצב הצמח...';
+      statusEl.textContent = t('checking');
 
       // פסק זמן: אם אין תשובה תוך 20 שניות, לא נישאר תקועים לנצח
       function withTimeout(promise, ms, message) {
@@ -1686,7 +2019,7 @@
             "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה כמו \"עלים צהובים\", \"diagnosis\": \"תיאור קצר במשפט אחד של מה שרואים בתמונה\", \"advice\": \"המלצת טיפול קצרה וברורה\"}. אם התמונה לא מספיק ברורה לאבחון מהימן, ציין זאת בשדה diagnosis וההמלצה תהיה לצלם מזווית/תאורה טובה יותר.",
             mediaType,
             base64Data,
-            "בדוק את מצב הבריאות של הצמח בתמונה הזו."
+            "בדוק את מצב הבריאות של הצמח בתמונה הזו. השב בשפה: " + LANG_NAMES[currentLang]
           ),
           20000,
           'הבדיקה לקחה יותר מדי זמן - נסי שוב'
@@ -1711,7 +2044,7 @@
         console.error('Health check failed:', (err && err.message) || String(err));
         // שולפים מחדש את האלמנט כי renderPlants() אולי כבר החליף את ה-DOM
         const freshStatusEl = document.getElementById(`health-status-${plantId}`);
-        const msg = 'לא הצלחתי לבדוק כרגע: ' + (err && err.message ? err.message : String(err));
+        const msg = t('check_failed') + (err && err.message ? err.message : String(err));
         if (freshStatusEl) freshStatusEl.textContent = msg;
         showGlobalError(msg);
       }
@@ -1750,7 +2083,7 @@
       const base64Data = match[2];
 
       quickHealthResult.innerHTML = '';
-      quickHealthStatus.textContent = '🔍 בודק את מצב הצמח...';
+      quickHealthStatus.textContent = t('checking');
       quickHealthStatus.classList.remove('error');
 
       try {
@@ -1759,7 +2092,7 @@
             "אתה מומחה לבריאות צמחי בית. תשיב אך ורק באובייקט JSON תקני, בלי טקסט נוסף ובלי גדרות markdown, בפורמט: {\"status\": \"תקין\" או תיאור קצר של הבעיה, \"diagnosis\": \"תיאור קצר במשפט אחד\", \"advice\": \"המלצת טיפול קצרה\"}. אם לא ברור, ציין זאת ב-diagnosis.",
             mediaType,
             base64Data,
-            "בדוק את מצב הבריאות של הצמח בתמונה הזו."
+            "בדוק את מצב הבריאות של הצמח בתמונה הזו. השב בשפה: " + LANG_NAMES[currentLang]
           ),
           20000,
           'הבדיקה לקחה יותר מדי זמן - נסי שוב'
@@ -1783,7 +2116,7 @@
         `;
       } catch (err) {
         console.error('Quick health check failed:', (err && err.message) || String(err));
-        quickHealthStatus.textContent = 'לא הצלחתי לבדוק כרגע: ' + ((err && err.message) || String(err));
+        quickHealthStatus.textContent = t('check_failed') + ((err && err.message) || String(err));
         quickHealthStatus.classList.add('error');
       }
     };
@@ -1805,104 +2138,147 @@
     }[c]));
   }
 
-  // מילות מפתח בוטניות - משמשות לסנן תוצאות ולוודא שמדובר בצמח, לא באדם/מקום/בניין וכד'
-  const PLANT_KEYWORDS_HE = /צמח|פרח|עלים|עלה|גבעול|שורש|שיח|עץ|עצי|עצים|זן|זרעים|נוי|גינון|עציץ|תבלין|פורח|פריחה|בוטני/;
-  const PLANT_KEYWORDS_EN = /plant|flora|flower|leaf|leaves|shrub|tree|species|genus|botan|houseplant|foliage|succulent|fern|vine|garden/i;
+  // ===== חיפוש צמח באינטרנט =====
+  // שתי תקלות שהיו כאן ותוקנו:
+  // 1. הקטגוריות של כל הדפים נשלפו עם cllimit אחד משותף, ולכן חלק מהדפים חזרו
+  //    בלי קטגוריות בכלל - ואותו חיפוש בדיוק הצליח פעם אחת ונכשל בפעם הבאה.
+  //    הקטגוריות כבר לא בשימוש, אז התלות הלא-יציבה הזו נעלמה.
+  // 2. הסינון "נראה כמו צמח" חיפש מילות מפתח בתקציר, ולכן החזיר גם זמרים,
+  //    שירים ומשקאות. עכשיו כל תוצאה נבדקת מול ויקינתונים: היא נכללת רק אם היא
+  //    טקסון (P31 = Q16521) שיש לו מזהה באחד ממאגרי הצמחים העולמיים. זה מסנן
+  //    החוצה גם בעלי חיים ופטריות ששמם מזכיר צמח (למשל "גדרון הקקטוס", ציפור).
 
-  function looksLikePlant(lang, categories, extract) {
-    const keywordRe = lang === 'he' ? PLANT_KEYWORDS_HE : PLANT_KEYWORDS_EN;
-    const inCategories = (categories || []).some(c => keywordRe.test(c.title || ''));
-    const inExtract = keywordRe.test(extract || '');
-    return inCategories || inExtract;
+  const WD_TAXON = 'Q16521';
+  const WD_PLANT_DB_PROPS = ['P5037', 'P961', 'P1772', 'P1421', 'P1070'];
+
+  async function fetchJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('(' + res.status + ')');
+    return res.json();
   }
 
-  async function searchWikipedia(lang, query) {
-    // גרשיים סביב מונח החיפוש = התאמת ביטוי, פחות "תוצאות תועות" מהתאמות מקריות של אותיות בודדות
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent('"' + query + '"')}&gsrlimit=10&prop=pageimages|extracts|categories&piprop=thumbnail&pithumbsize=300&exintro=1&explaintext=1&exchars=180&cllimit=50&clshow=!hidden&format=json&origin=*`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('שגיאת רשת בחיפוש (קוד ' + res.status + ')');
-    const data = await res.json();
+  // מועמדים מוויקיפדיה בשפה מסוימת: רק דפים עם תמונה ועם מזהה ויקינתונים
+  async function wikiCandidates(lang, query) {
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&generator=search` +
+      `&gsrsearch=${encodeURIComponent(query)}&gsrlimit=12` +
+      `&prop=pageimages|extracts|pageprops&ppprop=wikibase_item` +
+      `&piprop=thumbnail&pithumbsize=400&exintro=1&explaintext=1&exchars=220` +
+      `&format=json&origin=*`;
+    const data = await fetchJson(url);
     const pages = (data.query && data.query.pages) ? Object.values(data.query.pages) : [];
     return pages
-      .filter(pg => pg.thumbnail && pg.thumbnail.source) // בלי תמונה אין מה להציג/לשמור
-      .filter(pg => looksLikePlant(lang, pg.categories, pg.extract)) // רק תוצאות שנראות כמו צמח
-      .sort((a, b) => (a.index || 0) - (b.index || 0)) // המפתחות ב-JSON אינם מובטחים לשמור על סדר הרלוונטיות
+      .filter(pg => pg.thumbnail && pg.thumbnail.source)
+      .filter(pg => pg.pageprops && pg.pageprops.wikibase_item)
+      .sort((a, b) => (a.index || 0) - (b.index || 0)) // סדר המפתחות ב-JSON אינו סדר הרלוונטיות
       .map(pg => ({
         title: pg.title,
         extract: pg.extract || '',
         thumbnail: pg.thumbnail.source,
+        qid: pg.pageprops.wikibase_item,
         lang
       }));
   }
 
+  // בקשה אחת לוויקינתונים לכל המועמדים יחד, ומחזירה רק את אלה שהם באמת צמחים
+  async function keepOnlyPlants(candidates) {
+    if (!candidates.length) return [];
+    const ids = candidates.map(c => c.qid).join('|');
+    const data = await fetchJson('https://www.wikidata.org/w/api.php?action=wbgetentities&ids=' +
+      encodeURIComponent(ids) + '&props=claims&format=json&origin=*');
+    const entities = data.entities || {};
+    return candidates.filter(c => {
+      const claims = (entities[c.qid] || {}).claims || {};
+      const isTaxon = (claims.P31 || []).some(st => {
+        const dv = st.mainsnak && st.mainsnak.datavalue;
+        return !!(dv && dv.value && dv.value.id === WD_TAXON);
+      });
+      return isTaxon && WD_PLANT_DB_PROPS.some(prop => claims[prop]);
+    });
+  }
+
   async function runWebSearch(query) {
     const myToken = ++webSearchToken;
-    webSearchStatus.textContent = '🔍 מחפשת...';
+    webSearchStatus.textContent = t('searching');
     webSearchStatus.classList.remove('error');
     webSearchResults.innerHTML = '';
 
-    try {
-      let results = await searchWikipedia('he', query);
-      if (results.length === 0) results = await searchWikipedia('en', query);
+    // מחפשים קודם בשפת הממשק, ואם אין תוצאות - גם בשתי השפות האחרות,
+    // כך שאפשר להקליד שם צמח בעברית, באנגלית או ברוסית בלי להחליף שפה.
+    const order = [LANGS[currentLang].wiki, 'en', 'he', 'ru']
+      .filter((v, idx, arr) => arr.indexOf(v) === idx);
+
+    let results = [];
+    let lastError = null;
+    for (const lang of order) {
+      let candidates = [];
+      try {
+        candidates = await wikiCandidates(lang, query);
+      } catch (err) { lastError = err; continue; }
       if (myToken !== webSearchToken) return; // חיפוש חדש כבר התחיל בינתיים
+      if (!candidates.length) continue;
 
-      if (results.length === 0) {
-        webSearchStatus.textContent = 'לא נמצאו תוצאות עם תמונה.';
-        return;
-      }
-      webSearchStatus.textContent = '';
-
-      webSearchResults.innerHTML = results.map((r, i) => `
-        <div class="web-result-card">
-          <img src="${r.thumbnail}" alt="${escapeHtml(r.title)}">
-          <div class="wr-body">
-            <h4>${escapeHtml(r.title)}</h4>
-            <p>${escapeHtml(r.extract)}</p>
-            <button type="button" class="btn" data-idx="${i}">➕ הוספה לרשימה</button>
-          </div>
-        </div>
-      `).join('');
-
-      webSearchResults.querySelectorAll('button[data-idx]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const r = results[Number(btn.dataset.idx)];
-          btn.disabled = true;
-          btn.textContent = 'מוסיפה...';
-          try {
-            await insertPlant({
-              nameHe: r.lang === 'he' ? r.title : '',
-              nameEn: r.lang === 'en' ? r.title : '',
-              notes: r.extract,
-              photo: r.thumbnail,
-              source: 'web'
-            });
-            btn.textContent = '✓ נוסף';
-            await renderPlants();
-          } catch (err) {
-            console.error('Adding web plant failed:', (err && err.message) || String(err));
-            btn.textContent = 'הוספה נכשלה';
-            btn.disabled = false;
-          }
-        });
-      });
-    } catch (err) {
+      try {
+        results = await keepOnlyPlants(candidates);
+      } catch (err) { lastError = err; results = []; }
       if (myToken !== webSearchToken) return;
-      console.error('Web search failed:', (err && err.message) || String(err));
-      webSearchStatus.textContent = 'החיפוש נכשל: ' + ((err && err.message) || String(err));
-      webSearchStatus.classList.add('error');
+      if (results.length) break;
     }
+
+    if (!results.length) {
+      webSearchStatus.textContent = lastError
+        ? t('search_failed') + ((lastError && lastError.message) || String(lastError))
+        : t('no_results');
+      if (lastError) webSearchStatus.classList.add('error');
+      return;
+    }
+    webSearchStatus.textContent = '';
+
+    webSearchResults.innerHTML = results.map((r, i) => `
+      <div class="web-result-card">
+        <img src="${r.thumbnail}" alt="" loading="lazy">
+        <div class="wr-body">
+          <h4>${escapeHtml(r.title)}</h4>
+          <p>${escapeHtml(r.extract)}</p>
+          <button type="button" class="btn" data-idx="${i}">${escapeHtml(t('add_to_list'))}</button>
+        </div>
+      </div>
+    `).join('');
+
+    webSearchResults.querySelectorAll('button[data-idx]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const r = results[Number(btn.dataset.idx)];
+        btn.disabled = true;
+        btn.textContent = t('adding');
+        try {
+          await insertPlant({
+            nameHe: r.title,                            // שם התצוגה - תמיד בשפה שבה נמצא
+            nameEn: r.lang === 'en' ? r.title : '',
+            notes: r.extract,
+            photo: r.thumbnail,
+            source: 'web'
+          });
+          btn.textContent = t('added');
+          await renderPlants();
+        } catch (err) {
+          console.error('Adding web plant failed:', (err && err.message) || String(err));
+          btn.textContent = t('add_failed');
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
   webSearchInput.addEventListener('input', () => {
     const query = webSearchInput.value.trim();
     clearTimeout(webSearchTimer);
+    webSearchToken++; // כל הקלדה מבטלת תוצאות של חיפוש קודם שעדיין באוויר
     if (!query) {
-      webSearchToken++; // מבטל תוצאות ממתינות
       webSearchStatus.textContent = '';
+      webSearchStatus.classList.remove('error');
       webSearchResults.innerHTML = '';
       return;
     }
-    webSearchTimer = setTimeout(() => runWebSearch(query), 400); // דיבאונס - לא שולחים בקשה על כל תו
+    webSearchTimer = setTimeout(() => runWebSearch(query), 400); // דיבאונס - לא בקשה על כל תו
   });
 
   // ===== אימות משתמשים - שער כניסה באימייל =====
@@ -1993,18 +2369,18 @@
 
     authFormStatus.classList.remove('error');
     if (!firstName || !lastName) {
-      authFormStatus.textContent = 'נא למלא שם פרטי ושם משפחה';
+      authFormStatus.textContent = t('need_names');
       authFormStatus.classList.add('error');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      authFormStatus.textContent = 'נא להזין כתובת אימייל תקינה';
+      authFormStatus.textContent = t('need_email');
       authFormStatus.classList.add('error');
       return;
     }
 
     authSendBtn.disabled = true;
-    authFormStatus.textContent = 'שולחת...';
+    authFormStatus.textContent = t('sending');
     try {
       localStorage.setItem('avigrow_pending_first', firstName);
       localStorage.setItem('avigrow_pending_last', lastName);
@@ -2024,7 +2400,7 @@
       authFormStatus.textContent = '';
     } catch (err) {
       console.error('Send OTP failed:', (err && err.message) || String(err));
-      authFormStatus.textContent = 'השליחה נכשלה: ' + ((err && err.message) || String(err));
+      authFormStatus.textContent = t('send_failed') + ((err && err.message) || String(err));
       authFormStatus.classList.add('error');
     } finally {
       authSendBtn.disabled = false;
@@ -2038,13 +2414,13 @@
     const code = document.getElementById('auth-code').value.trim();
     authVerifyStatus.classList.remove('error');
     if (!/^\d{4,10}$/.test(code)) {
-      authVerifyStatus.textContent = 'נא להקליד את הקוד שקיבלת במייל';
+      authVerifyStatus.textContent = t('need_code');
       authVerifyStatus.classList.add('error');
       return;
     }
 
     authVerifyBtn.disabled = true;
-    authVerifyStatus.textContent = 'מאמתת...';
+    authVerifyStatus.textContent = t('verifying');
     try {
       const { error } = await sbClient.auth.verifyOtp({ email: pendingAuthEmail, token: code, type: 'email' });
       if (error) throw error;
@@ -2052,7 +2428,7 @@
       authVerifyStatus.textContent = '';
     } catch (err) {
       console.error('Verify OTP failed:', (err && err.message) || String(err));
-      authVerifyStatus.textContent = 'הקוד שגוי או פג תוקף: ' + ((err && err.message) || String(err));
+      authVerifyStatus.textContent = t('bad_code') + ((err && err.message) || String(err));
       authVerifyStatus.classList.add('error');
     } finally {
       authVerifyBtn.disabled = false;
@@ -2104,18 +2480,18 @@
 
     accountFormStatus.classList.remove('error');
     if (!firstName || !lastName) {
-      accountFormStatus.textContent = 'נא למלא שם פרטי ושם משפחה';
+      accountFormStatus.textContent = t('need_names');
       accountFormStatus.classList.add('error');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-      accountFormStatus.textContent = 'נא להזין כתובת אימייל תקינה';
+      accountFormStatus.textContent = t('need_email');
       accountFormStatus.classList.add('error');
       return;
     }
 
     accountSaveBtn.disabled = true;
-    accountFormStatus.textContent = 'שומרת...';
+    accountFormStatus.textContent = t('saving');
     try {
       const { data: { user } } = await sbClient.auth.getUser();
       const { error: profileError } = await sbClient.from('profiles')
@@ -2126,7 +2502,7 @@
 
       const emailChanged = newEmail.toLowerCase() !== accountOriginalEmail.toLowerCase();
       if (!emailChanged) {
-        accountFormStatus.textContent = '✓ נשמר בהצלחה';
+        accountFormStatus.textContent = t('saved_ok');
         return;
       }
 
@@ -2142,7 +2518,7 @@
       accountFormStatus.textContent = '';
     } catch (err) {
       console.error('Account update failed:', (err && err.message) || String(err));
-      accountFormStatus.textContent = 'השמירה נכשלה: ' + ((err && err.message) || String(err));
+      accountFormStatus.textContent = t('save_failed2') + ((err && err.message) || String(err));
       accountFormStatus.classList.add('error');
     } finally {
       accountSaveBtn.disabled = false;
@@ -2157,13 +2533,13 @@
     const newEmail = document.getElementById('account-new-email').textContent;
     accountVerifyStatus.classList.remove('error');
     if (!/^\d{4,10}$/.test(code)) {
-      accountVerifyStatus.textContent = 'נא להקליד את הקוד שקיבלת במייל';
+      accountVerifyStatus.textContent = t('need_code');
       accountVerifyStatus.classList.add('error');
       return;
     }
 
     accountVerifyBtn.disabled = true;
-    accountVerifyStatus.textContent = 'מאמתת...';
+    accountVerifyStatus.textContent = t('verifying');
     try {
       const { error } = await sbClient.auth.verifyOtp({ email: newEmail, token: code, type: 'email_change' });
       if (error) throw error;
@@ -2172,7 +2548,7 @@
       accountSection.style.display = 'none';
     } catch (err) {
       console.error('Verify email change failed:', (err && err.message) || String(err));
-      accountVerifyStatus.textContent = 'הקוד שגוי או פג תוקף: ' + ((err && err.message) || String(err));
+      accountVerifyStatus.textContent = t('bad_code') + ((err && err.message) || String(err));
       accountVerifyStatus.classList.add('error');
     } finally {
       accountVerifyBtn.disabled = false;
