@@ -366,6 +366,63 @@
   .auth-status.error { color: var(--clay); }
   .auth-sent-icon { font-size: 2.4rem; margin-bottom: 10px; }
   .auth-change-email { background: none; border: none; color: var(--ink-soft); font-size: 0.82rem; text-decoration: underline; cursor: pointer; margin-top: 14px; }
+
+  /* ===== סיור מודרך - אצבע שמצביעה על הפעולה הבאה בכל מסך, בכניסה הראשונה =====
+     כל השכבה היא pointer-events:none חוץ מכפתורי הבועה עצמה, כדי שהמשתמש
+     יוכל ללחוץ בפועל על האלמנט שמסומן ולהמשיך הלאה בצורה טבעית. */
+  .coach-layer { position: fixed; inset: 0; z-index: 120; pointer-events: none; display: none; }
+  .coach-layer.on { display: block; }
+
+  /* טבעת ההדגשה - ה-box-shadow הענק מכהה את כל שאר המסך ומשאיר "חלון" על היעד */
+  .coach-ring {
+    position: fixed; border-radius: 14px; pointer-events: none;
+    box-shadow: 0 0 0 9999px rgba(31, 53, 39, 0.55);
+    outline: 3px solid var(--sprout); outline-offset: 2px;
+  }
+
+  .coach-finger {
+    position: fixed; font-size: 2.1rem; pointer-events: none;
+    line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+    animation: coach-bounce 1.1s ease-in-out infinite;
+  }
+  @keyframes coach-bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-9px); }
+  }
+  @media (prefers-reduced-motion: reduce) { .coach-finger { animation: none; } }
+
+  .coach-bubble {
+    position: fixed; pointer-events: auto; box-sizing: border-box;
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; max-width: 290px;
+    box-shadow: 0 10px 30px rgba(31, 53, 39, .28);
+    font-size: 0.9rem; line-height: 1.5; text-align: start;
+  }
+  .coach-bubble .coach-text { margin: 0 0 12px; }
+  .coach-bubble .coach-count {
+    display: block; font-size: 0.72rem; color: var(--ink-soft);
+    margin-bottom: 6px; letter-spacing: .04em;
+  }
+  .coach-actions { display: flex; align-items: center; gap: 10px; }
+  .coach-actions .coach-next {
+    background: var(--sprout); color: #fff; border: none; border-radius: 999px;
+    padding: 7px 18px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer;
+  }
+  .coach-actions .coach-skip {
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 0.8rem; text-decoration: underline; cursor: pointer;
+    font-family: 'Inter', sans-serif; margin-inline-start: auto;
+  }
+  .coach-actions .coach-hint { font-size: 0.8rem; color: var(--sprout); font-weight: 500; }
+
+  /* מסך נמוך (נייד לרוחב / חלון קטן) - בועה קומפקטית, כדי שתישאר מקום להצביע */
+  @media (max-height: 520px) {
+    .coach-bubble { padding: 10px 12px; max-width: 240px; font-size: 0.82rem; }
+    .coach-bubble .coach-text { margin-bottom: 8px; }
+    .coach-bubble .coach-count { display: none; }
+    .coach-finger { font-size: 1.7rem; }
+  }
 </style>
 </head>
 <body>
@@ -406,6 +463,21 @@
         <button type="button" id="auth-verify-btn" class="btn">אימות והתחברות</button>
         <p id="auth-verify-status" class="auth-status"></p>
         <button type="button" id="auth-change-email-btn" class="auth-change-email">שליחה לכתובת אחרת</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- שכבת הסיור המודרך - נבנית פעם אחת ומופעלת לפי המסך שנפתח -->
+  <div class="coach-layer" id="coach-layer" aria-live="polite">
+    <div class="coach-ring" id="coach-ring"></div>
+    <div class="coach-finger" id="coach-finger">👆</div>
+    <div class="coach-bubble" id="coach-bubble">
+      <span class="coach-count" id="coach-count"></span>
+      <p class="coach-text" id="coach-text"></p>
+      <div class="coach-actions">
+        <button type="button" class="coach-next" id="coach-next">הבא ←</button>
+        <span class="coach-hint" id="coach-hint"></span>
+        <button type="button" class="coach-skip" id="coach-skip">דילוג על הסיור</button>
       </div>
     </div>
   </div>
@@ -592,6 +664,8 @@
           <p class="sub">עדכון שם או כתובת אימייל (עם קוד אימות), צפייה שוב במדריך הזה, והתנתקות מהחשבון.</p>
         </div>
       </div>
+      <button type="button" class="btn" id="replay-tour-btn" style="margin-top:6px;">👆 הפעלת הסיור המודרך מחדש</button>
+      <p class="sub" style="margin:8px 0 0;">האצבע תחזור להצביע על הפעולה הבאה בכל מסך שתפתחי, כמו בכניסה הראשונה.</p>
       <button type="button" class="btn btn-ghost" id="close-guide-btn">סגירה</button>
     </section>
 
@@ -883,6 +957,232 @@
   // סגירת התפריט אוטומטית בבחירת כל פריט (כולל תווית הייבוא, שאינה כפתור)
   menuDrawer.querySelectorAll('.menu-item').forEach(item => item.addEventListener('click', closeMenu));
 
+  // ===== סיור מודרך - אצבע שמצביעה על הפעולה הבאה =====
+  // בכניסה הראשונה לכל מסך, אצבע מצביעה על מה לעשות קודם. הסיור לא חוסם כלום:
+  // שכבת ההדגשה כולה pointer-events:none, כך שהמשתמש לוחץ בפועל על האלמנט
+  // המסומן - והסיור מתקדם מעצמו לצעד הבא. כל סיור מוצג פעם אחת בלבד למשתמש.
+  //
+  // step.watch = על איזה אירוע להתקדם. ברירת המחדל: לחיצה על היעד עצמו.
+  // step.info  = צעד הסברה בלבד, מתקדמים בכפתור "הבא" (וגם בלחיצה על היעד).
+  const TOURS = {
+    home: [
+      { sel: '#tile-add-plant',   info: true, text: 'ברוכים הבאים! מכאן מוסיפים צמח חדש - מצלמים, והשאר ימולא אוטומטית.' },
+      { sel: '#tile-plants-list', info: true, text: 'וכאן תמצאו תמיד את כל הצמחים שלכם, כולל מי צריך השקיה היום.' },
+      { sel: '#menu-toggle-btn',  info: true, text: 'משאר האפשרויות מגיעים דרך התפריט הזה. זהו - אפשר להתחיל!' }
+    ],
+    add: [
+      { sel: '#photo-label', watch: { sel: '#photo-input', ev: 'change' },
+        hint: 'לחצו על הכפתור המסומן',
+        text: 'מתחילים מכאן: לחצו לצילום הצמח או להעלאת תמונה. הזיהוי יתבצע אוטומטית.' },
+      { sel: '#plant-form button[type="submit"]',
+        hint: 'לחצו על הכפתור המסומן',
+        text: 'מצוין! אפשר לתקן את הפרטים שהתמלאו - וכשמוכנים, לוחצים כאן לשמירת הצמח.' }
+    ],
+    health: [
+      { sel: '#quick-health-section .photo-label', watch: { sel: '#quick-health-input', ev: 'change' },
+        hint: 'לחצו על הכפתור המסומן',
+        text: 'צלמו כאן כל צמח - גם כזה שעדיין לא ברשימה שלכם - ותקבלו אבחון מיידי של מצבו.' }
+    ],
+    search: [
+      { sel: '#web-search-input', info: true,
+        text: 'הקלידו כאן שם של צמח ולחצו Enter. מהתוצאות אפשר להוסיף אותו לרשימה כ"צמח מהרשת".' }
+    ],
+    list: [
+      { sel: '#search-input',  info: true, text: 'תיבת החיפוש מסננת את הרשימה תוך כדי הקלדה.' },
+      { sel: '#source-filter', info: true, text: 'והכפתורים האלה מסננים לפי מקור הצמח - הכל, הצמחים שלכם, או צמחים מהרשת.' }
+    ],
+    account: [
+      { sel: '#account-notify-watering', info: true,
+        text: 'מכאן שולטים על תזכורות ההשקיה במייל - אפשר לכבות ולהדליק מתי שרוצים.' },
+      { sel: '#account-save-btn',
+        hint: 'לחצו על הכפתור המסומן',
+        text: 'ואחרי כל שינוי - לוחצים כאן לשמירה.' }
+    ],
+    admin: [
+      { sel: '#admin-lock-toggle',
+        hint: 'לחצו על הכפתור המסומן',
+        text: 'הנתונים נעולים לעריכה כברירת מחדל. כדי לערוך או למחוק, פותחים קודם את המנעול.' }
+    ]
+  };
+
+  // איזה סיור שייך לאיזה מסך (null = אין סיור למסך הזה)
+  const SECTION_TOUR_KEYS = {
+    'add-plant-section': 'add',
+    'quick-health-section': 'health',
+    'web-search-section': 'search',
+    'plants-list-section': 'list',
+    'account-settings-section': 'account',
+    'admin-section': 'admin',
+    'guide-section': null
+  };
+
+  const coachLayer = document.getElementById('coach-layer');
+  const coachRing = document.getElementById('coach-ring');
+  const coachFinger = document.getElementById('coach-finger');
+  const coachBubble = document.getElementById('coach-bubble');
+  const coachTextEl = document.getElementById('coach-text');
+  const coachCountEl = document.getElementById('coach-count');
+  const coachNextBtn = document.getElementById('coach-next');
+  const coachHintEl = document.getElementById('coach-hint');
+  const coachSkipBtn = document.getElementById('coach-skip');
+
+  let coachSteps = null;
+  let coachIdx = 0;
+  let coachRaf = 0;
+  let coachDetach = null;
+  // מזהה שרץ קדימה בכל התחלה/סיום של סיור. כל מאזין זוכר את הערך שבו נוצר,
+  // כדי שלחיצה שמעבירה מסך לא תקדם בטעות את הסיור החדש שהתחיל בעקבותיה.
+  let coachToken = 0;
+
+  function tourStoreKey() {
+    return 'avigrow_tour_v1_' + (currentUserId || 'anon');
+  }
+  function tourState() {
+    try { return JSON.parse(localStorage.getItem(tourStoreKey()) || '{}'); } catch (e) { return {}; }
+  }
+  function markTourSeen(key) {
+    try {
+      const s = tourState();
+      s[key] = true;
+      localStorage.setItem(tourStoreKey(), JSON.stringify(s));
+    } catch (e) { /* אחסון חסום - הסיור פשוט יופיע שוב */ }
+  }
+
+  function detachCoachWatcher() {
+    if (coachDetach) { coachDetach(); coachDetach = null; }
+  }
+
+  function endTour() {
+    coachToken++;
+    detachCoachWatcher();
+    if (coachRaf) { cancelAnimationFrame(coachRaf); coachRaf = 0; }
+    coachSteps = null;
+    coachLayer.classList.remove('on');
+  }
+
+  // ממקם את הטבעת, האצבע והבועה סביב היעד. נקרא בכל פריים כדי להישאר צמוד גם בגלילה.
+  function placeCoach(target) {
+    const r = target.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const pad = 6;
+
+    coachRing.style.top = (r.top - pad) + 'px';
+    coachRing.style.left = (r.left - pad) + 'px';
+    coachRing.style.width = (r.width + pad * 2) + 'px';
+    coachRing.style.height = (r.height + pad * 2) + 'px';
+
+    // מעדיפים להצביע מלמטה כלפי מעלה; אם אין מקום - הופכים את הכיוון
+    const below = (vh - r.bottom) > 190;
+    coachFinger.textContent = below ? '👆' : '👇';
+    coachFinger.style.left = Math.min(Math.max(r.left + r.width / 2 - 18, 8), vw - 44) + 'px';
+    coachFinger.style.top = below ? (r.bottom + 10) + 'px' : (r.top - 48) + 'px';
+
+    const bw = coachBubble.offsetWidth || 280;
+    const bh = coachBubble.offsetHeight || 130;
+    const gap = 12;
+    const clampX = (x) => Math.min(Math.max(x, 10), Math.max(10, vw - bw - 10));
+    const clampY = (y) => Math.min(Math.max(y, 10), Math.max(10, vh - bh - 10));
+    const hides = (x, y) => !(x + bw < r.left || x > r.right || y + bh < r.top || y > r.bottom);
+
+    let bx = clampX(r.left + r.width / 2 - bw / 2);
+    let by = clampY(below ? r.bottom + 58 : r.top - 58 - bh);
+
+    // במסך נמוך הבועה עלולה לכסות דווקא את מה שהיא מסבירה עליו - אז מזיזים אותה לצד
+    if (hides(bx, by)) {
+      const sideY = clampY(r.top + r.height / 2 - bh / 2);
+      if (vw - r.right - gap >= bw + 10) { bx = r.right + gap; by = sideY; }
+      else if (r.left - gap >= bw + 10) { bx = r.left - gap - bw; by = sideY; }
+      else { by = (r.top + r.height / 2 < vh / 2) ? clampY(vh - bh - 10) : 10; }
+    }
+    coachBubble.style.left = bx + 'px';
+    coachBubble.style.top = by + 'px';
+  }
+
+  function coachTick() {
+    if (!coachSteps) return;
+    const target = document.querySelector(coachSteps[coachIdx].sel);
+    // היעד נעלם (נסגר המסך / הוחלף תוכן) - מסיימים בשקט
+    if (!target || !target.getClientRects().length) { endTour(); return; }
+    placeCoach(target);
+    coachRaf = requestAnimationFrame(coachTick);
+  }
+
+  function showCoachStep() {
+    if (!coachSteps) return;
+    const step = coachSteps[coachIdx];
+    const target = document.querySelector(step.sel);
+    if (!target) { endTour(); return; }
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    coachCountEl.textContent = coachSteps.length > 1 ? ('שלב ' + (coachIdx + 1) + ' מתוך ' + coachSteps.length) : '';
+    coachTextEl.textContent = step.text;
+
+    const isLast = coachIdx === coachSteps.length - 1;
+    if (step.info) {
+      coachNextBtn.style.display = '';
+      coachNextBtn.textContent = isLast ? 'סיימנו 👍' : 'הבא ←';
+      coachHintEl.textContent = '';
+    } else {
+      coachNextBtn.style.display = 'none';
+      coachHintEl.textContent = step.hint || 'לחצו על מה שמסומן כדי להמשיך';
+    }
+    coachSkipBtn.textContent = isLast ? 'סגירה' : 'דילוג על הסיור';
+
+    // מאזין שמקדם את הסיור ברגע שהמשתמש ביצע בפועל את הפעולה
+    detachCoachWatcher();
+    const watch = step.watch || { sel: step.sel, ev: 'click' };
+    const watchEl = document.querySelector(watch.sel);
+    if (watchEl) {
+      const myToken = coachToken;
+      const handler = () => {
+        detachCoachWatcher();
+        // השהיה קצרה כדי שהמסך יספיק להתעדכן לפני שהאצבע קופצת ליעד הבא
+        setTimeout(() => { if (myToken === coachToken) advanceCoach(); }, 340);
+      };
+      watchEl.addEventListener(watch.ev, handler, { once: true });
+      coachDetach = () => watchEl.removeEventListener(watch.ev, handler);
+    }
+
+    // מיקום ראשוני מיידי, כדי שהטבעת לא תהבהב לרגע בפינת המסך לפני הפריים הראשון
+    placeCoach(target);
+    if (coachRaf) cancelAnimationFrame(coachRaf);
+    coachRaf = requestAnimationFrame(coachTick);
+  }
+
+  function advanceCoach() {
+    if (!coachSteps) return;
+    if (coachIdx >= coachSteps.length - 1) { endTour(); return; }
+    coachIdx++;
+    showCoachStep();
+  }
+
+  function startTour(key, force) {
+    const steps = TOURS[key];
+    if (!steps || !steps.length) return;
+    if (!force && tourState()[key]) return;
+    endTour();
+    // מסמנים כ"נראה" כבר בהתחלה - הסיור מופיע פעם אחת, גם אם המשתמש עזב באמצע
+    markTourSeen(key);
+    coachSteps = steps;
+    coachIdx = 0;
+    coachLayer.classList.add('on');
+    showCoachStep();
+  }
+
+  // מתזמן סיור אחרי שהמסך הספיק להיפתח ולהיגלל. אם בינתיים המסך נסגר - מוותרים.
+  function scheduleTour(key, sectionEl, delay) {
+    if (!key || tourState()[key]) return;
+    setTimeout(() => {
+      if (sectionEl && sectionEl.style.display === 'none') return;
+      startTour(key);
+    }, delay || 520);
+  }
+
+  coachNextBtn.addEventListener('click', advanceCoach);
+  coachSkipBtn.addEventListener('click', endTour);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') endTour(); });
+
   // ===== כפתורי הפעולה בעמוד הנחיתה =====
   const addSection = document.getElementById('add-plant-section');
   const quickHealthSection = document.getElementById('quick-health-section');
@@ -896,12 +1196,25 @@
   function showSection(section) {
     allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // מעבר מסך מסיים סיור פתוח, ומתחיל את הסיור של המסך החדש אם זו כניסה ראשונה
+    endTour();
+    scheduleTour(SECTION_TOUR_KEYS[section.id], section);
   }
 
   // כפתור "בית" - סוגר כל מסך/סקשן פתוח וחוזר לדף הנחיתה הראשי
   document.getElementById('home-btn').addEventListener('click', () => {
+    endTour();
     allToggleSections.forEach(s => { s.style.display = 'none'; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // הפעלת הסיור מחדש מתוך מסך המדריך
+  document.getElementById('replay-tour-btn').addEventListener('click', () => {
+    try { localStorage.removeItem(tourStoreKey()); } catch (e) { /* אחסון חסום */ }
+    endTour();
+    allToggleSections.forEach(s => { s.style.display = 'none'; });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => startTour('home', true), 700);
   });
 
   // רשימת הצמחים - נגישה דרך תפריט ההמבורגר או אריח "רשימת צמחים" בדף הבית, לא מוצגת אוטומטית
@@ -1610,6 +1923,8 @@
     document.getElementById('auth-gate').style.display = 'none';
     document.getElementById('app-wrap').style.display = 'block';
     await renderPlants();
+    // סיור פתיחה קצר - רק בכניסה הראשונה של המשתמש הזה
+    scheduleTour('home', null, 800);
   }
 
   // יוצר/מעדכן שורת פרופיל (שם פרטי/משפחה) עבור המשתמש, ומציג אותו בתפריט
