@@ -269,6 +269,25 @@
   .plant-card .en-name { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 8px; }
   .plant-card .notes { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 10px; }
   .plant-card .date { font-size: 0.75rem; color: var(--ink-soft); opacity: 0.8; }
+  /* ===== הוספה/החלפה של תמונת צמח קיים =====
+     צמח שנוסף בלי תמונה היה תקוע בלעדיה - אפשר היה רק למחוק ולהוסיף מחדש. */
+  .photo-slot { position: relative; }
+  .card-photo-input { display: none; }
+  .photo-empty {
+    height: 160px; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); font-size: 2.4rem; border-bottom: 1px dashed var(--line);
+  }
+  .photo-edit-btn {
+    position: absolute; inset-inline-end: 8px; bottom: 8px;
+    background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 12px; font-size: 0.78rem;
+    cursor: pointer; color: var(--ink); font-family: 'Inter', sans-serif;
+  }
+  .photo-edit-btn:hover { border-color: var(--sprout); color: var(--sprout); }
+  .photo-edit-btn:focus-visible { outline: 2px solid var(--sprout); outline-offset: 2px; }
+  .photo-status { font-size: 0.78rem; color: var(--sprout); margin: 6px 14px 0; }
+  .photo-status.error { color: var(--clay); }
+
   .plant-card .delete-btn {
     background: none; border: none; color: var(--clay); font-size: 0.8rem;
     cursor: pointer; margin-top: 8px; padding: 0; font-family: 'Inter', sans-serif;
@@ -854,6 +873,8 @@
       notes: 'הערות', notes_ph: 'יתמלא אוטומטית לאחר צילום - ניתן לתקן',
       photo_label_title: 'תמונה של הצמח - הזיהוי יתבצע אוטומטית',
       photo_pick: '📷 לחצו לצילום או העלאת תמונה', photo_change: '📷 תמונה נבחרה - לחצו להחלפה',
+      photo_add: '📷 הוספת תמונה', photo_replace: '📷 החלפת תמונה',
+      photo_saving: 'שומר תמונה...', photo_save_failed: 'שמירת התמונה נכשלה: ',
       save_plant: 'שמירת הצמח',
       filter_watering: 'מציגה רק צמחים שדורשים השקיה', clear_filter: '✕ נקה סינון',
       list_search_ph: '🔍 חיפוש צמח לפי שם', f_all: 'הכל', f_mine: 'הצמחים שלי', f_web: 'מהרשת',
@@ -941,6 +962,8 @@
       notes: 'Notes', notes_ph: 'Filled in automatically after a photo - you can edit it',
       photo_label_title: 'Photo of the plant - identification happens automatically',
       photo_pick: '📷 Tap to take or upload a photo', photo_change: '📷 Photo selected - tap to replace',
+      photo_add: '📷 Add a photo', photo_replace: '📷 Replace photo',
+      photo_saving: 'Saving photo...', photo_save_failed: 'Could not save the photo: ',
       save_plant: 'Save plant',
       filter_watering: 'Showing only plants that need watering', clear_filter: '✕ Clear filter',
       list_search_ph: '🔍 Search plants by name', f_all: 'All', f_mine: 'My plants', f_web: 'From the web',
@@ -1022,6 +1045,8 @@
       notes: 'Заметки', notes_ph: 'Заполнится автоматически после фото — можно исправить',
       photo_label_title: 'Фотография растения — распознавание произойдёт автоматически',
       photo_pick: '📷 Нажмите, чтобы сфотографировать или загрузить', photo_change: '📷 Фото выбрано — нажмите, чтобы заменить',
+      photo_add: '📷 Добавить фото', photo_replace: '📷 Заменить фото',
+      photo_saving: 'Сохраняю фото...', photo_save_failed: 'Не удалось сохранить фото: ',
       save_plant: 'Сохранить растение',
       filter_watering: 'Показаны только растения, которым нужен полив', clear_filter: '✕ Сбросить фильтр',
       list_search_ph: '🔍 Поиск растения по названию', f_all: 'Все', f_mine: 'Мои растения', f_web: 'Из интернета',
@@ -1773,6 +1798,43 @@
     if (!response.ok) throw new Error('המחיקה נכשלה (קוד ' + response.status + ')');
   }
 
+  async function updatePlantPhotoRow(id, photoBase64) {
+    assertSupabaseConfigured();
+    const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: await getSupabaseHeaders(),
+      body: JSON.stringify({ photo_base64: photoBase64 })
+    });
+    if (!response.ok) throw new Error('(' + response.status + ')');
+  }
+
+  // הוספה או החלפה של תמונה לצמח קיים. התמונה עוברת דרך אותה הקטנה
+  // שעוברות תמונות חדשות, כדי לא לנפח את העמודה בקובץ ישירות מהמצלמה.
+  async function changePlantPhoto(plantId) {
+    const inputEl = document.getElementById('photo-input-' + plantId);
+    const statusEl = document.getElementById('photo-status-' + plantId);
+    const file = inputEl && inputEl.files[0];
+    if (!file) return;
+    if (statusEl) { statusEl.textContent = t('photo_saving'); statusEl.classList.remove('error'); }
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('read failed'));
+        reader.readAsDataURL(file);
+      });
+      await updatePlantPhotoRow(plantId, await compressImage(dataUrl));
+      await renderPlants(); // הרינדור מחדש מציג את התמונה החדשה ומנקה את הסטטוס
+    } catch (err) {
+      console.error('Updating plant photo failed:', (err && err.message) || String(err));
+      if (statusEl) {
+        statusEl.textContent = t('photo_save_failed') + ((err && err.message) || String(err));
+        statusEl.classList.add('error');
+      }
+      if (inputEl) inputEl.value = ''; // מאפשר לנסות שוב עם אותו קובץ
+    }
+  }
+
   async function updatePlantHealthRow(id, health) {
     assertSupabaseConfigured();
     const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(id), {
@@ -2019,7 +2081,12 @@
 
     container.innerHTML = '<div class="plants-grid">' + plants.map(p => `
       <div class="plant-card">
-        ${p.photo ? `<img src="${p.photo}" alt="${p.nameHe}">` : ''}
+        <div class="photo-slot">
+          ${p.photo ? `<img src="${p.photo}" alt="">` : '<div class="photo-empty">🌱</div>'}
+          <input type="file" id="photo-input-${p.id}" class="card-photo-input" accept="image/*" onchange="changePlantPhoto(${p.id})">
+          <label for="photo-input-${p.id}" class="photo-edit-btn">${escapeHtml(p.photo ? t('photo_replace') : t('photo_add'))}</label>
+          <p id="photo-status-${p.id}" class="photo-status"></p>
+        </div>
         <div class="body">
           <h3>${p.nameHe}${p.source === 'web' ? '<span class="source-badge">' + escapeHtml(t('badge_web')) + '</span>' : ''}</h3>
           ${p.nameEn ? `<div class="en-name">${p.nameEn}</div>` : ''}
