@@ -288,6 +288,67 @@
   .photo-status { font-size: 0.78rem; color: var(--sprout); margin: 6px 14px 0; }
   .photo-status.error { color: var(--clay); }
 
+  /* ===== תנאי גידול - חלון מידע לכל צמח ===== */
+  .care-btn {
+    background: none; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 14px; font-size: 0.8rem; cursor: pointer; color: var(--ink);
+    font-family: 'Inter', sans-serif; margin-top: 10px;
+  }
+  .care-btn:hover { border-color: var(--sprout); color: var(--sprout); }
+  .care-btn:focus-visible { outline: 2px solid var(--sprout); outline-offset: 2px; }
+  .care-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+  .care-overlay {
+    position: fixed; inset: 0; background: rgba(31, 53, 39, 0.45); z-index: 60;
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .care-overlay.open { display: flex; }
+  .care-sheet {
+    background: var(--card); border-radius: var(--radius); width: 100%; max-width: 560px;
+    max-height: 88vh; overflow-y: auto; padding: 22px; box-sizing: border-box;
+    box-shadow: 0 18px 48px rgba(31, 53, 39, 0.28);
+  }
+  .care-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .care-head h3 { font-family: 'Fraunces', serif; font-size: 1.15rem; line-height: 1.35; }
+  .care-latin { color: var(--ink-soft); font-size: 0.85rem; font-style: italic; margin-bottom: 14px; }
+  .care-season-now {
+    display: inline-block; background: #EAF3DE; color: #3B6D11; border: 1px solid var(--sprout);
+    border-radius: 999px; padding: 4px 12px; font-size: 0.78rem; margin-bottom: 6px;
+  }
+  .care-block { border-top: 1px solid var(--line); padding: 14px 0; }
+  .care-block h4 {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .care-block p { font-size: 0.9rem; line-height: 1.65; }
+  .care-freq-wrap { border-top: 1px solid var(--line); padding-top: 14px; }
+  .care-freq-title {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  .care-freq { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .care-freq div {
+    text-align: center; padding: 8px 4px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--bg);
+  }
+  .care-freq div.now { border-color: var(--sprout); background: #EAF3DE; }
+  .care-freq .fs { display: block; font-size: 0.72rem; color: var(--ink-soft); }
+  .care-freq .fd { display: block; font-weight: 600; font-size: 1rem; font-variant-numeric: tabular-nums; }
+  .care-current { font-size: 0.82rem; color: var(--ink-soft); margin-top: 10px; }
+  .care-warn {
+    background: #FBEDE9; border: 1px solid #E6C4B8; border-radius: 12px;
+    padding: 12px 14px; margin-top: 16px;
+  }
+  .care-warn h4 {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #8A3D26; margin-bottom: 8px;
+  }
+  .care-warn li { font-size: 0.85rem; line-height: 1.6; margin-inline-start: 18px; margin-bottom: 6px; }
+  .care-warn li:last-child { margin-bottom: 0; }
+  .care-unknown {
+    background: var(--bg); border: 1px dashed var(--line); border-radius: 12px;
+    padding: 14px; font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft);
+  }
+
   .plant-card .delete-btn {
     background: none; border: none; color: var(--clay); font-size: 0.8rem;
     cursor: pointer; margin-top: 8px; padding: 0; font-family: 'Inter', sans-serif;
@@ -826,6 +887,18 @@
     <footer class="app-footer" data-i18n="footer"></footer>
   </div>
 
+  <!-- חלון תנאי גידול. נפתח מכפתור בכרטיס הצמח; התוכן מוזרק ב-JS. -->
+  <div class="care-overlay" id="care-overlay" onclick="closeCare(event)">
+    <div class="care-sheet" role="dialog" aria-modal="true" aria-labelledby="care-title">
+      <div class="care-head">
+        <h3 id="care-title"></h3>
+        <button type="button" class="menu-close" onclick="closeCare()" data-i18n-aria="close">✕</button>
+      </div>
+      <div class="care-latin" id="care-latin"></div>
+      <div id="care-body"></div>
+    </div>
+  </div>
+
 <script>
 
   // ===== ריבוי שפות =====
@@ -886,6 +959,7 @@
       w_bad_number: 'יש להזין מספר ימים תקין (1 ומעלה), או להשאיר ריק לביטול',
       // כרטיס צמח
       badge_web: 'מהרשת', added_on: 'נוסף בתאריך', health_btn: '🩺 בדיקת בריאות', checked_on: 'נבדק בתאריך',
+      care_btn: '🌱 תנאי גידול',
       delete_plant: 'מחיקת צמח', status_ok: 'תקין',
       empty_none: 'עדיין לא הוספת צמחים. התחילו למעלה 🌱', empty_search: 'לא נמצאו צמחים התואמים לחיפוש.',
       load_failed: 'לא הצלחתי לטעון את הצמחים מהשרת: ',
@@ -973,6 +1047,7 @@
       day: 'day', days: 'days', w_every: '💧 Water every', w_days_ph: 'days', w_done: '✅ Watered today',
       w_bad_number: 'Enter a valid number of days (1 or more), or leave it empty to turn this off',
       badge_web: 'from the web', added_on: 'Added on', health_btn: '🩺 Health check', checked_on: 'Checked on',
+      care_btn: '🌱 Growing conditions',
       delete_plant: 'Delete plant', status_ok: 'Healthy',
       empty_none: 'No plants yet. Add your first one above 🌱', empty_search: 'No plants match your search.',
       load_failed: 'Could not load your plants from the server: ',
@@ -1056,6 +1131,7 @@
       day: 'день', days: 'дн.', w_every: '💧 Полив каждые', w_days_ph: 'дней', w_done: '✅ Полил(а) сегодня',
       w_bad_number: 'Введите корректное число дней (от 1) или оставьте пустым, чтобы отключить',
       badge_web: 'из интернета', added_on: 'Добавлено', health_btn: '🩺 Проверка здоровья', checked_on: 'Проверено',
+      care_btn: '🌱 Условия выращивания',
       delete_plant: 'Удалить растение', status_ok: 'Здоровое',
       empty_none: 'Растений пока нет. Добавьте первое 🌱', empty_search: 'Ничего не найдено по вашему запросу.',
       load_failed: 'Не удалось загрузить растения с сервера: ',
@@ -1489,6 +1565,30 @@
     } catch (e) { /* אחסון חסום - הסיור פשוט יופיע שוב */ }
   }
 
+  // דגל גלובלי: מרגע שמישהו לוחץ "דילוג על הסיור" פעם אחת, מפסיקים לכפות
+  // סיורים אוטומטיים בכל מסך אחר שהוא עוד לא ראה - לא רק במסך הנוכחי.
+  // חוזרים להציע סיורים רק דרך הכפתור הידני במסך המדריך (replay-tour-btn).
+  function tourDismissKey() {
+    return 'avigrow_tour_dismissed_v1_' + (currentUserId || 'anon');
+  }
+  function isTourDismissed() {
+    try { return localStorage.getItem(tourDismissKey()) === '1'; } catch (e) { return false; }
+  }
+  function markTourDismissed() {
+    try { localStorage.setItem(tourDismissKey(), '1'); } catch (e) { /* אחסון חסום */ }
+  }
+  function clearTourDismissed() {
+    try { localStorage.removeItem(tourDismissKey()); } catch (e) { /* אחסון חסום */ }
+  }
+
+  // אותו כפתור משמש גם לדילוג באמצע הסיור וגם ל"סגירה" אחרי שהמשתמש סיים
+  // אותו עד הסוף - רק דילוג אמיתי (לפני הצעד האחרון) נחשב "ביטול" שמפסיק
+  // לכפות סיורים אוטומטית במסכים אחרים; סגירה אחרי סיום לא.
+  function skipTour() {
+    if (coachSteps && coachIdx < coachSteps.length - 1) markTourDismissed();
+    endTour();
+  }
+
   function detachCoachWatcher() {
     if (coachDetach) { coachDetach(); coachDetach = null; }
   }
@@ -1613,7 +1713,7 @@
 
   // מתזמן סיור אחרי שהמסך הספיק להיפתח ולהיגלל. אם בינתיים המסך נסגר - מוותרים.
   function scheduleTour(key, sectionEl, delay) {
-    if (!key || tourState()[key]) return;
+    if (!key || tourState()[key] || isTourDismissed()) return;
     setTimeout(() => {
       if (sectionEl && sectionEl.style.display === 'none') return;
       startTour(key);
@@ -1624,7 +1724,7 @@
   applyLanguage(currentLang);
 
   coachNextBtn.addEventListener('click', advanceCoach);
-  coachSkipBtn.addEventListener('click', endTour);
+  coachSkipBtn.addEventListener('click', skipTour);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') endTour(); });
 
   // ===== כפתורי הפעולה בעמוד הנחיתה =====
@@ -1655,6 +1755,7 @@
   // הפעלת הסיור מחדש מתוך מסך המדריך
   document.getElementById('replay-tour-btn').addEventListener('click', () => {
     try { localStorage.removeItem(tourStoreKey()); } catch (e) { /* אחסון חסום */ }
+    clearTourDismissed();
     endTour();
     allToggleSections.forEach(s => { s.style.display = 'none'; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2053,6 +2154,483 @@
     card.style.display = 'block';
   }
 
+  // =====================================================================
+  //  תנאי גידול
+  //  לכל צמח כפתור שפותח חלון עם ארבעה חלקים: תאורה, עונתיות, מצע,
+  //  והשקיה + תדירות. המידע לא נשמר בבסיס הנתונים אלא נגזר מהמין:
+  //  CARE_DB מתאים את השם הלטיני/העברי לערך, וכל ערך מצביע על קודים
+  //  (light / season / soil / water) שמתורגמים פעם אחת לשלוש השפות.
+  //  כך המידע נשאר מדויק למין הספציפי בלי לשכפל טקסט לכל צמח.
+  // =====================================================================
+
+  // מכפילי עונה על מרווח ההשקיה של הקיץ. הקיץ הוא הבסיס (1) כי אז
+  // הצמח צורך הכי הרבה מים; בחורף הקצב יורד כמעט לחצי.
+  const SEASON_MULT = { summer: 1, autumn: 1.35, winter: 1.9, spring: 1.1 };
+  // צמחי חורף (ליתופס, פקעות חורף) - לוח הפוך: בקיץ לא משקים בכלל.
+  const SEASON_MULT_WINTER_GROWER = { summer: null, autumn: 1, winter: 1, spring: 1.5 };
+
+  // עונות לפי האקלים בישראל: קיץ ארוך שנמשך עד סוף ספטמבר, חורף קצר.
+  function currentSeason() {
+    const m = new Date().getMonth() + 1;
+    if (m >= 6 && m <= 9) return 'summer';
+    if (m === 10 || m === 11) return 'autumn';
+    if (m === 12 || m <= 2) return 'winter';
+    return 'spring';
+  }
+
+  const CARE_I18N = {
+    he: {
+      season_now: 'העונה עכשיו: {s}',
+      s_summer: 'קיץ', s_autumn: 'סתיו', s_winter: 'חורף', s_spring: 'אביב',
+      h_light: 'תאורה', h_season: 'עונתיות', h_soil: 'מצע', h_water: 'השקיה ותדירות',
+      h_warn: 'שימו לב',
+      freq_title: 'מרווח מומלץ בין השקיות, לפי עונה',
+      freq_none: 'ללא',
+      freq_no_schedule: 'לא לפי לוח זמנים',
+      applied_now: 'במערכת מוגדר כרגע כל {n} ימים.',
+      applied_none: 'לא הוגדר מרווח השקיה במערכת.',
+      apply_btn: 'לעדכן ל-{n} ימים בעונה הנוכחית',
+      applying: 'מעדכן...',
+      apply_failed: 'העדכון נכשל: ',
+      unknown_title: 'אין לנו נתונים מדויקים למין הזה',
+      unknown_body: 'הצמח לא נמצא במאגר תנאי הגידול של האפליקציה, ולא ננחש. כדאי לוודא את השם הלטיני (השדה באנגלית) - ברגע שהוא מזוהה, המידע יופיע כאן אוטומטית. עד אז: אור בהיר עקיף, מצע מנקז, והשקיה רק כששכבת 2-3 ס"מ העליונים יבשה למגע.',
+      gl_indoor: 'תחת תאורת גידול: 25-35 ס"מ מהנורה, 12-14 שעות ביום.',
+      gl_sun: 'תאורת גידול לבדה בדרך כלל לא מספיקה לצמח שמש - הוא זקוק לשמש אמיתית או לנורה חזקה במיוחד וקרובה.',
+      gl_shade: 'תחת תאורת גידול: מרחק 40 ס"מ ומעלה, או בשולי קרן האור. נורה חזקה מקרוב תלבין את העלים.',
+
+      l_full_sun: 'שמש מלאה - 6 שעות ומעלה של שמש ישירה ביום. חלון דרומי או מערבי, או מרפסת פתוחה. פחות מזה והצמח יתארך ויאבד צורה וצבע.',
+      l_sun_am: 'שמש ישירה בשעות הבוקר בלבד, וצל בשעות החמות. חלון מזרחי הוא המיקום האידיאלי.',
+      l_bright_indirect: 'אור בהיר עקיף - ליד חלון אבל מחוץ לקו השמש הישירה, או מאחורי וילון דק. השמש הישירה של הצהריים שורפת את העלים.',
+      l_medium: 'אור בינוני - מטר עד שלושה מהחלון, או חלון צפוני. לא יסבול שמש ישירה חזקה.',
+      l_low_ok: 'סובל אור נמוך, אבל לא חושך. באור חלש הצמיחה תאט מאוד, העלים יחווירו והגבעולים יתארכו - זה לא סימן מחלה אלא בקשה לאור.',
+
+      sn_summer_grower: 'צמח קיץ - עונת הגדילה שלו היא אביב עד סוף הסתיו. מדשנים רק בעונה הזו, ומפסיקים לגמרי מדצמבר עד פברואר.',
+      sn_winter_grower: 'צמח חורף, עם לוח הפוך: מתעורר בספטמבר-אוקטובר כשהחום נשבר, גדל ופורח כל החורף, ונרדם באביב. בשיא הקיץ הוא ישן - השקיה אז מרקיבה אותו.',
+      sn_evergreen_indoor: 'צמח פנים ירוק-עד - גדל כמעט כל השנה, עם האטה מורגשת בדצמבר-פברואר. בחודשים האלה מפחיתים מים ומפסיקים דישון.',
+      sn_winter_rest: 'מאט מאוד בחורף ועלול להשיל חלק מהעלים - זו תרדמה חלקית ולא מחלה. מפחיתים מים בחדות מדצמבר עד פברואר ומחכים; העלים חוזרים כשהמצע מתחמם.',
+      sn_winter_dormant: 'נכנס לתרדמה מלאה: בסוף הסתיו העלים מצהיבים ונושרים - זה נורמלי לגמרי. הפקעת נחה יבשה עד האביב, ובלי מים בכלל. השקיה בתרדמה מרקיבה אותה.',
+      sn_terrarium: 'בתוך טרריום העונתיות מתונה - האקלים בפנים כמעט קבוע. עדיין: פחות אור בחורף פירושו צמיחה איטית יותר, ולכן פחות צורך בהתערבות.',
+
+      so_gritty: 'מצע מנקז מאוד: 50-70% מינרלי (פרלייט, פומיס, חול גס או אקדמה) עם מעט קומפוסט. אחרי השקיה המים צריכים לרדת מיד ולא לעמוד.',
+      so_aroid: 'מצע אוורירי לצמחי אררואיד: קליפות אורן + פרלייט + סיבי קוקוס, ומעט אדמה. השורשים האוויריים צריכים חמצן וייחנקו באדמת עציץ רגילה.',
+      so_moist_rich: 'מצע עשיר שמחזיק לחות אבל לא נקווה: קוקוס או כבול + פרלייט + מעט קומפוסט. הוא צריך להיות לח כמו ספוג סחוט, לא בוצי.',
+      so_bark_epiphyte: 'מצע אפיפיטי גס: קליפות אורן, ספגנום ופחם - כמעט בלי אדמה. בטבע הצמח יושב על עץ, לא בקרקע.',
+      so_terrarium: 'שכבות טרריום: ניקוז (לקה או חצץ) בתחתית, רשת מפרידה, ומעליהם מצע יער עם ספגנום ופחם פעיל.',
+      so_standard: 'אדמת עציץ איכותית עם תוספת 20-30% פרלייט לניקוז. חובה חור ניקוז בעציץ.',
+
+      w_dry_fully: 'להשקות רק כשהמצע יבש לגמרי לעומק - לא רק בשכבה העליונה. אצבע או שיפוד עד אמצע העציץ: יצא נקי ויבש - להשקות. יש ספק - לחכות עוד שבוע.',
+      w_dry_two_thirds: 'לתת לשני שלישים העליונים של המצע להתייבש בין השקיות. אז להשקות ברצינות עד שהמים יוצאים מהניקוז.',
+      w_dry_top_third: 'להשקות כשהשליש העליון של המצע יבש. השקיה יסודית עד ניקוז, ולרוקן את הצלוחית אחרי עשר דקות.',
+      w_dry_top_layer: 'להשקות כששכבת 2-3 הסנטימטרים העליונים יבשה למגע. לא לתת לגוש להתייבש לגמרי.',
+      w_evenly_moist: 'לשמור על לחות אחידה וקבועה - לא בוצי ולא יבש. עדיף מעט מים בתדירות גבוהה מאשר הצפה אחת נדירה.',
+      w_orchid_soak: 'טבילה: להשרות את העציץ במים 10-15 דקות, ואז לתת לו לנקז לגמרי. לעולם לא להשאיר מים בעציץ הדקורטיבי החיצוני.',
+      w_condensation: 'בטרריום סגור לא משקים לפי לוח זמנים. המדד הוא עיבוי על הזכוכית: ערפל קל בבוקר שנעלם במשך היום = מאוזן. אין עיבוי כמה ימים ברצף = לרסס מעט. טיפות זולגות כל היום = לאוורר, לא להוסיף מים.',
+
+      wr_rot: 'עודף מים הוא הסכנה מספר אחת. צמח קמל עם מצע רטוב סובל מריקבון שורשים ולא מצמא - השקיה נוספת רק תזרז את הקריסה.',
+      wr_burn: 'שמש ישירה חזקה כווה את העלים: כתמים לבנבנים או חומים ויבשים שלא מתאוששים.',
+      wr_fluoride: 'רגיש לפלואוריד ולכלור במי ברז, והתוצאה היא קצוות עלים חומים. עדיף מים מסוננים או מים שעמדו לילה פתוחים.',
+      wr_salts: 'מלחי דשן מצטברים במצע ושורפים את קצוות השורשים. פעם בכמה חודשים לשטוף את העציץ בכמות מים גדולה עד שהם יוצאים מהניקוז.',
+      wr_no_rosette: 'לא לשפוך מים לתוך מרכז הרוזטה - מים שנשארים שם גורמים לריקבון מהמרכז החוצה.',
+      wr_no_wet_leaves: 'לא להרטיב את העלים השעירים - השיער מחזיק מים והעלה נרקב מתחתיו.',
+      wr_farina: 'הציפוי הקמחי הבהיר על העלים הוא הגנת שמש טבעית של הצמח. לא לגעת ולא לנגב - הוא לא חוזר.',
+      wr_sap: 'המוהל הלבן מגרה עור ועיניים ורעיל בבליעה. כפפות בגיזום, ולשטוף מיד במגע.',
+      wr_humidity: 'צריך לחות אוויר גבוהה. אוויר יבש מתבטא בקצוות חומים ומזמין אקריות אדומות.',
+      wr_draft: 'רגיש לזרם אוויר קר - לא מול מזגן, מאוורר או חלון פתוח בחורף.',
+      wr_leggy: 'מתארך ומתקרח כשחסר לו אור. קטימה מעודדת התעבות, והקצוות שנגזמו משרישים בקלות ואפשר לנעוץ אותם בחזרה באותו עציץ.',
+      wr_repot_tight: 'אוהב להיות צפוף בעציץ. החלפת עציץ מוקדמת מדי דוחה את הפריחה בשנה.',
+      wr_keep_spurs: 'לא לגזום את עוקצי הפריחה הישנים - הפריחה הבאה חוזרת בדיוק מהם.',
+      wr_distilled: 'רק מים מזוקקים, מי גשם או מי אוסמוזה. מי ברז הורגים אותו תוך שבועות.',
+      wr_split: 'השקיה בזמן הלא נכון גורמת לגוף להתפקע ולהיסדק. התזמון כאן חשוב יותר מהכמות.',
+      wr_cold_min: 'לא לחשוף לטמפרטורה מתחת ל-10 מעלות. מרפסת פתוחה בלילות חורף קרים היא סיכון.',
+
+      n_jewel: 'סחלב תכשיט מגדל שורשים זוחלים על פני המצע - לא לקבור אותם. שינויי אוורור פתאומיים גורמים לו לנשור עלים, ולכן מאווררים במנות קצרות ולא ברציפות.',
+      n_calathea: 'קיפול העלים כלפי מעלה בלילה הוא תנועה טבעית ובריאה, ולא קמילה.',
+      n_fittonia: 'מתמוטטת לגמרי כשהמצע מתייבש, וקמה תוך שעות אחרי השקיה. ההתמוטטות לא מזיקה בפעם אחת, אבל חוזרת עליה שוב ושוב מחלישה אותה.',
+      n_alocasia: 'זן מגוון עם מעט כלורופיל מייצר פחות אנרגיה ולכן גדל לאט מטבעו - זו לא תוצאה של טיפול לקוי, ודישון מוגבר לא יעזור.',
+      n_sansevieria: 'מנובמבר עד פברואר להכפיל את המרווח. סנסיווריה מתה מהצפה חורפית הרבה יותר מאשר מהזנחה.',
+      n_echeveria: 'רוזטה שמתארכת ומרווחת בין העלים מבקשת אור, לא מים. אפשר לקטום את הראש, לתת לו להתייבש יומיים ולשתול מחדש.',
+      n_panda: 'קצוות חומים על העלים השעירים הם הצבע הטבעי של הזן ולא נזק.',
+      n_hoya: 'פורחת מעוקצים קצרים שחוזרים שנה אחר שנה. עלים מצומקים בזמן שהשאר בסדר מעידים על בעיה בשורשים או במצע, לא על צמא.',
+      n_cryptanthus: 'ברומליאדה פורחת פעם אחת ואז דועכת, אבל משאירה שלוחות בבסיס. מפרידים אותן כשהן מגיעות לשליש מגודל האם.',
+      n_lithops: 'חלון ההשקיה שלו הוא ספטמבר עד נובמבר - עונת הצמיחה והפריחה. בקיץ ובאמצע החורף: יבש לגמרי. בזמן החלפת העלים באביב לא משקים בכלל, העלים הישנים מזינים את החדשים.',
+      n_caudex: 'הפקעת חייבת להישאר מעל פני המצע. כשהעלים מתייבשים באביב זה סימן להפסיק מים לגמרי, לא לנסות להציל.',
+      n_caladium: 'הפקעת נשמרת יבשה בחורף ב-13-18 מעלות. שתילה מחדש כשהמצע מתחמם, והנבטים חוזרים תוך 2-4 שבועות.',
+      n_rhipsalis: 'קקטוס יער אפיפיטי ולא קקטוס מדברי - רוצה יותר מים ופחות שמש ממה שנותנים לקקטוס רגיל.',
+      n_ceropegia: 'קצוות שנגזמו אפשר לנעוץ בחזרה לאותו עציץ - הם משרישים ומעבים אותו.',
+      n_euphorbia_milii: 'ככל שיש יותר אור כך הפריחה צפופה יותר, והיא יכולה להימשך כמעט כל השנה.',
+      n_portulacaria: 'כל ענף שנגזם משריש בקלות במצע יבש - זה הצמח הכי פשוט להכפלה באוסף.',
+      n_cactus: 'מדצמבר עד פברואר לא משקים בכלל. היובש החורפי הוא מה שמפעיל את הפריחה באביב.',
+      n_dracaena: 'קצוות חומים בדרך כלל מקורם במלחים ובפלואוריד שבמי הברז, יותר מאשר בלחות אוויר נמוכה.',
+      n_moss: 'טחב שותה מהאוויר ולא מהשורש. הוא מחוויר ומחמים כשהאקלים מתייבש, ומתאושש כשהלחות חוזרת.'
+    },
+
+    en: {
+      season_now: 'Current season: {s}',
+      s_summer: 'Summer', s_autumn: 'Autumn', s_winter: 'Winter', s_spring: 'Spring',
+      h_light: 'Light', h_season: 'Seasonality', h_soil: 'Substrate', h_water: 'Watering and frequency',
+      h_warn: 'Watch out for',
+      freq_title: 'Recommended interval between waterings, by season',
+      freq_none: 'none',
+      freq_no_schedule: 'not on a schedule',
+      applied_now: 'Currently set to every {n} days.',
+      applied_none: 'No watering interval is set.',
+      apply_btn: 'Set to {n} days for this season',
+      applying: 'Updating...',
+      apply_failed: 'Update failed: ',
+      unknown_title: 'No precise data for this species',
+      unknown_body: 'This plant is not in the app care database, and we will not guess. Check the Latin name (the English field) - once it is recognised the details appear here automatically. Until then: bright indirect light, a free-draining mix, and water only when the top 2-3 cm feel dry.',
+      gl_indoor: 'Under a grow light: 25-35 cm from the lamp, 12-14 hours a day.',
+      gl_sun: 'A grow light alone is usually not enough for a sun plant - it needs real sun or a very strong lamp placed close.',
+      gl_shade: 'Under a grow light: 40 cm or more, or at the edge of the beam. A strong lamp up close will bleach the leaves.',
+
+      l_full_sun: 'Full sun - six hours or more of direct sun a day. A south or west window, or an open balcony. Less than that and the plant stretches and loses its shape and colour.',
+      l_sun_am: 'Direct sun in the morning only, shade during the hottest hours. An east window is ideal.',
+      l_bright_indirect: 'Bright indirect light - near a window but out of the direct beam, or behind a sheer curtain. Midday sun burns the leaves.',
+      l_medium: 'Medium light - one to three metres from a window, or a north window. It will not tolerate strong direct sun.',
+      l_low_ok: 'Tolerates low light, but not darkness. In weak light growth slows sharply, leaves pale and stems stretch - that is a request for light, not a disease.',
+
+      sn_summer_grower: 'A summer grower - its growing season runs from spring to late autumn. Feed only then, and stop completely from December to February.',
+      sn_winter_grower: 'A winter grower on a reversed calendar: it wakes in September-October as the heat breaks, grows and flowers all winter, and sleeps in spring. In high summer it is dormant - watering then rots it.',
+      sn_evergreen_indoor: 'An evergreen houseplant - it grows nearly year round with a clear slowdown from December to February. Reduce water and stop feeding in those months.',
+      sn_winter_rest: 'Slows sharply in winter and may drop some leaves - that is a partial dormancy, not a disease. Cut watering back hard from December to February and wait; leaves return once the mix warms.',
+      sn_winter_dormant: 'Goes fully dormant: in late autumn the leaves yellow and fall - entirely normal. The tuber rests dry until spring with no water at all. Watering a dormant tuber rots it.',
+      sn_terrarium: 'Inside a terrarium seasonality is muted - the climate in there is nearly constant. Still, less light in winter means slower growth and less need to intervene.',
+
+      so_gritty: 'A very free-draining mix: 50-70% mineral (perlite, pumice, coarse sand or akadama) with a little compost. Water should run straight through, never pool.',
+      so_aroid: 'An airy aroid mix: pine bark + perlite + coco coir with a little soil. The aerial roots need oxygen and suffocate in ordinary potting soil.',
+      so_moist_rich: 'A rich mix that holds moisture without staying waterlogged: coco or peat + perlite + a little compost. It should feel like a wrung-out sponge, not mud.',
+      so_bark_epiphyte: 'A coarse epiphyte mix: pine bark, sphagnum and charcoal - almost no soil. In the wild this plant sits on a tree, not in the ground.',
+      so_terrarium: 'Terrarium layers: drainage (leca or gravel) at the bottom, a separating mesh, then a forest mix with sphagnum and activated charcoal.',
+      so_standard: 'Good potting soil with 20-30% added perlite for drainage. A drainage hole is mandatory.',
+
+      w_dry_fully: 'Water only when the mix is bone dry all the way down, not just at the surface. Push a finger or a skewer to mid-pot: clean and dry means water. In doubt, wait another week.',
+      w_dry_two_thirds: 'Let the top two thirds of the mix dry out between waterings, then water properly until it runs from the drainage hole.',
+      w_dry_top_third: 'Water when the top third of the mix is dry. Water thoroughly until it drains, and empty the saucer after ten minutes.',
+      w_dry_top_layer: 'Water when the top 2-3 cm feel dry to the touch. Never let the root ball dry out completely.',
+      w_evenly_moist: 'Keep the moisture even and steady - neither muddy nor dry. Little and often beats one rare flooding.',
+      w_orchid_soak: 'Soak: stand the pot in water for 10-15 minutes, then let it drain completely. Never leave water sitting in the decorative outer pot.',
+      w_condensation: 'A closed terrarium is not watered on a schedule. The measure is condensation on the glass: light morning fog that clears during the day means it is balanced. No condensation for several days running means mist lightly. Droplets running all day means vent it, do not add water.',
+
+      wr_rot: 'Too much water is the number one danger. A wilting plant in wet mix has root rot, not thirst - watering again only speeds up the collapse.',
+      wr_burn: 'Strong direct sun scorches the leaves: whitish or brown dry patches that never recover.',
+      wr_fluoride: 'Sensitive to fluoride and chlorine in tap water, which shows as brown leaf tips. Use filtered water, or water left standing overnight.',
+      wr_salts: 'Fertiliser salts build up in the mix and burn the root tips. Every few months flush the pot with plenty of water until it runs out of the bottom.',
+      wr_no_rosette: 'Do not pour water into the centre of the rosette - water sitting there rots it from the middle out.',
+      wr_no_wet_leaves: 'Do not wet the hairy leaves - the hairs hold water and the leaf rots underneath.',
+      wr_farina: 'The pale powdery coating on the leaves is the plant own sunscreen. Do not touch or wipe it - it does not grow back.',
+      wr_sap: 'The white sap irritates skin and eyes and is toxic if swallowed. Wear gloves when pruning and rinse on contact.',
+      wr_humidity: 'Needs high air humidity. Dry air shows as brown tips and invites spider mites.',
+      wr_draft: 'Sensitive to cold draughts - keep it away from air conditioning, fans and open winter windows.',
+      wr_leggy: 'Stretches and goes bare when short of light. Pinching encourages density, and the cuttings root easily - push them back into the same pot.',
+      wr_repot_tight: 'Likes being pot-bound. Repotting too early delays flowering by a year.',
+      wr_keep_spurs: 'Never cut off the old flower spurs - next year the flowers come back from exactly those.',
+      wr_distilled: 'Distilled, rain or reverse-osmosis water only. Tap water kills it within weeks.',
+      wr_split: 'Watering at the wrong time makes the body split open. Timing matters more than quantity here.',
+      wr_cold_min: 'Do not expose it below 10 degrees. An open balcony on cold winter nights is a real risk.',
+
+      n_jewel: 'A jewel orchid grows creeping roots along the surface - do not bury them. Sudden changes in airflow make it drop leaves, so vent in short bursts rather than continuously.',
+      n_calathea: 'Leaves folding upward at night is a natural, healthy movement, not wilting.',
+      n_fittonia: 'Collapses completely when the mix dries out and stands back up within hours of watering. One collapse does no harm, but repeated ones weaken it.',
+      n_alocasia: 'A variegated form has little chlorophyll, makes less energy and is therefore naturally slow - that is not poor care, and extra feeding will not fix it.',
+      n_sansevieria: 'From November to February double the interval. Sansevieria dies of winter overwatering far more often than of neglect.',
+      n_echeveria: 'A rosette that stretches with gaps between the leaves is asking for light, not water. You can behead it, let the cut dry two days and replant.',
+      n_panda: 'Brown edges on the furry leaves are the natural colour of the variety, not damage.',
+      n_hoya: 'It flowers from short spurs that return year after year. Shrivelled leaves while the rest look fine point to a root or substrate problem, not thirst.',
+      n_cryptanthus: 'A bromeliad flowers once and then declines, but leaves pups at the base. Separate them once they reach a third of the mother size.',
+      n_lithops: 'Its watering window is September to November - the growth and flowering season. In summer and midwinter: bone dry. During the spring leaf change do not water at all; the old leaves feed the new ones.',
+      n_caudex: 'The caudex must stay above the surface. When the leaves dry off in spring that is the signal to stop water entirely, not to rescue it.',
+      n_caladium: 'The tuber is stored dry over winter at 13-18 degrees. Replant when the mix warms and shoots return within 2-4 weeks.',
+      n_rhipsalis: 'An epiphytic forest cactus, not a desert one - it wants more water and less sun than a regular cactus.',
+      n_ceropegia: 'Trimmed ends can be pushed straight back into the same pot - they root and thicken it up.',
+      n_euphorbia_milii: 'The more light it gets the denser the flowering, and it can carry on almost all year.',
+      n_portulacaria: 'Every pruned branch roots easily in dry mix - the simplest plant in the collection to multiply.',
+      n_cactus: 'From December to February do not water at all. That winter drought is what triggers spring flowering.',
+      n_dracaena: 'Brown tips usually come from salts and fluoride in tap water rather than from low air humidity.',
+      n_moss: 'Moss drinks from the air, not through roots. It pales and browns when the climate dries out and recovers when humidity returns.'
+    },
+
+    ru: {
+      season_now: 'Сейчас сезон: {s}',
+      s_summer: 'Лето', s_autumn: 'Осень', s_winter: 'Зима', s_spring: 'Весна',
+      h_light: 'Освещение', h_season: 'Сезонность', h_soil: 'Субстрат', h_water: 'Полив и частота',
+      h_warn: 'Обратите внимание',
+      freq_title: 'Рекомендуемый интервал между поливами по сезонам',
+      freq_none: 'нет',
+      freq_no_schedule: 'не по графику',
+      applied_now: 'Сейчас задано: каждые {n} дн.',
+      applied_none: 'Интервал полива не задан.',
+      apply_btn: 'Установить {n} дн. на текущий сезон',
+      applying: 'Обновляю...',
+      apply_failed: 'Не удалось обновить: ',
+      unknown_title: 'Точных данных по этому виду нет',
+      unknown_body: 'Это растение отсутствует в базе условий выращивания, и мы не будем угадывать. Проверьте латинское название (поле на английском) - как только вид распознан, данные появятся здесь автоматически. А пока: яркий рассеянный свет, хорошо дренированный субстрат и полив только когда верхние 2-3 см просохли.',
+      gl_indoor: 'Под фитолампой: 25-35 см от лампы, 12-14 часов в сутки.',
+      gl_sun: 'Одной фитолампы солнечному растению обычно мало - нужно настоящее солнце или очень мощная лампа вблизи.',
+      gl_shade: 'Под фитолампой: от 40 см и дальше, или с краю светового пятна. Мощная лампа вблизи обесцветит листья.',
+
+      l_full_sun: 'Полное солнце - шесть и более часов прямого солнца в день. Южное или западное окно, либо открытый балкон. При меньшем свете растение вытягивается и теряет форму и цвет.',
+      l_sun_am: 'Прямое солнце только утром, притенение в жаркие часы. Идеально восточное окно.',
+      l_bright_indirect: 'Яркий рассеянный свет - рядом с окном, но вне прямых лучей, или за тонкой занавеской. Полуденное солнце обжигает листья.',
+      l_medium: 'Средний свет - один-три метра от окна или северное окно. Сильного прямого солнца не выносит.',
+      l_low_ok: 'Переносит слабый свет, но не темноту. При недостатке света рост сильно замедляется, листья бледнеют, побеги вытягиваются - это просьба о свете, а не болезнь.',
+
+      sn_summer_grower: 'Летний тип роста - сезон с весны до поздней осени. Подкормки только в это время, с декабря по февраль полностью прекратить.',
+      sn_winter_grower: 'Зимний тип роста, календарь перевернут: просыпается в сентябре-октябре, когда спадает жара, растет и цветет всю зиму, засыпает весной. В разгар лета спит - полив в это время приводит к гнили.',
+      sn_evergreen_indoor: 'Вечнозеленое комнатное растение - растет почти круглый год с заметным замедлением с декабря по февраль. В эти месяцы меньше воды и никаких подкормок.',
+      sn_winter_rest: 'Зимой сильно замедляется и может сбросить часть листьев - это частичный покой, а не болезнь. С декабря по февраль резко сократить полив и подождать; листья вернутся, когда субстрат прогреется.',
+      sn_winter_dormant: 'Уходит в полный покой: поздней осенью листья желтеют и опадают - это совершенно нормально. Клубень отдыхает сухим до весны, без полива вообще. Полив в покое губит его.',
+      sn_terrarium: 'В террариуме сезонность сглажена - климат внутри почти постоянный. Но зимой света меньше, рост медленнее, и вмешиваться нужно реже.',
+
+      so_gritty: 'Очень хорошо дренированный субстрат: 50-70% минеральной части (перлит, пемза, крупный песок или акадама) и немного компоста. Вода должна проходить сразу и не застаиваться.',
+      so_aroid: 'Воздухопроницаемая смесь для ароидных: сосновая кора + перлит + кокос и немного земли. Воздушным корням нужен кислород, в обычном грунте они задыхаются.',
+      so_moist_rich: 'Питательный субстрат, удерживающий влагу, но без застоя: кокос или торф + перлит + немного компоста. На ощупь как отжатая губка, а не грязь.',
+      so_bark_epiphyte: 'Грубый эпифитный субстрат: сосновая кора, сфагнум и уголь, почти без земли. В природе растение сидит на дереве, а не в почве.',
+      so_terrarium: 'Слои террариума: дренаж (керамзит или гравий) внизу, разделительная сетка, сверху лесной субстрат со сфагнумом и активированным углем.',
+      so_standard: 'Качественный грунт с добавлением 20-30% перлита для дренажа. Дренажное отверстие обязательно.',
+
+      w_dry_fully: 'Поливать только когда субстрат просох полностью на всю глубину, а не только сверху. Палец или шпажка до середины горшка: чисто и сухо - можно поливать. Сомневаетесь - подождите еще неделю.',
+      w_dry_two_thirds: 'Дать просохнуть верхним двум третям субстрата, затем полить как следует, до вытекания из дренажа.',
+      w_dry_top_third: 'Поливать, когда верхняя треть субстрата сухая. Полив обильный, до дренажа, поддон опорожнить через десять минут.',
+      w_dry_top_layer: 'Поливать, когда верхние 2-3 см сухие на ощупь. Не давать кому пересыхать полностью.',
+      w_evenly_moist: 'Поддерживать ровную постоянную влажность - не грязь и не сушь. Понемногу и чаще лучше, чем один редкий залив.',
+      w_orchid_soak: 'Замачивание: поставить горшок в воду на 10-15 минут, затем дать полностью стечь. Никогда не оставлять воду в декоративном кашпо.',
+      w_condensation: 'Закрытый террариум не поливают по графику. Показатель - конденсат на стекле: легкий утренний туман, который расходится за день, означает баланс. Нет конденсата несколько дней подряд - слегка опрыскать. Капли текут весь день - проветрить, а не доливать воду.',
+
+      wr_rot: 'Избыток воды - главная опасность. Вянущее растение во влажном субстрате страдает от корневой гнили, а не от жажды, и повторный полив только ускорит гибель.',
+      wr_burn: 'Сильное прямое солнце обжигает листья: белесые или коричневые сухие пятна, которые не восстанавливаются.',
+      wr_fluoride: 'Чувствительно к фтору и хлору в водопроводной воде - от этого коричневые кончики листьев. Лучше фильтрованная или отстоянная вода.',
+      wr_salts: 'Соли удобрений накапливаются в субстрате и жгут кончики корней. Раз в несколько месяцев промывать горшок большим количеством воды до вытекания снизу.',
+      wr_no_rosette: 'Не лить воду в центр розетки - оставшаяся там вода вызывает гниль изнутри.',
+      wr_no_wet_leaves: 'Не мочить опушенные листья - волоски удерживают воду, и лист под ними гниет.',
+      wr_farina: 'Светлый восковой налет на листьях - естественная защита от солнца. Не трогать и не вытирать, он не восстанавливается.',
+      wr_sap: 'Белый млечный сок раздражает кожу и глаза и ядовит при проглатывании. Обрезка в перчатках, при попадании сразу смыть.',
+      wr_humidity: 'Нужна высокая влажность воздуха. Сухой воздух дает коричневые кончики и провоцирует паутинного клеща.',
+      wr_draft: 'Чувствительно к холодным сквознякам - подальше от кондиционера, вентилятора и открытого зимнего окна.',
+      wr_leggy: 'Вытягивается и оголяется при нехватке света. Прищипка загущает куст, а срезанные концы легко укореняются - их можно воткнуть обратно в тот же горшок.',
+      wr_repot_tight: 'Любит тесный горшок. Слишком ранняя пересадка откладывает цветение на год.',
+      wr_keep_spurs: 'Не срезать старые цветочные шпорцы - именно из них цветы появятся снова.',
+      wr_distilled: 'Только дистиллированная, дождевая вода или осмос. Водопроводная вода убивает его за несколько недель.',
+      wr_split: 'Полив не вовремя приводит к растрескиванию тела. Здесь важнее срок, чем количество.',
+      wr_cold_min: 'Не держать при температуре ниже 10 градусов. Открытый балкон холодными зимними ночами - реальный риск.',
+
+      n_jewel: 'Драгоценная орхидея наращивает ползучие корни по поверхности - не закапывайте их. Резкие изменения проветривания вызывают сброс листьев, поэтому проветривать короткими сеансами, а не постоянно.',
+      n_calathea: 'Складывание листьев вверх ночью - естественное здоровое движение, а не увядание.',
+      n_fittonia: 'Полностью падает при пересыхании субстрата и поднимается через несколько часов после полива. Один раз не вредит, но повторяющиеся падения ослабляют растение.',
+      n_alocasia: 'У вариегатной формы мало хлорофилла, она вырабатывает меньше энергии и потому растет медленно от природы - дело не в уходе, и усиленные подкормки не помогут.',
+      n_sansevieria: 'С ноября по февраль удвоить интервал. Сансевиерия гибнет от зимнего перелива гораздо чаще, чем от забывчивости.',
+      n_echeveria: 'Розетка, которая вытягивается с промежутками между листьями, просит света, а не воды. Можно срезать верхушку, подсушить срез два дня и посадить заново.',
+      n_panda: 'Коричневые края опушенных листьев - природная окраска сорта, а не повреждение.',
+      n_hoya: 'Цветет с коротких шпорцев, которые возвращаются год за годом. Сморщенные листья при общем нормальном виде указывают на проблему корней или субстрата, а не на жажду.',
+      n_cryptanthus: 'Бромелия цветет один раз и затем угасает, но оставляет детки у основания. Отделять их, когда они достигнут трети размера материнского растения.',
+      n_lithops: 'Окно полива - с сентября по ноябрь, сезон роста и цветения. Летом и в середине зимы - совершенно сухо. Во время весенней смены листьев не поливать вовсе: старые листья питают новые.',
+      n_caudex: 'Каудекс должен оставаться над поверхностью субстрата. Высыхание листьев весной - сигнал полностью прекратить полив, а не спасать растение.',
+      n_caladium: 'Клубень хранят зимой сухим при 13-18 градусах. Высаживают, когда субстрат прогреется, ростки возвращаются через 2-4 недели.',
+      n_rhipsalis: 'Эпифитный лесной кактус, а не пустынный - ему нужно больше воды и меньше солнца, чем обычному кактусу.',
+      n_ceropegia: 'Срезанные концы можно воткнуть обратно в тот же горшок - они укоренятся и сделают его гуще.',
+      n_euphorbia_milii: 'Чем больше света, тем гуще цветение, и оно может продолжаться почти весь год.',
+      n_portulacaria: 'Любая обрезанная ветка легко укореняется в сухом субстрате - самое простое растение коллекции для размножения.',
+      n_cactus: 'С декабря по февраль не поливать совсем. Именно зимняя засуха запускает весеннее цветение.',
+      n_dracaena: 'Коричневые кончики обычно вызваны солями и фтором в водопроводной воде, а не низкой влажностью воздуха.',
+      n_moss: 'Мох пьет из воздуха, а не корнями. Он бледнеет и буреет, когда климат пересыхает, и восстанавливается с возвращением влажности.'
+    }
+  };
+
+  function ct(key, vars) {
+    const table = CARE_I18N[currentLang] || CARE_I18N.he;
+    let str = (table[key] !== undefined) ? table[key] : (CARE_I18N.he[key] !== undefined ? CARE_I18N.he[key] : key);
+    if (vars) Object.keys(vars).forEach(k => { str = str.split('{' + k + '}').join(vars[k]); });
+    return str;
+  }
+
+  // מאגר תנאי הגידול. הסדר קובע - הערך הראשון שמתאים הוא שנבחר, ולכן
+  // המינים הספציפיים מופיעים לפני הכלליים (Kalanchoe tomentosa לפני Kalanchoe,
+  // Dracaena trifasciata לפני Dracaena, וכן הלאה).
+  // l=תאורה  sn=עונתיות  so=מצע  w=שיטת השקיה  f=מרווח בסיס בימים (קיץ)
+  // wg=צמח חורף  warn=אזהרות  note=הערה ייחודית למין
+  const CARE_DB = [
+    { re: /anoectochilus|ludisia|macodes|jewel orchid|סחלב תכשיט/i, l: 'low_ok', sn: 'terrarium', so: 'terrarium', w: 'condensation', warn: ['humidity', 'draft'], note: 'n_jewel' },
+    { re: /\bmoss\b|sphagnum|טחב/i, l: 'medium', sn: 'terrarium', so: 'terrarium', w: 'condensation', warn: ['humidity'], note: 'n_moss' },
+
+    { re: /begonia rex|בגוניה רקס/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'moist_rich', w: 'dry_top_layer', f: 5, warn: ['rot', 'no_wet_leaves', 'humidity'] },
+    { re: /begonia|בגוניה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'moist_rich', w: 'dry_top_layer', f: 6, warn: ['rot', 'no_wet_leaves'] },
+    { re: /peperomia|פפרומיה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'gritty', w: 'dry_two_thirds', f: 9, warn: ['rot', 'leggy'] },
+    { re: /\bpilea\b|פיליאה|פילאה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 7, warn: ['leggy', 'rot'] },
+    { re: /fittonia|פיטוניה/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity'], note: 'n_fittonia' },
+    { re: /goeppertia|calathea|maranta|ctenanthe|stromanthe|קלתיאה|מרנטה/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 5, warn: ['fluoride', 'humidity', 'draft'], note: 'n_calathea' },
+    { re: /anthurium|אנתוריום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'] },
+    { re: /alocasia|אלוקזיה/i, l: 'bright_indirect', sn: 'winter_rest', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'], note: 'n_alocasia' },
+    { re: /colocasia|קולוקסיה/i, l: 'bright_indirect', sn: 'winter_rest', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity'] },
+    { re: /caladium|קלדיום/i, l: 'bright_indirect', sn: 'winter_dormant', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['rot', 'humidity'], note: 'n_caladium' },
+    { re: /scindapsus|epipremnum|pothos|סינדפסוס|פותוס/i, l: 'medium', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_third', f: 9, warn: ['leggy', 'rot'] },
+    { re: /monstera|מונסטרה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_third', f: 9, warn: ['rot'] },
+    { re: /philodendron|פילודנדרון/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 8, warn: ['leggy', 'rot'] },
+    { re: /syngonium|סינגוניום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['leggy'] },
+    { re: /aglaonema|אגלאונמה/i, l: 'low_ok', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 9, warn: ['rot', 'draft'] },
+    { re: /spathiphyllum|ספטיפילום/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 6, warn: ['fluoride', 'humidity'] },
+    { re: /zamioculcas|\bzz plant\b|זמיוקולקס/i, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 18, warn: ['rot'] },
+    { re: /chlorophytum|spider plant|כלורופיטום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 8, warn: ['fluoride'] },
+    { re: /tradescantia|zebrina|טרדסקנטיה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'standard', w: 'dry_top_layer', f: 6, warn: ['leggy'] },
+    { re: /hedera|קיסוס/i, l: 'medium', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 6, warn: ['humidity'] },
+    { re: /\bficus\b|פיקוס/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 8, warn: ['draft', 'sap'] },
+    { re: /nephrolepis|adiantum|asplenium|platycerium|\bfern\b|שרך/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity', 'fluoride'] },
+
+    { re: /dracaena trifasciata|sansevieria|סנסיווריה/i, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot'], note: 'n_sansevieria' },
+    { re: /dracaena|דרצנה/i, l: 'medium', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 10, warn: ['fluoride', 'salts'], note: 'n_dracaena' },
+
+    { re: /ceropegia|string of hearts|שרשרת לבבות/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'leggy'], note: 'n_ceropegia' },
+    { re: /rhipsalis|ריפסליס/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'dry_top_third', f: 10, warn: ['burn'], note: 'n_rhipsalis' },
+    { re: /schlumbergera|christmas cactus|קקטוס חג המולד/i, l: 'bright_indirect', sn: 'winter_rest', so: 'bark_epiphyte', w: 'dry_top_third', f: 9, warn: ['burn', 'rot'] },
+    { re: /\bhoya\b|הויה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'dry_two_thirds', f: 12, warn: ['repot_tight', 'keep_spurs', 'rot'], note: 'n_hoya' },
+    { re: /phalaenopsis|cattleya|dendrobium|\borchid\b|סחלב/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['no_rosette', 'rot'] },
+    { re: /cryptanthus|earth star|קריפטנתוס/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn', 'no_rosette'], note: 'n_cryptanthus' },
+    { re: /guzmania|neoregelia|vriesea|aechmea|bromeliad|ברומליאדה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn'], note: 'n_cryptanthus' },
+    { re: /tillandsia|air plant/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['rot', 'humidity'] },
+    { re: /nepenthes|dionaea|sarracenia|drosera|טורף/i, l: 'sun_am', sn: 'winter_rest', so: 'moist_rich', w: 'evenly_moist', f: 3, warn: ['distilled', 'humidity'] },
+
+    { re: /lithops|living stone|ליתופס/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 14, wg: true, warn: ['split', 'rot'], note: 'n_lithops' },
+    { re: /caudex|פקעת חורף|conophytum|pelargonium.*caudex/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 10, wg: true, warn: ['rot'], note: 'n_caudex' },
+    { re: /aeonium|אאוניום/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 12, wg: true, warn: ['rot', 'burn'] },
+
+    { re: /kalanchoe tomentosa|panda plant|קלנצואה פנדה|פנדה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['no_wet_leaves', 'rot'], note: 'n_panda' },
+    { re: /cotyledon|kalanchoe|קלנצואה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['farina', 'rot'] },
+    { re: /echeveria|graptopetalum|pachyphytum|אכוורייה|אצ׳וורייה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['no_rosette', 'farina', 'rot'], note: 'n_echeveria' },
+    { re: /haworthi|הוורתיה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
+    { re: /gasteria|גסטריה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
+    { re: /\baloe\b|אלוורה|אלואה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'] },
+    { re: /euphorbia milii|crown of thorns|כתר קוצים/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 10, warn: ['sap', 'rot'], note: 'n_euphorbia_milii' },
+    { re: /euphorbia|אופורביה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['sap', 'rot'] },
+    { re: /portulacaria|elephant bush|פורטולקריה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot'], note: 'n_portulacaria' },
+    { re: /crassula|jade plant|קרסולה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_wet_leaves'] },
+    { re: /senecio|curio|string of pearls|שרשרת פנינים/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot'] },
+    { re: /sedum|sempervivum|סדום/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_rosette'] },
+    { re: /mammillaria|opuntia|echinopsis|gymnocalycium|cereus|astrophytum|\bcactus\b|קקטוס/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'], note: 'n_cactus' },
+    { re: /succulent|סוקולנט|בשרני/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_rosette'] }
+  ];
+
+  // המפתח למאגר הוא השם הלטיני, ואם אין - השם העברי.
+  function findCare(p) {
+    const hay = ((p.nameEn || '') + ' ' + (p.nameHe || '')).trim();
+    if (!hay) return null;
+    for (let i = 0; i < CARE_DB.length; i++) {
+      if (CARE_DB[i].re.test(hay)) return CARE_DB[i];
+    }
+    return null;
+  }
+
+  // צמח בטרריום מטופל אחרת גם אם המין עצמו מוכר: ההשקיה לא לפי לוח זמנים.
+  function isTerrariumPlant(p) {
+    return /טרריום|terrarium|террариум/i.test((p.nameHe || '') + ' ' + (p.nameEn || '') + ' ' + (p.notes || ''));
+  }
+
+  function careInterval(entry, season) {
+    if (!entry || !entry.f) return null;
+    const mult = (entry.wg ? SEASON_MULT_WINTER_GROWER : SEASON_MULT)[season];
+    if (mult === null || mult === undefined) return null;
+    return Math.max(1, Math.round(entry.f * mult));
+  }
+
+  const carePlantCache = {};
+
+  function openCare(id) {
+    const p = carePlantCache[id];
+    if (!p) return;
+    const season = currentSeason();
+    let entry = findCare(p);
+    const terrarium = isTerrariumPlant(p);
+    // בטרריום דורסים את שיטת ההשקיה ואת העונתיות, גם למין מוכר
+    if (terrarium && entry) entry = Object.assign({}, entry, { w: 'condensation', sn: 'terrarium', f: null });
+
+    document.getElementById('care-title').textContent = p.nameHe || '';
+    const latinEl = document.getElementById('care-latin');
+    latinEl.textContent = p.nameEn || '';
+    latinEl.style.display = p.nameEn ? 'block' : 'none';
+
+    const body = document.getElementById('care-body');
+    if (!entry) {
+      body.innerHTML =
+        '<div class="care-unknown"><strong>' + escapeHtml(ct('unknown_title')) + '</strong><br>' +
+        escapeHtml(ct('unknown_body')) + '</div>';
+    } else {
+      const glKey = entry.l === 'full_sun' || entry.l === 'sun_am' ? 'gl_sun'
+        : (entry.l === 'low_ok' || entry.l === 'medium' ? 'gl_shade' : 'gl_indoor');
+
+      let html =
+        '<div class="care-season-now">' + escapeHtml(ct('season_now', { s: ct('s_' + season) })) + '</div>' +
+        careBlock('h_light', ct('l_' + entry.l) + ' ' + ct(glKey)) +
+        careBlock('h_season', ct('sn_' + entry.sn)) +
+        careBlock('h_soil', ct('so_' + entry.so)) +
+        careBlock('h_water', ct('w_' + entry.w) + (entry.note ? ' ' + ct(entry.note) : ''));
+
+      // טבלת התדירות - רק לצמח שמושקה לפי לוח זמנים
+      if (entry.f) {
+        const seasons = ['spring', 'summer', 'autumn', 'winter'];
+        html += '<div class="care-freq-wrap"><p class="care-freq-title">' + escapeHtml(ct('freq_title')) + '</p><div class="care-freq">' +
+          seasons.map(s => {
+            const d = careInterval(entry, s);
+            return '<div class="' + (s === season ? 'now' : '') + '">' +
+              '<span class="fs">' + escapeHtml(ct('s_' + s)) + '</span>' +
+              '<span class="fd">' + escapeHtml(d === null ? '—' : String(d)) + '</span>' +
+              '<span class="fs">' + escapeHtml(d === null ? ct('freq_none') : daysUnit(d)) + '</span></div>';
+          }).join('') + '</div>';
+
+        const rec = careInterval(entry, season);
+        html += '<p class="care-current">' + escapeHtml(p.wateringIntervalDays
+          ? ct('applied_now', { n: p.wateringIntervalDays })
+          : ct('applied_none')) + '</p>';
+        if (rec !== null && p.wateringIntervalDays !== rec) {
+          html += '<button type="button" class="care-btn" id="care-apply-btn" onclick="applyCareInterval(' + p.id + ',' + rec + ')">' +
+            escapeHtml(ct('apply_btn', { n: rec })) + '</button>' +
+            '<p id="care-apply-status" class="photo-status"></p>';
+        }
+        html += '</div>';
+      } else {
+        html += '<p class="care-current">' + escapeHtml(ct('freq_no_schedule')) + '</p>';
+      }
+
+      if (entry.warn && entry.warn.length) {
+        html += '<div class="care-warn"><h4>' + escapeHtml(ct('h_warn')) + '</h4><ul>' +
+          entry.warn.map(w => '<li>' + escapeHtml(ct('wr_' + w)) + '</li>').join('') + '</ul></div>';
+      }
+      body.innerHTML = html;
+    }
+
+    document.getElementById('care-overlay').classList.add('open');
+    document.addEventListener('keydown', careEscHandler);
+  }
+
+  function careBlock(titleKey, text) {
+    return '<div class="care-block"><h4>' + escapeHtml(ct(titleKey)) + '</h4><p>' + escapeHtml(text) + '</p></div>';
+  }
+
+  function careEscHandler(e) { if (e.key === 'Escape') closeCare(); }
+
+  function closeCare(e) {
+    // לחיצה על הרקע סוגרת; לחיצה בתוך החלון עצמו לא
+    if (e && e.target && e.target.id !== 'care-overlay' && e.type === 'click') return;
+    document.getElementById('care-overlay').classList.remove('open');
+    document.removeEventListener('keydown', careEscHandler);
+  }
+
+  // עדכון מרווח ההשקיה במערכת לפי ההמלצה העונתית
+  async function applyCareInterval(id, days) {
+    const statusEl = document.getElementById('care-apply-status');
+    const btn = document.getElementById('care-apply-btn');
+    if (statusEl) { statusEl.textContent = ct('applying'); statusEl.classList.remove('error'); }
+    if (btn) btn.disabled = true;
+    try {
+      await updateWateringRow(id, { watering_interval_days: days });
+      await renderPlants();
+      closeCare();
+    } catch (err) {
+      console.error('Applying care interval failed:', (err && err.message) || String(err));
+      if (statusEl) {
+        statusEl.textContent = ct('apply_failed') + ((err && err.message) || String(err));
+        statusEl.classList.add('error');
+      }
+      if (btn) btn.disabled = false;
+    }
+  }
+
   async function renderPlants() {
     const container = document.getElementById('plants-container');
     let allPlants;
@@ -2067,6 +2645,8 @@
     }
 
     updateHomeWateringFocus(allPlants);
+    // חלון תנאי הגידול נפתח לפי id, ולכן צריך גישה לאובייקט הצמח אחרי הרינדור
+    allPlants.forEach(p => { carePlantCache[p.id] = p; });
     const plants = filterPlants(allPlants);
     await updateStatLine(allPlants.length);
 
@@ -2122,6 +2702,8 @@
               <span class="h-date">${escapeHtml(t('checked_on'))} ${p.health.date}</span>
             </div>
           ` : ''}
+
+          <button type="button" class="care-btn" onclick="openCare(${p.id})">${escapeHtml(t('care_btn'))}</button>
 
           <button class="delete-btn" onclick="deletePlant(${p.id})">${escapeHtml(t('delete_plant'))}</button>
         </div>
