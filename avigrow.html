@@ -1468,6 +1468,7 @@
   const menuDrawer = document.getElementById('menu-drawer');
 
   function openMenu() {
+    pushBackLayer();
     menuOverlay.classList.add('open');
     menuDrawer.classList.add('open');
     menuDrawer.setAttribute('aria-hidden', 'false');
@@ -1705,6 +1706,7 @@
     const steps = TOURS[key];
     if (!steps || !steps.length) return;
     if (!force && tourState()[key]) return;
+    pushBackLayer();
     endTour();
     // מסמנים כ"נראה" כבר בהתחלה - הסיור מופיע פעם אחת, גם אם המשתמש עזב באמצע
     markTourSeen(key);
@@ -1741,6 +1743,7 @@
   const allToggleSections = [addSection, quickHealthSection, webSearchSection, accountSection, guideSection, adminSection, plantsListSection];
 
   function showSection(section) {
+    pushBackLayer();
     allToggleSections.forEach(s => { s.style.display = (s === section) ? 'block' : 'none'; });
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // מעבר מסך מסיים סיור פתוח, ומתחיל את הסיור של המסך החדש אם זו כניסה ראשונה
@@ -1753,6 +1756,44 @@
     endTour();
     allToggleSections.forEach(s => { s.style.display = 'none'; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ===== לחיצת "אחורה" (באנדרואיד/דפדפן) סוגרת שכבה פתוחה באתר, ולא יוצאת ממנו =====
+  // כל שכבה שנפתחת (תפריט, מסך, סיור, חלון תנאי גידול) דוחפת רשומת היסטוריה - אבל
+  // רק אם עוד לא הייתה פתוחה שכבה כלשהי, כך שמעבר בין מסכים או פתיחת שכבה נוספת
+  // מעל שכבה קיימת (למשל חלון "תנאי גידול" מעל רשימת הצמחים) לא צוברים רשומות
+  // מיותרות. "אחורה" מפעיל popstate, שסוגר רק את השכבה העליונה הפתוחה כרגע (סדר
+  // עדיפות: חלון תנאי גידול > סיור > תפריט > מסך) - ואם אחרי הסגירה עדיין נשאר
+  // משהו פתוח מתחתיה (כמו המסך שמאחורי החלון), נדחפת מיד רשומה חדשה כדי שהלחיצה
+  // הבאה תתפוס גם אותו. רק כשכלום כבר לא פתוח, לחיצת "אחורה" יוצאת מהעמוד כרגיל.
+  let backLayerOpen = false;
+  function pushBackLayer() {
+    if (backLayerOpen) return;
+    backLayerOpen = true;
+    try { history.pushState({ avigrowBack: true }, ''); } catch (e) { /* לא קריטי - בלי History API הכפתור פשוט יתנהג כרגיל */ }
+  }
+  function isAnyBackLayerOpen() {
+    const careOverlay = document.getElementById('care-overlay');
+    return !!(careOverlay && careOverlay.classList.contains('open'))
+      || !!coachSteps
+      || menuDrawer.classList.contains('open')
+      || allToggleSections.some(s => s.style.display !== 'none');
+  }
+  function closeTopmostLayer() {
+    const careOverlay = document.getElementById('care-overlay');
+    if (careOverlay && careOverlay.classList.contains('open')) { closeCare(); return; }
+    if (coachSteps) { endTour(); return; }
+    if (menuDrawer.classList.contains('open')) { closeMenu(); return; }
+    if (allToggleSections.some(s => s.style.display !== 'none')) {
+      allToggleSections.forEach(s => { s.style.display = 'none'; });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+  window.addEventListener('popstate', () => {
+    backLayerOpen = false;
+    closeTopmostLayer();
+    // עדיין נשאר משהו פתוח מתחת לשכבה שנסגרה עכשיו - תופסים גם את הלחיצה הבאה
+    if (isAnyBackLayerOpen()) pushBackLayer();
   });
 
   // הפעלת הסיור מחדש מתוך מסך המדריך
@@ -2537,6 +2578,7 @@
   function openCare(id) {
     const p = carePlantCache[id];
     if (!p) return;
+    pushBackLayer();
     const season = currentSeason();
     let entry = findCare(p);
     const terrarium = isTerrariumPlant(p);
