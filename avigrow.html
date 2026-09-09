@@ -369,6 +369,42 @@
   .watering-status.overdue { color: var(--clay); }
   .watering-done-btn { margin-top: 8px; padding: 7px 16px; font-size: 0.82rem; }
 
+  /* ===== משימות טיפול נוספות בכרטיס: דישון והחלפת מצע =====
+     אותו מנגנון של ההשקיה (מרווח בימים + תאריך ביצוע אחרון), בשורה קומפקטית. */
+  .task-row {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line);
+  }
+  .task-row .task-name { font-size: 0.82rem; font-weight: 600; }
+  .task-row input[type="number"] {
+    width: 56px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line);
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; text-align: center;
+  }
+  .task-row .task-unit { font-size: 0.78rem; color: var(--ink-soft); }
+  .task-row .btn { padding: 6px 12px; font-size: 0.78rem; }
+  .task-status { font-size: 0.82rem; font-weight: 600; flex-basis: 100%; margin-top: 2px; }
+  .task-status.ok { color: var(--sprout); }
+  .task-status.due { color: #B8860B; }
+  .task-status.overdue { color: var(--clay); }
+  .task-status.off { color: var(--ink-soft); font-weight: 500; }
+  .focus-row .focus-task { color: var(--ink-soft); font-size: 0.8rem; }
+
+  /* ===== מסך רחב: רשימה בשורות עם תמונה קטנה בצד, במקום רשת כרטיסים =====
+     בנייד (מתחת ל-900px) הכרטיסים נשארים בדיוק כפי שהיו. */
+  @media (min-width: 900px) {
+    .plants-grid { grid-template-columns: 1fr; gap: 14px; }
+    .plant-card { display: flex; align-items: stretch; }
+    .plant-card .photo-slot {
+      flex: 0 0 170px; width: 170px; display: flex; flex-direction: column;
+      border-inline-end: 1px solid var(--line);
+    }
+    .plant-card .photo-slot img,
+    .plant-card .photo-slot .photo-empty {
+      flex: 1 1 auto; height: auto; min-height: 150px; border-bottom: none;
+    }
+    .plant-card .body { flex: 1 1 auto; min-width: 0; }
+  }
+
   /* ===== ניהול מערכת (אדמין) ===== */
   .admin-lock {
     display: block; width: 100%; text-align: center; padding: 10px; margin-bottom: 14px;
@@ -962,6 +998,11 @@
       w_bad_number: 'יש להזין מספר ימים תקין (1 ומעלה), או להשאיר ריק לביטול',
       // כרטיס צמח
       badge_web: 'מהרשת', added_on: 'נוסף בתאריך', health_btn: '🩺 בדיקת בריאות', checked_on: 'נבדק בתאריך',
+      task_fertilize: '🌿 דישון', task_repot: '🪴 החלפת מצע', task_water: '💧 השקיה',
+      task_never: 'עוד לא בוצע', task_next: 'הבא בעוד {n}', task_today: 'להיום!', task_late: 'באיחור {n}',
+      task_off_season: 'לא בעונה הזו - לא מדשנים בתרדמה', task_done: '✅ בוצע היום', task_every: 'כל',
+      day_1: 'יום', day_n: 'ימים', week_1: 'שבוע', week_n: 'שבועות', month_1: 'חודש', month_n: 'חודשים',
+      year_1: 'שנה', year_n: 'שנים',
       care_btn: '🌱 תנאי גידול',
       delete_plant: 'מחיקת צמח', status_ok: 'תקין',
       empty_none: 'עדיין לא הוספת צמחים. התחילו למעלה 🌱', empty_search: 'לא נמצאו צמחים התואמים לחיפוש.',
@@ -1050,6 +1091,11 @@
       day: 'day', days: 'days', w_every: '💧 Water every', w_days_ph: 'days', w_done: '✅ Watered today',
       w_bad_number: 'Enter a valid number of days (1 or more), or leave it empty to turn this off',
       badge_web: 'from the web', added_on: 'Added on', health_btn: '🩺 Health check', checked_on: 'Checked on',
+      task_fertilize: '🌿 Fertilizing', task_repot: '🪴 Substrate change', task_water: '💧 Watering',
+      task_never: 'not done yet', task_next: 'next in {n}', task_today: 'due today!', task_late: '{n} overdue',
+      task_off_season: 'out of season - no feeding during dormancy', task_done: '✅ Done today', task_every: 'every',
+      day_1: 'day', day_n: 'days', week_1: 'week', week_n: 'weeks', month_1: 'month', month_n: 'months',
+      year_1: 'year', year_n: 'years',
       care_btn: '🌱 Growing conditions',
       delete_plant: 'Delete plant', status_ok: 'Healthy',
       empty_none: 'No plants yet. Add your first one above 🌱', empty_search: 'No plants match your search.',
@@ -1134,6 +1180,11 @@
       day: 'день', days: 'дн.', w_every: '💧 Полив каждые', w_days_ph: 'дней', w_done: '✅ Полил(а) сегодня',
       w_bad_number: 'Введите корректное число дней (от 1) или оставьте пустым, чтобы отключить',
       badge_web: 'из интернета', added_on: 'Добавлено', health_btn: '🩺 Проверка здоровья', checked_on: 'Проверено',
+      task_fertilize: '🌿 Подкормка', task_repot: '🪴 Смена субстрата', task_water: '💧 Полив',
+      task_never: 'ещё не выполнено', task_next: 'через {n}', task_today: 'сегодня!', task_late: 'просрочено на {n}',
+      task_off_season: 'не в этом сезоне - в покое не подкармливают', task_done: '✅ Выполнено', task_every: 'каждые',
+      day_1: 'день', day_n: 'дней', week_1: 'неделя', week_n: 'недель', month_1: 'месяц', month_n: 'месяцев',
+      year_1: 'год', year_n: 'лет',
       care_btn: '🌱 Условия выращивания',
       delete_plant: 'Удалить растение', status_ok: 'Здоровое',
       empty_none: 'Растений пока нет. Добавьте первое 🌱', empty_search: 'Ничего не найдено по вашему запросу.',
@@ -1259,10 +1310,20 @@
   document.addEventListener('click', () => closeAllLangMenus());
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllLangMenus(); });
 
+  // בחירת השפה נשמרת גם בפרופיל ולא רק ב-localStorage, כי תזכורות ההשקיה
+  // נשלחות מהשרת - הוא צריך לדעת באיזו שפה לכתוב את המייל למשתמש הזה.
+  function saveLangToProfile(lang) {
+    if (!currentUserId) return;
+    sbClient.from('profiles').update({ lang: lang }).eq('id', currentUserId)
+      .then(null, (err) => console.error('Saving language failed:', (err && err.message) || String(err)));
+  }
+
   function applyLanguage(lang) {
     if (!LANGS[lang]) lang = 'he';
     currentLang = lang;
     try { localStorage.setItem('avigrow_lang', lang); } catch (e) { /* אחסון חסום */ }
+    // בטעינה הראשונה currentUserId עדיין בתחום המת (TDZ) - אין משתמש לשמור לו
+    try { saveLangToProfile(lang); } catch (e) { /* עוד לא מחוברים */ }
 
     document.documentElement.lang = lang;
     document.documentElement.dir = LANGS[lang].dir;
@@ -1349,7 +1410,12 @@
       source: row.source || 'mine',
       addedAt: row.added_at ? new Date(row.added_at).toLocaleDateString('he-IL') : '',
       wateringIntervalDays: row.watering_interval_days || null,
-      lastWateredAt: row.last_watered_at || null
+      lastWateredAt: row.last_watered_at || null,
+      fertilizeIntervalDays: row.fertilize_interval_days || null,
+      lastFertilizedAt: row.last_fertilized_at || null,
+      repotIntervalDays: row.repot_interval_days || null,
+      lastRepottedAt: row.last_repotted_at || null,
+      growthSeason: row.growth_season || null
     };
     if (row.health_status) {
       plant.health = {
@@ -2006,6 +2072,118 @@
     if (!response.ok) throw new Error('עדכון ההשקיה נכשל (קוד ' + response.status + ')');
   }
 
+  // ===== משימות טיפול =====
+  // שלוש המשימות (השקיה, דישון, החלפת מצע) עובדות לפי אותו מנגנון בדיוק:
+  // מרווח בימים + תאריך הביצוע האחרון. הטבלה כאן ממפה כל משימה לשמות השדות
+  // שלה, כך שכל החישוב, השמירה וה"בוצע" נכתבים פעם אחת ולא שלוש.
+  const CARE_TASKS = {
+    water:     { label: 'task_water',     intervalKey: 'wateringIntervalDays',  lastKey: 'lastWateredAt',
+                 intervalCol: 'watering_interval_days',  lastCol: 'last_watered_at',   seasonal: false },
+    fertilize: { label: 'task_fertilize', intervalKey: 'fertilizeIntervalDays', lastKey: 'lastFertilizedAt',
+                 intervalCol: 'fertilize_interval_days', lastCol: 'last_fertilized_at', seasonal: true },
+    repot:     { label: 'task_repot',     intervalKey: 'repotIntervalDays',     lastKey: 'lastRepottedAt',
+                 intervalCol: 'repot_interval_days',     lastCol: 'last_repotted_at',  seasonal: false }
+  };
+  // המשימות שמוצגות ככפתורים נוספים בכרטיס (ההשקיה כבר יש לה תיבה משלה)
+  const EXTRA_TASK_KEYS = ['fertilize', 'repot'];
+
+  const RU_UNITS = {
+    day:   ['день', 'дня', 'дней'],
+    week:  ['неделя', 'недели', 'недель'],
+    month: ['месяц', 'месяца', 'месяцев'],
+    year:  ['год', 'года', 'лет']
+  };
+  function unitWord(n, unit) {
+    n = Math.abs(n);
+    if (currentLang === 'ru') {
+      const forms = RU_UNITS[unit];
+      const t1 = n % 10, t2 = n % 100;
+      if (t1 === 1 && t2 !== 11) return forms[0];
+      if (t1 >= 2 && t1 <= 4 && (t2 < 10 || t2 >= 20)) return forms[1];
+      return forms[2];
+    }
+    return t(unit + (n === 1 ? '_1' : '_n'));
+  }
+  // 21 ימים -> "3 שבועות", 90 -> "3 חודשים", 1095 -> "3 שנים".
+  // שנים רק כשהמספר באמת קרוב לשנים שלמות, אחרת 540 ימים היה הופך ל"שנה וחצי"
+  // מעוגלת לשנה אחת - ולכן הוא נשאר "18 חודשים".
+  function formatInterval(days) {
+    if (!days) return '';
+    let n = days, unit = 'day';
+    const yearRemainder = days % 365;
+    if (days >= 365 && (yearRemainder <= 30 || 365 - yearRemainder <= 30)) {
+      n = Math.round(days / 365); unit = 'year';
+    } else if (days >= 60 || (days >= 28 && days % 30 === 0)) {
+      n = Math.round(days / 30); unit = 'month';
+    } else if (days >= 14 && days % 7 === 0) {
+      n = days / 7; unit = 'week';
+    }
+    // בעברית לזוגי יש צורה משלו: "שנתיים" ולא "2 שנים"
+    if (currentLang === 'he' && n === 2) {
+      const dual = { day: 'יומיים', week: 'שבועיים', month: 'חודשיים', year: 'שנתיים' }[unit];
+      if (dual) return dual;
+    }
+    return (n === 1 ? '' : n + ' ') + unitWord(n, unit);
+  }
+
+  // דישון בתרדמה מזיק - שורשים שלא גדלים לא סופגים מלחים, והם נשרפים.
+  // צמח קיץ לא מדושן בדצמבר-פברואר, וצמח חורף לא מדושן ביוני-אוגוסט.
+  function isFeedingSeason(p) {
+    const m = new Date().getMonth() + 1;
+    const gs = p.growthSeason || 'summer';
+    if (gs === 'year_round') return true;
+    if (gs === 'winter') return !(m >= 6 && m <= 8);
+    return !(m === 12 || m <= 2);
+  }
+
+  function computeTaskStatus(p, key) {
+    const task = CARE_TASKS[key];
+    const interval = p[task.intervalKey];
+    if (!interval) return null;
+    if (task.seasonal && !isFeedingSeason(p)) return { text: t('task_off_season'), cls: 'off' };
+    const last = p[task.lastKey];
+    if (!last) return { text: t('task_never'), cls: 'due' };
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysSince = Math.floor((Date.now() - new Date(last).getTime()) / msPerDay);
+    const daysLeft = interval - daysSince;
+    if (daysLeft > 0) return { text: t('task_next', { n: formatInterval(daysLeft) }), cls: 'ok' };
+    if (daysLeft === 0) return { text: t('task_today'), cls: 'due' };
+    return { text: t('task_late', { n: formatInterval(-daysLeft) }), cls: 'overdue' };
+  }
+
+  function isTaskDue(p, key) {
+    if (p.source === 'web') return false;
+    const st = computeTaskStatus(p, key);
+    return !!st && (st.cls === 'due' || st.cls === 'overdue');
+  }
+
+  async function saveTaskInterval(id, key) {
+    const task = CARE_TASKS[key];
+    const input = document.getElementById('task-int-' + key + '-' + id);
+    const statusEl = document.getElementById('task-msg-' + key + '-' + id);
+    const raw = input.value.trim();
+    const days = raw === '' ? null : parseInt(raw, 10);
+    if (raw !== '' && (!Number.isFinite(days) || days < 1)) {
+      if (statusEl) statusEl.textContent = t('w_bad_number');
+      return;
+    }
+    try {
+      await updateWateringRow(id, { [task.intervalCol]: days });
+      await renderPlants();
+    } catch (err) {
+      if (statusEl) statusEl.textContent = t('error') + ((err && err.message) || String(err));
+    }
+  }
+
+  async function markTaskDone(id, key) {
+    try {
+      await updateWateringRow(id, { [CARE_TASKS[key].lastCol]: new Date().toISOString() });
+      await renderPlants();
+    } catch (err) {
+      showGlobalError((err && err.message) || String(err));
+    }
+  }
+
   // מחשבת את מצב ההשקיה של צמח: כמה ימים נשארו / כמה איחור יש
   function computeWateringStatus(p) {
     if (!p.wateringIntervalDays) return null;
@@ -2185,16 +2363,27 @@
   // מעדכן את כרטיס "להשקות היום" בדף הבית - מוצג רק אם יש בפועל צמח שצריך השקיה
   function updateHomeWateringFocus(allPlants) {
     const card = document.getElementById('watering-focus-card');
-    const due = allPlants.filter(isDueForWatering);
-    if (due.length === 0) {
+    // הכרטיס מרכז את כל מה שצריך טיפול היום - לא רק השקיה אלא גם דישון
+    // והחלפת מצע, כי מבחינת המשתמש זו אותה שאלה: "מה עלי לעשות היום"
+    const rows = [];
+    allPlants.filter(isDueForWatering).forEach(p => {
+      rows.push({ name: p.nameHe, task: t('task_water'),
+                  text: computeWateringStatus(p).text.replace(/^[💧⚠️]+\s*/, '') });
+    });
+    EXTRA_TASK_KEYS.forEach(key => {
+      allPlants.filter(p => isTaskDue(p, key)).forEach(p => {
+        rows.push({ name: p.nameHe, task: t(CARE_TASKS[key].label),
+                    text: computeTaskStatus(p, key).text });
+      });
+    });
+    if (rows.length === 0) {
       card.style.display = 'none';
       return;
     }
-    document.getElementById('watering-focus-count').textContent = due.length;
-    document.getElementById('watering-focus-list').innerHTML = due.map(p => {
-      const w = computeWateringStatus(p);
-      return `<div class="focus-row"><span>${p.nameHe}</span><span>${w.text.replace(/^[💧⚠️]+\s*/, '')}</span></div>`;
-    }).join('');
+    document.getElementById('watering-focus-count').textContent = rows.length;
+    document.getElementById('watering-focus-list').innerHTML = rows.map(r =>
+      `<div class="focus-row"><span>${escapeHtml(r.name)} <span class="focus-task">${escapeHtml(r.task)}</span></span>` +
+      `<span>${escapeHtml(r.text)}</span></div>`).join('');
     card.style.display = 'block';
   }
 
@@ -2227,7 +2416,12 @@
       season_now: 'העונה עכשיו: {s}',
       s_summer: 'קיץ', s_autumn: 'סתיו', s_winter: 'חורף', s_spring: 'אביב',
       h_light: 'תאורה', h_season: 'עונתיות', h_soil: 'מצע', h_water: 'השקיה ותדירות',
-      h_warn: 'שימו לב',
+      h_warn: 'שימו לב', h_tasks: 'טיפול תקופתי',
+      rec_fertilize: 'דישון: כל {v}, ורק בעונת הגדילה.',
+      rec_fertilize_none: 'דישון: המין הזה לא מדושן לפי לוח זמנים.',
+      rec_repot: 'החלפת מצע: כל {v}.',
+      rec_repot_none: 'החלפת מצע: לא לפי לוח זמנים.',
+      apply_all: 'לעדכן את כל ההמלצות לצמח הזה',
       freq_title: 'מרווח מומלץ בין השקיות, לפי עונה',
       freq_none: 'ללא',
       freq_no_schedule: 'לא לפי לוח זמנים',
@@ -2312,7 +2506,12 @@
       season_now: 'Current season: {s}',
       s_summer: 'Summer', s_autumn: 'Autumn', s_winter: 'Winter', s_spring: 'Spring',
       h_light: 'Light', h_season: 'Seasonality', h_soil: 'Substrate', h_water: 'Watering and frequency',
-      h_warn: 'Watch out for',
+      h_warn: 'Watch out for', h_tasks: 'Periodic care',
+      rec_fertilize: 'Fertilizing: every {v}, and only in the growing season.',
+      rec_fertilize_none: 'Fertilizing: this species is not fed on a schedule.',
+      rec_repot: 'Substrate change: every {v}.',
+      rec_repot_none: 'Substrate change: not on a schedule.',
+      apply_all: 'Apply all recommendations to this plant',
       freq_title: 'Recommended interval between waterings, by season',
       freq_none: 'none',
       freq_no_schedule: 'not on a schedule',
@@ -2397,7 +2596,12 @@
       season_now: 'Сейчас сезон: {s}',
       s_summer: 'Лето', s_autumn: 'Осень', s_winter: 'Зима', s_spring: 'Весна',
       h_light: 'Освещение', h_season: 'Сезонность', h_soil: 'Субстрат', h_water: 'Полив и частота',
-      h_warn: 'Обратите внимание',
+      h_warn: 'Обратите внимание', h_tasks: 'Периодический уход',
+      rec_fertilize: 'Подкормка: каждые {v}, и только в сезон роста.',
+      rec_fertilize_none: 'Подкормка: этот вид не подкармливают по графику.',
+      rec_repot: 'Смена субстрата: каждые {v}.',
+      rec_repot_none: 'Смена субстрата: не по графику.',
+      apply_all: 'Применить все рекомендации к этому растению',
       freq_title: 'Рекомендуемый интервал между поливами по сезонам',
       freq_none: 'нет',
       freq_no_schedule: 'не по графику',
@@ -2486,6 +2690,33 @@
     return str;
   }
 
+  // עונת הגדילה נגזרת מהעונתיות שכבר מוגדרת לכל מין - לא משכפלים אותה.
+  // היא קובעת מתי מותר לדשן: דישון בתרדמה שורף שורשים שלא סופגים.
+  const SEASON_TO_GROWTH = {
+    summer_grower: 'summer', evergreen_indoor: 'summer', winter_rest: 'summer',
+    winter_dormant: 'summer', winter_grower: 'winter', terrarium: 'year_round'
+  };
+
+  // ברירות מחדל לדישון (fz) ולהחלפת מצע (rp), בימים, לפי סוג המצע.
+  // מין עם צורך חריג מקבל ערך משלו ישירות ב-CARE_DB והוא גובר על אלה.
+  const SOIL_DEFAULT_CARE = {
+    gritty:        { fz: 45,  rp: 730 },   // סוקולנטים - דשן מדולל, עציץ פעם בשנתיים
+    aroid:         { fz: 30,  rp: 540 },   // קליפות האורן מתפרקות תוך כשנה וחצי ונחנקות
+    moist_rich:    { fz: 30,  rp: 365 },
+    bark_epiphyte: { fz: 21,  rp: 540 },   // התפרקות המצע היא הסיבה העיקרית להחלפה
+    standard:      { fz: 30,  rp: 730 },
+    terrarium:     { fz: null, rp: null }  // בטרריום סגור לא מדשנים ולא מחליפים לפי לוח
+  };
+
+  function careDefaults(entry) {
+    const base = SOIL_DEFAULT_CARE[entry.so] || { fz: 30, rp: 730 };
+    return {
+      fz: entry.fz !== undefined ? entry.fz : base.fz,
+      rp: entry.rp !== undefined ? entry.rp : base.rp,
+      gs: SEASON_TO_GROWTH[entry.sn] || 'summer'
+    };
+  }
+
   // מאגר תנאי הגידול. הסדר קובע - הערך הראשון שמתאים הוא שנבחר, ולכן
   // המינים הספציפיים מופיעים לפני הכלליים (Kalanchoe tomentosa לפני Kalanchoe,
   // Dracaena trifasciata לפני Dracaena, וכן הלאה).
@@ -2501,53 +2732,53 @@
     { re: /\bpilea\b|פיליאה|פילאה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 7, warn: ['leggy', 'rot'] },
     { re: /fittonia|פיטוניה/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity'], note: 'n_fittonia' },
     { re: /goeppertia|calathea|maranta|ctenanthe|stromanthe|קלתיאה|מרנטה/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 5, warn: ['fluoride', 'humidity', 'draft'], note: 'n_calathea' },
-    { re: /anthurium|אנתוריום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'] },
-    { re: /alocasia|אלוקזיה/i, l: 'bright_indirect', sn: 'winter_rest', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'], note: 'n_alocasia' },
+    { re: /anthurium|אנתוריום/i, fz: 30, rp: 365, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'] },
+    { re: /alocasia|אלוקזיה/i, fz: 30, rp: 365, l: 'bright_indirect', sn: 'winter_rest', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['rot', 'humidity'], note: 'n_alocasia' },
     { re: /colocasia|קולוקסיה/i, l: 'bright_indirect', sn: 'winter_rest', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity'] },
-    { re: /caladium|קלדיום/i, l: 'bright_indirect', sn: 'winter_dormant', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['rot', 'humidity'], note: 'n_caladium' },
+    { re: /caladium|קלדיום/i, fz: 21, rp: 365, l: 'bright_indirect', sn: 'winter_dormant', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['rot', 'humidity'], note: 'n_caladium' },
     { re: /scindapsus|epipremnum|pothos|סינדפסוס|פותוס/i, l: 'medium', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_third', f: 9, warn: ['leggy', 'rot'] },
     { re: /monstera|מונסטרה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_third', f: 9, warn: ['rot'] },
     { re: /philodendron|פילודנדרון/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 8, warn: ['leggy', 'rot'] },
     { re: /syngonium|סינגוניום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'aroid', w: 'dry_top_layer', f: 7, warn: ['leggy'] },
     { re: /aglaonema|אגלאונמה/i, l: 'low_ok', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 9, warn: ['rot', 'draft'] },
-    { re: /spathiphyllum|ספטיפילום/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 6, warn: ['fluoride', 'humidity'] },
-    { re: /zamioculcas|\bzz plant\b|זמיוקולקס/i, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 18, warn: ['rot'] },
+    { re: /spathiphyllum|ספטיפילום/i, fz: 30, rp: 365, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 6, warn: ['fluoride', 'humidity'] },
+    { re: /zamioculcas|\bzz plant\b|זמיוקולקס/i, fz: 60, rp: 1095, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 18, warn: ['rot'] },
     { re: /chlorophytum|spider plant|כלורופיטום/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 8, warn: ['fluoride'] },
     { re: /tradescantia|zebrina|טרדסקנטיה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'standard', w: 'dry_top_layer', f: 6, warn: ['leggy'] },
     { re: /hedera|קיסוס/i, l: 'medium', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_layer', f: 6, warn: ['humidity'] },
     { re: /\bficus\b|פיקוס/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 8, warn: ['draft', 'sap'] },
     { re: /nephrolepis|adiantum|asplenium|platycerium|\bfern\b|שרך/i, l: 'medium', sn: 'evergreen_indoor', so: 'moist_rich', w: 'evenly_moist', f: 4, warn: ['humidity', 'fluoride'] },
 
-    { re: /dracaena trifasciata|sansevieria|סנסיווריה/i, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot'], note: 'n_sansevieria' },
+    { re: /dracaena trifasciata|sansevieria|סנסיווריה/i, fz: 60, rp: 1095, l: 'low_ok', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot'], note: 'n_sansevieria' },
     { re: /dracaena|דרצנה/i, l: 'medium', sn: 'evergreen_indoor', so: 'standard', w: 'dry_top_third', f: 10, warn: ['fluoride', 'salts'], note: 'n_dracaena' },
 
     { re: /ceropegia|string of hearts|שרשרת לבבות/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'leggy'], note: 'n_ceropegia' },
     { re: /rhipsalis|ריפסליס/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'dry_top_third', f: 10, warn: ['burn'], note: 'n_rhipsalis' },
     { re: /schlumbergera|christmas cactus|קקטוס חג המולד/i, l: 'bright_indirect', sn: 'winter_rest', so: 'bark_epiphyte', w: 'dry_top_third', f: 9, warn: ['burn', 'rot'] },
-    { re: /\bhoya\b|הויה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'dry_two_thirds', f: 12, warn: ['repot_tight', 'keep_spurs', 'rot'], note: 'n_hoya' },
-    { re: /phalaenopsis|cattleya|dendrobium|\borchid\b|סחלב/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['no_rosette', 'rot'] },
-    { re: /cryptanthus|earth star|קריפטנתוס/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn', 'no_rosette'], note: 'n_cryptanthus' },
-    { re: /guzmania|neoregelia|vriesea|aechmea|bromeliad|ברומליאדה/i, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn'], note: 'n_cryptanthus' },
-    { re: /tillandsia|air plant/i, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['rot', 'humidity'] },
-    { re: /nepenthes|dionaea|sarracenia|drosera|טורף/i, l: 'sun_am', sn: 'winter_rest', so: 'moist_rich', w: 'evenly_moist', f: 3, warn: ['distilled', 'humidity'] },
+    { re: /\bhoya\b|הויה/i, fz: 30, rp: 730, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'dry_two_thirds', f: 12, warn: ['repot_tight', 'keep_spurs', 'rot'], note: 'n_hoya' },
+    { re: /phalaenopsis|cattleya|dendrobium|\borchid\b|סחלב/i, fz: 14, rp: 540, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['no_rosette', 'rot'] },
+    { re: /cryptanthus|earth star|קריפטנתוס/i, fz: 60, rp: 730, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn', 'no_rosette'], note: 'n_cryptanthus' },
+    { re: /guzmania|neoregelia|vriesea|aechmea|bromeliad|ברומליאדה/i, fz: 60, rp: 730, l: 'bright_indirect', sn: 'evergreen_indoor', so: 'bark_epiphyte', w: 'dry_top_layer', f: 7, warn: ['burn'], note: 'n_cryptanthus' },
+    { re: /tillandsia|air plant/i, fz: 30, rp: null, l: 'bright_indirect', sn: 'summer_grower', so: 'bark_epiphyte', w: 'orchid_soak', f: 7, warn: ['rot', 'humidity'] },
+    { re: /nepenthes|dionaea|sarracenia|drosera|טורף/i, fz: null, rp: 365, l: 'sun_am', sn: 'winter_rest', so: 'moist_rich', w: 'evenly_moist', f: 3, warn: ['distilled', 'humidity'] },
 
-    { re: /lithops|living stone|ליתופס/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 14, wg: true, warn: ['split', 'rot'], note: 'n_lithops' },
-    { re: /caudex|פקעת חורף|conophytum|pelargonium.*caudex/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 10, wg: true, warn: ['rot'], note: 'n_caudex' },
-    { re: /aeonium|אאוניום/i, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 12, wg: true, warn: ['rot', 'burn'] },
+    { re: /lithops|living stone|ליתופס/i, fz: null, rp: 1460, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 14, wg: true, warn: ['split', 'rot'], note: 'n_lithops' },
+    { re: /caudex|פקעת חורף|conophytum|pelargonium.*caudex/i, fz: 60, rp: 1095, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 10, wg: true, warn: ['rot'], note: 'n_caudex' },
+    { re: /aeonium|אאוניום/i, fz: 45, rp: 730, l: 'full_sun', sn: 'winter_grower', so: 'gritty', w: 'dry_fully', f: 12, wg: true, warn: ['rot', 'burn'] },
 
     { re: /kalanchoe tomentosa|panda plant|קלנצואה פנדה|פנדה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['no_wet_leaves', 'rot'], note: 'n_panda' },
     { re: /cotyledon|kalanchoe|קלנצואה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['farina', 'rot'] },
     { re: /echeveria|graptopetalum|pachyphytum|אכוורייה|אצ׳וורייה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['no_rosette', 'farina', 'rot'], note: 'n_echeveria' },
-    { re: /haworthi|הוורתיה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
-    { re: /gasteria|גסטריה/i, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
-    { re: /\baloe\b|אלוורה|אלואה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'] },
+    { re: /haworthi|הוורתיה/i, fz: 45, rp: 1095, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
+    { re: /gasteria|גסטריה/i, fz: 45, rp: 1095, l: 'bright_indirect', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['burn', 'rot'] },
+    { re: /\baloe\b|אלוורה|אלואה/i, fz: 45, rp: 1095, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'] },
     { re: /euphorbia milii|crown of thorns|כתר קוצים/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 10, warn: ['sap', 'rot'], note: 'n_euphorbia_milii' },
     { re: /euphorbia|אופורביה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['sap', 'rot'] },
     { re: /portulacaria|elephant bush|פורטולקריה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot'], note: 'n_portulacaria' },
     { re: /crassula|jade plant|קרסולה/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_wet_leaves'] },
     { re: /senecio|curio|string of pearls|שרשרת פנינים/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot'] },
     { re: /sedum|sempervivum|סדום/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_rosette'] },
-    { re: /mammillaria|opuntia|echinopsis|gymnocalycium|cereus|astrophytum|\bcactus\b|קקטוס/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'], note: 'n_cactus' },
+    { re: /mammillaria|opuntia|echinopsis|gymnocalycium|cereus|astrophytum|\bcactus\b|קקטוס/i, fz: 60, rp: 1095, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 16, warn: ['rot', 'burn'], note: 'n_cactus' },
     { re: /succulent|סוקולנט|בשרני/i, l: 'full_sun', sn: 'summer_grower', so: 'gritty', w: 'dry_fully', f: 14, warn: ['rot', 'no_rosette'] }
   ];
 
@@ -2618,18 +2849,28 @@
               '<span class="fs">' + escapeHtml(d === null ? ct('freq_none') : daysUnit(d)) + '</span></div>';
           }).join('') + '</div>';
 
-        const rec = careInterval(entry, season);
         html += '<p class="care-current">' + escapeHtml(p.wateringIntervalDays
           ? ct('applied_now', { n: p.wateringIntervalDays })
-          : ct('applied_none')) + '</p>';
-        if (rec !== null && p.wateringIntervalDays !== rec) {
-          html += '<button type="button" class="care-btn" id="care-apply-btn" onclick="applyCareInterval(' + p.id + ',' + rec + ')">' +
-            escapeHtml(ct('apply_btn', { n: rec })) + '</button>' +
-            '<p id="care-apply-status" class="photo-status"></p>';
-        }
-        html += '</div>';
+          : ct('applied_none')) + '</p></div>';
       } else {
         html += '<p class="care-current">' + escapeHtml(ct('freq_no_schedule')) + '</p>';
+      }
+
+      // דישון והחלפת מצע - אותן המלצות שמזינות את התזכורות בכרטיס ובמייל
+      const def = careDefaults(entry);
+      html += '<div class="care-block"><h4>' + escapeHtml(ct('h_tasks')) + '</h4><p>' +
+        escapeHtml(def.fz ? ct('rec_fertilize', { v: formatInterval(def.fz) }) : ct('rec_fertilize_none')) +
+        '<br>' +
+        escapeHtml(def.rp ? ct('rec_repot', { v: formatInterval(def.rp) }) : ct('rec_repot_none')) +
+        '</p></div>';
+
+      // כפתור אחד שמחיל את שלוש ההמלצות יחד, ורק אם משהו בפועל שונה מהמוגדר
+      const recWater = entry.f ? careInterval(entry, season) : null;
+      if ((recWater !== null && p.wateringIntervalDays !== recWater)
+          || p.fertilizeIntervalDays !== def.fz || p.repotIntervalDays !== def.rp) {
+        html += '<button type="button" class="care-btn" id="care-apply-btn" onclick="applyCareRecommendations(' + p.id + ')">' +
+          escapeHtml(ct('apply_all')) + '</button>' +
+          '<p id="care-apply-status" class="photo-status"></p>';
       }
 
       if (entry.warn && entry.warn.length) {
@@ -2656,14 +2897,37 @@
     document.removeEventListener('keydown', careEscHandler);
   }
 
-  // עדכון מרווח ההשקיה במערכת לפי ההמלצה העונתית
-  async function applyCareInterval(id, days) {
+  // מחיל על הצמח את כל ההמלצות של המין: מרווח השקיה לעונה הנוכחית, מרווח
+  // דישון, מרווח החלפת מצע, ועונת הגדילה (שקובעת מתי לא לדשן בכלל).
+  async function applyCareRecommendations(id) {
+    const p = carePlantCache[id];
+    if (!p) return;
+    let entry = findCare(p);
+    if (!entry) return;
+    if (isTerrariumPlant(p)) entry = Object.assign({}, entry, { w: 'condensation', sn: 'terrarium', f: null });
+    const def = careDefaults(entry);
+    const fields = {
+      fertilize_interval_days: def.fz,
+      repot_interval_days: def.rp,
+      growth_season: def.gs
+    };
+    // משימה בלי תאריך ביצוע נחשבת "עוד לא בוצע" ולכן באיחור מיד, וכבר למחרת
+    // בבוקר היא נכנסת למייל התזכורות. מתחילים את הספירה מהיום.
+    const nowIso = new Date().toISOString();
+    if (def.fz && !p.lastFertilizedAt) fields.last_fertilized_at = nowIso;
+    if (def.rp && !p.lastRepottedAt) fields.last_repotted_at = nowIso;
+    const recWater = entry.f ? careInterval(entry, currentSeason()) : null;
+    if (recWater !== null) fields.watering_interval_days = recWater;
+    await applyCareFields(id, fields);
+  }
+
+  async function applyCareFields(id, fields) {
     const statusEl = document.getElementById('care-apply-status');
     const btn = document.getElementById('care-apply-btn');
     if (statusEl) { statusEl.textContent = ct('applying'); statusEl.classList.remove('error'); }
     if (btn) btn.disabled = true;
     try {
-      await updateWateringRow(id, { watering_interval_days: days });
+      await updateWateringRow(id, fields);
       await renderPlants();
       closeCare();
     } catch (err) {
@@ -2733,6 +2997,21 @@
               <div class="watering-status ${w.cls}">${w.text}</div>
               <button type="button" class="btn watering-done-btn" onclick="markWatered(${p.id})">${escapeHtml(t('w_done'))}</button>
             ` : ''}
+            ${EXTRA_TASK_KEYS.map(key => {
+              const st = computeTaskStatus(p, key);
+              const interval = p[CARE_TASKS[key].intervalKey];
+              return `
+            <div class="task-row">
+              <span class="task-name">${escapeHtml(t(CARE_TASKS[key].label))}</span>
+              <span class="task-unit">${escapeHtml(t('task_every'))}</span>
+              <input type="number" min="1" id="task-int-${key}-${p.id}" value="${interval || ''}" placeholder="${escapeHtml(t('w_days_ph'))}">
+              <span class="task-unit">${escapeHtml(t('w_days_ph'))}</span>
+              <button type="button" class="btn btn-ghost" onclick="saveTaskInterval(${p.id},'${key}')">${escapeHtml(t('save'))}</button>
+              ${interval ? `<button type="button" class="btn" onclick="markTaskDone(${p.id},'${key}')">${escapeHtml(t('task_done'))}</button>` : ''}
+              ${st ? `<span class="task-status ${st.cls}">${escapeHtml(st.text)}</span>` : ''}
+              <p id="task-msg-${key}-${p.id}" class="task-status overdue" style="flex-basis:100%;"></p>
+            </div>`;
+            }).join('')}
           </div>
           <input type="file" id="health-input-${p.id}" class="health-input" accept="image/*" onchange="checkPlantHealth(${p.id})">
           <div class="care-health-row">
@@ -3121,7 +3400,10 @@
       // עדכון שקט של המייל בכל כניסה (למקרה שהשתנה), בלי לגעת בשם השמור
       await sbClient.from('profiles').update({ email: user.email || null }).eq('id', user.id);
     }
-    const { data } = await sbClient.from('profiles').select('first_name,last_name').eq('id', user.id).maybeSingle();
+    const { data } = await sbClient.from('profiles').select('first_name,last_name,lang').eq('id', user.id).maybeSingle();
+    // השפה השמורה בפרופיל מנצחת, כדי שהאתר והמיילים ידברו באותה שפה בכל מכשיר
+    if (data && data.lang && LANGS[data.lang] && data.lang !== currentLang) applyLanguage(data.lang);
+    else saveLangToProfile(currentLang);
     const nameEl = document.getElementById('menu-user-name');
     if (nameEl) nameEl.textContent = data ? `${data.first_name} ${data.last_name}`.trim() : (user.email || '');
 
