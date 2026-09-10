@@ -113,7 +113,6 @@ Deno.serve(async (req) => {
   type DueTask = { key: TaskKey; overdueDays: number | null };
   type DuePlant = { id: number; name: string; photo: string | null; tasks: DueTask[] };
   const dueByUser: Record<string, DuePlant[]> = {};
-  const idsToMark: number[] = [];
 
   for (const p of plants || []) {
     if (p.last_watering_reminder_at === today) continue;
@@ -138,8 +137,13 @@ Deno.serve(async (req) => {
     if (tasks.length === 0) continue;
     dueByUser[p.user_id] = dueByUser[p.user_id] || [];
     dueByUser[p.user_id].push({ id: p.id, name: p.name_he, photo: p.photo_base64 || null, tasks });
-    idsToMark.push(p.id);
   }
+
+  const plantIdsOf = (userId: string) => (dueByUser[userId] || []).map((p) => p.id);
+  const markReminded = (ids: number[]) =>
+    ids.length > 0
+      ? supabase.from("plants").update({ last_watering_reminder_at: today }).in("id", ids)
+      : Promise.resolve();
 
   let userIds = Object.keys(dueByUser);
   if (userIds.length === 0) {
@@ -160,11 +164,15 @@ Deno.serve(async (req) => {
   for (const p of profiles || []) {
     langById[p.id] = (p.lang === "en" || p.lang === "ru") ? p.lang : "he";
   }
+  const optedOutUserIds = userIds.filter((id) => optedOut.has(id));
   userIds = userIds.filter((id) => !optedOut.has(id));
 
-  if (idsToMark.length > 0) {
-    await supabase.from("plants").update({ last_watering_reminder_at: today }).in("id", idsToMark);
-  }
+  // Plants of users who opted out are marked right away: no email will ever be
+  // attempted for them, and leaving them unmarked would make them look "never
+  // reminded" forever. Everyone else is marked only once their mail actually
+  // went out - marking up front meant a failed send silently ate that day's
+  // reminder, which is exactly how a dead SMTP password went unnoticed.
+  await markReminded(optedOutUserIds.flatMap(plantIdsOf));
 
   if (userIds.length === 0) {
     return new Response(JSON.stringify({ sent: 0, skippedOptOut: true }), {
@@ -198,6 +206,7 @@ Deno.serve(async (req) => {
   }
 
   let sentCount = 0;
+  let failedCount = 0;
   for (const userId of userIds) {
     const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(userId);
     if (userErr || !userData?.user?.email) continue;
@@ -245,14 +254,26 @@ Deno.serve(async (req) => {
         </div>`,
         attachments
       });
+      // Only now is the day's reminder actually spent for this user's plants.
+      await markReminded(plantIdsOf(userId));
       sentCount++;
     } catch (e) {
       console.error("Failed to send to", email, e);
+      failedCount++;
     }
   }
 
-  return new Response(JSON.stringify({ sent: sentCount, usersNotified: userIds.length }), {
-    status: 200,
+  // Every single send failing is an outage (a dead SMTP password looks exactly
+  // like this), so answer 5xx and let the scheduled workflow go red. Returning
+  // 200 with sent:0 is what let a broken mailer sit unnoticed.
+  const allFailed = sentCount === 0 && failedCount > 0;
+  return new Response(JSON.stringify({
+    sent: sentCount,
+    failed: failedCount,
+    usersNotified: userIds.length,
+    ...(allFailed ? { error: "every send failed - check GMAIL_APP_PASSWORD" } : {})
+  }), {
+    status: allFailed ? 500 : 200,
     headers: { "Content-Type": "application/json" }
   });
 });
