@@ -1,0 +1,41 @@
+name: Send version announcement
+
+# Manual only - there is no schedule here on purpose. This mails every
+# registered user, so it must never fire on its own.
+#
+# Run it with dry_run = true first: that reports exactly how many people would
+# be mailed, in which languages, and sends nothing.
+#
+# The function also guards itself - each user it mails is stamped with the
+# announcement key, so a second run mails nobody twice.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only report who would be mailed, send nothing'
+        type: boolean
+        default: true
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call announce edge function
+        run: |
+          URL="https://wipkpkdctwnpsyqszzhn.supabase.co/functions/v1/announce"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            URL="$URL?dry=1"
+            echo "DRY RUN - no email will be sent."
+          else
+            echo "LIVE RUN - emails will be sent."
+          fi
+          HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X POST "$URL" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response body:"
+          cat /tmp/response.txt
+          echo
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            exit 1
+          fi
