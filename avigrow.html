@@ -2123,6 +2123,21 @@
   // המשימות שמוצגות ככפתורים נוספים בכרטיס (ההשקיה כבר יש לה תיבה משלה)
   const EXTRA_TASK_KEYS = ['fertilize', 'repot'];
 
+  // אילו משימות בכלל רלוונטיות לצמח הזה. לא כל צמח צריך דישון או החלפת מצע:
+  // ליתופס לא מדושן בכלל, טילנדסיה יושבת באוויר ואין לה מצע להחליף, וצמח
+  // בטרריום סגור לא מקבל אף אחד מהשניים. מציגים שורה רק אם המין באמת צריך
+  // אותה - או אם כבר הוגדר לצמח מרווח, כדי לא להסתיר משהו שהמשתמשת קבעה.
+  function applicableTasks(p) {
+    return EXTRA_TASK_KEYS.filter(key => {
+      if (p[CARE_TASKS[key].intervalKey]) return true;
+      if (isTerrariumPlant(p)) return false;
+      const entry = findCare(p);
+      if (!entry) return false; // מין לא מוכר - לא ננחש שהוא צריך טיפול
+      const def = careDefaults(entry);
+      return !!(key === 'fertilize' ? def.fz : def.rp);
+    });
+  }
+
   const RU_UNITS = {
     day:   ['день', 'дня', 'дней'],
     week:  ['неделя', 'недели', 'недель'],
@@ -3075,7 +3090,7 @@
               <div class="watering-status ${w.cls}">${w.text}</div>
               <button type="button" class="btn watering-done-btn" onclick="markWatered(${p.id})">${escapeHtml(t('w_done'))}</button>
             ` : ''}
-            ${EXTRA_TASK_KEYS.map(key => {
+            ${applicableTasks(p).map(key => {
               const st = computeTaskStatus(p, key);
               const interval = p[CARE_TASKS[key].intervalKey];
               return `
