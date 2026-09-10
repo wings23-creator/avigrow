@@ -389,20 +389,56 @@
   .task-status.off { color: var(--ink-soft); font-weight: 500; }
   .focus-row .focus-task { color: var(--ink-soft); font-size: 0.8rem; }
 
-  /* ===== מסך רחב: רשימה בשורות עם תמונה קטנה בצד, במקום רשת כרטיסים =====
-     בנייד (מתחת ל-900px) הכרטיסים נשארים בדיוק כפי שהיו. */
+  /* ===== מסך רחב: שורה אחת לכל צמח, נפתחת בלחיצה =====
+     ברירת המחדל היא שורת סיכום קצרה עם תמונה קטנה; לחיצה פותחת את השורה
+     לעריכה, ולחיצה על שורה אחרת סוגרת את הקודמת. בנייד (מתחת ל-900px)
+     כותרת השורה מוסתרת והכרטיסים נשארים בדיוק כפי שהיו. */
+  .row-head { display: none; }
   @media (min-width: 900px) {
-    .plants-grid { grid-template-columns: 1fr; gap: 14px; }
-    .plant-card { display: flex; align-items: stretch; }
-    .plant-card .photo-slot {
+    .plants-grid { grid-template-columns: 1fr; gap: 10px; }
+    .plant-card { display: block; }
+    .row-head {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 10px 14px; background: none; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; text-align: start; color: var(--ink);
+    }
+    .row-head:hover { background: var(--bg); }
+    .row-head:focus-visible { outline: 2px solid var(--sprout); outline-offset: -2px; }
+    .row-thumb {
+      width: 46px; height: 46px; border-radius: 10px; object-fit: cover;
+      flex-shrink: 0; background: var(--bg);
+    }
+    .row-thumb.empty {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; border: 1px dashed var(--line); box-sizing: border-box;
+    }
+    .row-title { flex: 1 1 auto; min-width: 0; }
+    .row-title b { font-size: 0.95rem; font-weight: 600; display: block; }
+    .row-title small { color: var(--ink-soft); font-size: 0.78rem; }
+    .row-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .row-chip { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    .row-chip.due { background: #FBEDE9; color: #8A3D26; border: 1px solid #E6C4B8; }
+    .row-chip.ok { background: var(--bg); color: var(--ink-soft); border: 1px solid var(--line); }
+    .row-caret { color: var(--ink-soft); font-size: 0.8rem; flex-shrink: 0; transition: transform 0.15s ease; }
+    .plant-card.open .row-caret { transform: rotate(180deg); }
+
+    /* הפרטים המלאים - מוסתרים עד שנכנסים לשורה */
+    .card-detail { display: none; }
+    .plant-card.open .card-detail {
+      display: flex; align-items: stretch; border-top: 1px solid var(--line);
+    }
+    .plant-card.open .photo-slot {
       flex: 0 0 170px; width: 170px; display: flex; flex-direction: column;
       border-inline-end: 1px solid var(--line);
     }
-    .plant-card .photo-slot img,
-    .plant-card .photo-slot .photo-empty {
+    .plant-card.open .photo-slot img,
+    .plant-card.open .photo-slot .photo-empty {
       flex: 1 1 auto; height: auto; min-height: 150px; border-bottom: none;
     }
-    .plant-card .body { flex: 1 1 auto; min-width: 0; }
+    .plant-card.open .body { flex: 1 1 auto; min-width: 0; }
+    /* השם כבר מופיע בכותרת השורה - לא חוזרים עליו שוב בפנים */
+    .plant-card.open .body > h3,
+    .plant-card.open .body > .en-name { display: none; }
   }
 
   /* ===== ניהול מערכת (אדמין) ===== */
@@ -2940,6 +2976,41 @@
     }
   }
 
+  // איזו שורה פתוחה כרגע. נשמר מחוץ לרינדור, כדי ששמירת מרווח או סימון
+  // "בוצע" (שמרנדרים מחדש את כל הרשימה) לא יסגרו את השורה שעובדים עליה.
+  let expandedPlantId = null;
+
+  function togglePlantRow(id) {
+    const card = document.querySelector('.plant-card[data-id="' + id + '"]');
+    if (!card) return;
+    const willOpen = !card.classList.contains('open');
+    document.querySelectorAll('.plant-card.open').forEach(c => {
+      c.classList.remove('open');
+      const head = c.querySelector('.row-head');
+      if (head) head.setAttribute('aria-expanded', 'false');
+    });
+    if (willOpen) {
+      card.classList.add('open');
+      const head = card.querySelector('.row-head');
+      if (head) head.setAttribute('aria-expanded', 'true');
+    }
+    expandedPlantId = willOpen ? id : null;
+  }
+
+  // תקציר קצר לשורה הסגורה: מה שצריך טיפול היום, ואם אין - מתי ההשקיה הבאה
+  function plantRowSummary(p) {
+    const chips = [];
+    if (isDueForWatering(p)) chips.push(['due', t('task_water')]);
+    EXTRA_TASK_KEYS.forEach(key => {
+      if (isTaskDue(p, key)) chips.push(['due', t(CARE_TASKS[key].label)]);
+    });
+    if (chips.length === 0) {
+      const w = computeWateringStatus(p);
+      if (w) chips.push(['ok', w.text.replace(/^[💧⚠️]+\s*/, '')]);
+    }
+    return chips.map(c => '<span class="row-chip ' + c[0] + '">' + escapeHtml(c[1]) + '</span>').join('');
+  }
+
   async function renderPlants() {
     const container = document.getElementById('plants-container');
     let allPlants;
@@ -2969,7 +3040,14 @@
     }
 
     container.innerHTML = '<div class="plants-grid">' + plants.map(p => `
-      <div class="plant-card">
+      <div class="plant-card${p.id === expandedPlantId ? ' open' : ''}" data-id="${p.id}">
+        <button type="button" class="row-head" onclick="togglePlantRow(${p.id})" aria-expanded="${p.id === expandedPlantId}">
+          ${p.photo ? `<img class="row-thumb" src="${p.photo}" alt="">` : '<span class="row-thumb empty">🌱</span>'}
+          <span class="row-title"><b>${escapeHtml(p.nameHe || '')}${p.source === 'web' ? '<span class="source-badge">' + escapeHtml(t('badge_web')) + '</span>' : ''}</b>${p.nameEn ? `<small>${escapeHtml(p.nameEn)}</small>` : ''}</span>
+          <span class="row-chips">${plantRowSummary(p)}</span>
+          <span class="row-caret">▾</span>
+        </button>
+        <div class="card-detail">
         <div class="photo-slot">
           ${p.photo ? `<img src="${p.photo}" alt="">` : '<div class="photo-empty">🌱</div>'}
           <input type="file" id="photo-input-${p.id}" class="card-photo-input" accept="image/*" onchange="changePlantPhoto(${p.id})">
@@ -3031,6 +3109,7 @@
           ` : ''}
 
           <button class="delete-btn" onclick="deletePlant(${p.id})">${escapeHtml(t('delete_plant'))}</button>
+        </div>
         </div>
       </div>
     `).join('') + '</div>';
