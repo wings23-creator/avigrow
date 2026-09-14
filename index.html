@@ -3824,9 +3824,11 @@
     btn.classList.toggle('locked', !adminUnlocked);
     btn.classList.toggle('unlocked', adminUnlocked);
     btn.textContent = adminUnlocked ? '🔓 פתוח לעריכה - לחצי לנעילה' : '🔒 נעול לעריכה - לחצי לפתיחה';
-    // מרעננים את התצוגה הנוכחית כדי שכפתורי שמירה/מחיקה יתעדכנו (מושבתים/פעילים)
-    applyAdminUsersFilter();
-    if (adminPlantsUserIdFilter) applyAdminPlantsFilter();
+    // מעדכנים רק את מצב הכפתורים בשורות הקיימות. בעבר רינדרנו מחדש את כל
+    // השורות מהזיכרון - וכל שינוי שכבר הוקלד (למשל תיבת "התראות השקיה")
+    // נמחק וחזר לערך הישן, כך שנראה כאילו השמירה לא עובדת.
+    document.querySelectorAll('#admin-section [data-action="save"], #admin-section [data-action="delete"]')
+      .forEach(b => { b.disabled = !adminUnlocked; });
   });
 
   document.getElementById('show-admin-btn').addEventListener('click', () => {
@@ -3877,6 +3879,20 @@
 
   document.getElementById('admin-users-search').addEventListener('input', applyAdminUsersFilter);
 
+  // PATCH שמחזיר את השורה שנכתבה. עם return=minimal מתקבל 204 גם כששום שורה
+  // לא עודכנה בפועל (למשל חסימת הרשאה) - ואז "נשמר" מוצג בלי שנשמר כלום.
+  async function adminPatch(url, updates) {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=representation' },
+      body: JSON.stringify(updates)
+    });
+    if (!response.ok) throw new Error('שמירה נכשלה (קוד ' + response.status + ')');
+    const rows = await response.json();
+    if (!rows.length) throw new Error('השמירה לא נכתבה - אין הרשאה לעדכן את השורה הזו');
+    return rows[0];
+  }
+
   async function loadAdminPlants() {
     try {
       const response = await fetch(SUPABASE_TABLE_URL + '?select=*&order=added_at.desc', {
@@ -3926,12 +3942,8 @@
           watering_interval_days: intervalVal ? Number(intervalVal) : null
         };
         try {
-          const response = await fetch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(p.id), {
-            method: 'PATCH',
-            headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=minimal' },
-            body: JSON.stringify(updates)
-          });
-          if (!response.ok) throw new Error('שמירה נכשלה (קוד ' + response.status + ')');
+          const saved = await adminPatch(SUPABASE_TABLE_URL + '?id=eq.' + encodeURIComponent(p.id), updates);
+          Object.assign(p, saved); // p הוא האובייקט שבזיכרון - כך רינדור הבא יציג את הערך החדש
           setAdminStatus('✓ הצמח נשמר');
         } catch (err) {
           setAdminStatus('שגיאה בשמירה: ' + ((err && err.message) || String(err)), true);
@@ -4013,12 +4025,9 @@
           notify_watering: row.querySelector('[data-field="notify_watering"]').checked
         };
         try {
-          const response = await fetch(SUPABASE_PROFILES_URL + '?id=eq.' + encodeURIComponent(u.id), {
-            method: 'PATCH',
-            headers: { ...(await getSupabaseHeaders()), 'Prefer': 'return=minimal' },
-            body: JSON.stringify(updates)
-          });
-          if (!response.ok) throw new Error('שמירה נכשלה (קוד ' + response.status + ')');
+          const saved = await adminPatch(SUPABASE_PROFILES_URL + '?id=eq.' + encodeURIComponent(u.id), updates);
+          Object.assign(u, saved); // u הוא האובייקט שבזיכרון - כך רינדור הבא יציג את הערך החדש
+          adminUserNameById[u.id] = `${u.first_name || ''} ${u.last_name || ''}`.trim();
           setAdminStatus('✓ המשתמש נשמר');
         } catch (err) {
           setAdminStatus('שגיאה בשמירה: ' + ((err && err.message) || String(err)), true);
